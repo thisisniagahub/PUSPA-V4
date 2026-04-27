@@ -1,0 +1,531 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  // For local dev: use "sqlite"
+  // For Vercel/Supabase production: use "postgresql"
+  provider  = "sqlite"
+  url       = env("DATABASE_URL")
+  // Uncomment for Supabase production:
+  // directUrl = env("DIRECT_URL")
+}
+
+// ============ CORE MODELS ============
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("ops") // admin, ops, finance, volunteer
+  avatar    String?
+  phone     String?
+  isActive  Boolean  @default(true)
+  lastLogin DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditLogs    AuditLog[]
+  notifications Notification[]
+  createdCases Case[]          @relation("CaseCreator")
+  assignedCases Case[]         @relation("CaseAssignee")
+  deviceBindings DeviceBinding[]
+securityLogs   SecurityLog[]
+}
+
+// Bot API Key for service accounts (e.g., PuspaCareBot)
+model BotApiKey {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "PuspaCareBot"
+  key         String   @unique // hashed API key, never plain text
+  keyPrefix   String   // first 8 chars for display, e.g., "psbot_abc"
+  role        String   @default("bot") // bot, admin_bot, ops_bot
+  permissions String   @default("[]") // array of allowed permissions
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([keyPrefix])
+  @@index([isActive])
+}
+
+// ============ MEMBER / ASNAF (Phase 3) ============
+
+model Member {
+  id             String   @id @default(cuid())
+  memberNumber   String   @unique // auto-generated: PUSPA-XXXX
+  name           String
+  ic             String   @unique
+  phone          String
+  email          String?
+  address        String
+  city           String?
+  state          String?
+  postalCode     String?
+  householdSize  Int      @default(1)
+  monthlyIncome  Float    @default(0)
+  maritalStatus  String   @default("single") // single, married, divorced, widowed
+  occupation     String?
+  bankAccount    String?
+  bankName       String?
+  status         String   @default("active") // active, inactive, blacklisted
+  notes          String?
+  joinedAt       DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  cases            Case[]
+  householdMembers HouseholdMember[]
+  disbursements    Disbursement[]
+  eKYCVerification EKYCVerification?
+
+  @@index([memberNumber])
+  @@index([ic])
+  @@index([status])
+}
+
+model HouseholdMember {
+  id          String  @id @default(cuid())
+  name        String
+  relationship String // spouse, child, parent, sibling, other
+  age         Int?
+  occupation  String?
+  income      Float   @default(0)
+  isOKU       Boolean @default(false)
+  isStudent   Boolean @default(false)
+  memberId    String
+  member      Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============ PROGRAMME ============
+
+model Programme {
+  id                    String   @id @default(cuid())
+  name                  String
+  description           String?
+  category              String   // food_aid, education, skills_training, healthcare, financial_assistance, community, emergency_relief, dawah
+  status                String   @default("active") // active, completed, suspended, planned
+  startDate             DateTime?
+  endDate               DateTime?
+  location              String?
+  targetBeneficiaries   Int?
+  actualBeneficiaries   Int      @default(0)
+  budget                Float    @default(0)
+  totalSpent            Float    @default(0)
+  partners              String?
+  notes                 String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  cases         Case[]
+  donations     Donation[]
+  disbursements Disbursement[]
+  activities    Activity[]
+  impactMetrics ImpactMetric[]
+}
+
+// ============ CASE WORKFLOW ============
+
+model Case {
+  id            String   @id @default(cuid())
+  caseNumber    String   @unique // auto-generated: CS-XXXX
+  title         String
+  description   String?
+  status        String   @default("draft") // 12 statuses: draft, submitted, verifying, verified, scoring, scored, approved, disbursing, disbursed, follow_up, closed, rejected
+  priority      String   @default("normal") // urgent, high, normal, low
+  category      String   @default("zakat") // zakat, sedekah, wakaf, infak, government_aid
+  amount        Float    @default(0)
+
+  // Applicant info (legacy - will be replaced by memberId)
+  applicantName  String?
+  applicantIC    String?
+  applicantPhone String?
+  applicantAddress String?
+
+  // New: linked member
+  memberId       String?
+  member         Member?  @relation(fields: [memberId], references: [id])
+
+  programmeId    String?
+  programme      Programme? @relation(fields: [programmeId], references: [id])
+
+  creatorId      String
+  creator        User      @relation("CaseCreator", fields: [creatorId], references: [id])
+  assigneeId     String?
+  assignee       User?     @relation("CaseAssignee", fields: [assigneeId], references: [id])
+
+  verificationScore Float? @default(0)
+  welfareScore      Float? @default(0)
+  notes             String?
+  closedAt          DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  caseNotes     CaseNote[]
+  caseDocuments CaseDocument[]
+  disbursements Disbursement[]
+
+  @@index([caseNumber])
+  @@index([status])
+  @@index([memberId])
+  @@index([applicantIC])
+  @@index([applicantPhone])
+}
+
+model CaseNote {
+  id        String   @id @default(cuid())
+  content   String
+  type      String   @default("note") // note, call, visit, assessment
+  caseId    String
+  case      Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CaseDocument {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   @default("document") // ic, income_proof, medical, photo, other
+  url       String
+  caseId    String
+  case      Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  uploadedBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============ DONATION WITH ISF ============
+
+model Donation {
+  id               String   @id @default(cuid())
+  donationNumber   String   @unique // auto: DN-XXXX
+  donorName        String
+  donorIC          String?
+  donorEmail       String?
+  donorPhone       String?
+  amount           Float
+  status           String   @default("pending") // pending, confirmed, failed, refunded
+  method           String   @default("cash") // cash, bank_transfer, online, cheque, ewallet
+  channel          String?
+
+  // ISF Segregation
+  fundType         String   @default("donation_general") // zakat, sadaqah, waqf, infaq, donation_general
+  zakatCategory    String?  // fitrah, harta, pendapatan, perniagaan (if fundType=zakat)
+  zakatAuthority   String?  // LZNK, MAIPS, MAIK, etc.
+  shariahCompliant Boolean  @default(true)
+
+  isAnonymous      Boolean  @default(false)
+  isTaxDeductible  Boolean  @default(false)
+  receiptNumber    String?
+
+  programmeId      String?
+  programme        Programme? @relation(fields: [programmeId], references: [id])
+  caseId           String?
+  notes            String?
+  donatedAt        DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([fundType])
+  @@index([status])
+  @@index([donorIC])
+  @@index([donorEmail])
+  @@index([donorPhone])
+}
+
+// ============ DISBURSEMENT ============
+
+model Disbursement {
+  id            String   @id @default(cuid())
+  disbursementNumber String @unique // auto: DB-XXXX
+  amount        Float
+  purpose       String
+  status        String   @default("pending") // pending, approved, processing, completed, failed, cancelled
+  recipientName String
+  recipientIC   String?
+  recipientBank String?
+  recipientAcc  String?
+  scheduledDate DateTime?
+  processedDate DateTime?
+  receiptUrl    String?
+  notes         String?
+  approvedBy    String?
+  caseId        String?
+  case          Case?    @relation(fields: [caseId], references: [id])
+  programmeId   String?
+  programme     Programme? @relation(fields: [programmeId], references: [id])
+  memberId      String?
+  member        Member?  @relation(fields: [memberId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+}
+
+// ============ ACTIVITY / KANBAN ============
+
+model Activity {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  type         String   @default("task") // task, event, meeting, fieldwork
+  status       String   @default("planned") // planned, in_progress, completed, cancelled
+  date         DateTime?
+  endDate      DateTime?
+  location     String?
+  programmeId  String?
+  programme    Programme? @relation(fields: [programmeId], references: [id])
+  assignees    String?   // JSON array of names
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  order        Int      @default(0)
+}
+
+// ============ COMPLIANCE (Phase 4) ============
+
+model OrganizationProfile {
+  id                  String   @id @default(cuid())
+  legalName           String
+  tradeName           String?
+  registrationType    String   @default("pertubuhan") // pertubuhan, syarikat, yayasan
+  registrationNumber  String?
+  foundedDate         DateTime?
+  registeredAddress   String?
+  operatingAddress    String?
+  phone               String?
+  email               String?
+  website             String?
+
+  // Bank details
+  bankName            String?
+  bankAccount         String?
+  bankVerified        Boolean  @default(false)
+
+  // LHDN
+  lhdnApprovalRef     String?
+  lhdnApprovalExpiry  DateTime?
+  isTaxExempt         Boolean  @default(false)
+
+  // Documents
+  rosCertificateUrl   String?
+  constitutionUrl     String?
+  logoUrl             String?
+  missionStatement    String?
+  visionStatement     String?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model BoardMember {
+  id             String   @id @default(cuid())
+  name           String
+  title          String?  // title/honorific
+  role           String   // chairman, deputy_chairman, treasurer, secretary, deputy_secretary, adviser, committee
+  appointmentDate DateTime?
+  endDate        DateTime?
+  phone          String?
+  email          String?
+  photo          String?
+  bio            String?
+  isCurrent      Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Partner {
+  id               String   @id @default(cuid())
+  name             String
+  type             String   @default("ngo") // corporate, foundation, government, ngo, masjid, individual
+  relationship     String?
+  contactPerson    String?
+  contactPhone     String?
+  contactEmail     String?
+  address          String?
+  verifiedStatus   String   @default("claimed") // claimed, partner_confirmed, publicly_verified
+  verificationUrl  String?
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model ImpactMetric {
+  id                  String   @id @default(cuid())
+  programmeId         String
+  programme           Programme @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+  metricName          String
+  description         String?
+  selfReportedValue   Float?
+  verifiedValue       Float?
+  verificationSource  String?
+  verificationDate    DateTime?
+  verificationUrl     String?
+  methodology         String?
+  period              String?  // 2024, 2025, Q1-2025, etc.
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model PublicReport {
+  id          String   @id @default(cuid())
+  title       String
+  type        String   // annual, financial, impact, audit
+  year        String
+  period      String?  // e.g., "2024", "Q1-2025"
+  url         String?
+  status      String   @default("draft") // draft, published, archived
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ComplianceChecklist {
+  id          String   @id @default(cuid())
+  category    String   // registration, governance, financial, programme, transparency
+  item        String
+  description String?
+  isCompleted Boolean  @default(false)
+  completedAt DateTime?
+  evidenceUrl String?
+  notes       String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============ AUDIT LOG ============
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // create, update, delete, login, logout, export, etc.
+  entity    String   // Member, Case, Donation, etc.
+  entityId  String?
+  details   String?  // JSON
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+// ============ NOTIFICATION ============
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   @default("info") // info, warning, error, success
+  isRead    Boolean  @default(false)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  link      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============ CAPTURE (Quick Data Capture) ============
+
+model Capture {
+  id        String   @id @default(cuid())
+  type      String   // text, voice, photo, link
+  content   String
+  metadata  String?  // JSON
+  userId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============ eKYC — BNM AMLA COMPLIANT VERIFICATION ============
+
+model EKYCVerification {
+  id                String   @id @default(cuid())
+  memberId          String   @unique
+  member            Member   @relation(fields: [memberId], references: [id])
+
+  // eKYC evidence file URLs (served through authenticated upload routes)
+  icFrontUrl        String?
+  icBackUrl         String?
+
+  // OCR Results extracted from IC
+  icName            String?
+  icNumber          String?
+  icAddress         String?
+  icDateOfBirth     DateTime?
+  icGender          String?
+
+  // Selfie / Liveness Detection
+  selfieUrl         String?
+  livenessScore     Float?   // 0-100 confidence score
+  livenessMethod    String?  // blink, smile, turn_head, multi_challenge
+  faceMatchScore    Float?   // 0-100 similarity between IC photo and selfie
+
+  // Verification Status
+  status            String   @default("pending") // pending, processing, verified, rejected, expired
+  verifiedBy        String?
+  verifiedAt        DateTime?
+  rejectionReason   String?
+
+  // BNM AMLA Compliance
+  bnmCompliant      Boolean  @default(false)
+  amlaScreening     String?  // pass, fail, pending, review
+  riskLevel         String?  // low, medium, high
+  screeningNotes    String?
+
+  // Wallet / eWallet Integration
+  walletEnabled     Boolean  @default(false)
+  walletLimit       Float    @default(200) // RM200 default before eKYC
+  previousLimit     Float    @default(200)
+  limitUpgradedAt   DateTime?
+  bankTransferEnabled Boolean @default(false)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// ============ TAPSECURE — DEVICE & SECURITY MANAGEMENT ============
+
+model DeviceBinding {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+
+  deviceName        String?
+  deviceType        String?  // mobile, desktop, tablet
+  deviceFingerprint String?
+  userAgent         String?
+  ipAddress         String?
+  location          String?
+
+  isPrimary         Boolean  @default(false)
+  isTrusted         Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  otpVerified       Boolean  @default(false)
+
+  lastUsedAt        DateTime?
+  boundAt           DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model SecurityLog {
+  id                String   @id @default(cuid())
+  userId            String?
+  user              User?    @relation(fields: [userId], references: [id])
+
+  action            String   // login, device_bind, device_unbind, biometric_setup, transaction_verify, otp_sent, otp_verified, etc.
+  method            String?  // password, webauthn, device_bind, face, fingerprint, otp
+  deviceFingerprint String?
+  ipAddress         String?
+  userAgent         String?
+  status            String   @default("success") // success, failed, blocked
+  details           String?  // JSON
+
+  createdAt         DateTime @default(now())
+}
