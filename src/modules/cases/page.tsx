@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -95,6 +95,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { api } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 // ============================================================
 // Types
@@ -794,12 +796,16 @@ function CaseFormDialog({
   open,
   onOpenChange,
   editingCase,
+  onCaseSaved,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editingCase: CaseData | null;
+  onCaseSaved: () => void;
 }) {
   const isEditing = !!editingCase;
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CaseFormData>({
     resolver: zodResolver(caseFormSchema) as any,
@@ -853,10 +859,43 @@ function CaseFormDialog({
     }
   }, [editingCase, form, open]);
 
-  const onSubmit = (data: CaseFormData) => {
-    // In a real app, this would call an API
-    console.log('Form submitted:', data);
-    onOpenChange(false);
+  const onSubmit = async (data: CaseFormData) => {
+    setIsSubmitting(true);
+    try {
+      const payload: Record<string, unknown> = {
+        title: data.title,
+        description: data.description || undefined,
+        category: data.category,
+        priority: data.priority,
+        applicantName: data.applicantName,
+        applicantIC: data.applicantIC,
+        applicantPhone: data.applicantPhone,
+        applicantAddress: data.applicantAddress,
+        programmeId: data.programmeId || undefined,
+        memberId: data.memberId || undefined,
+        amount: data.amountRequested || 0,
+        notes: data.notes || undefined,
+      };
+
+      if (isEditing && editingCase) {
+        await api.put('/cases', { id: editingCase.id, ...payload });
+        toast({ title: 'Kes dikemas kini', description: 'Maklumat kes telah berjaya dikemas kini.' });
+      } else {
+        await api.post('/cases', payload);
+        toast({ title: 'Kes didaftarkan', description: 'Kes baharu telah berjaya didaftarkan.' });
+      }
+
+      onOpenChange(false);
+      onCaseSaved();
+    } catch (error: any) {
+      toast({
+        title: 'Ralat',
+        description: error?.message || (isEditing ? 'Gagal mengemas kini kes.' : 'Gagal mendaftarkan kes.'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -1151,8 +1190,8 @@ function CaseFormDialog({
               >
                 Batal
               </Button>
-              <Button type="submit">
-                {isEditing ? 'Kemas Kini' : 'Daftar Kes'}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Menyimpan...' : isEditing ? 'Kemas Kini' : 'Daftar Kes'}
               </Button>
             </DialogFooter>
           </form>
@@ -1694,6 +1733,7 @@ function CaseDetailSheet({
 
 export default function CasesPage() {
   const [cases, setCases] = useState<CaseData[]>(INITIAL_CASES);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -1703,6 +1743,28 @@ export default function CasesPage() {
   const [editingCase, setEditingCase] = useState<CaseData | null>(null);
   const [detailCase, setDetailCase] = useState<CaseData | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const { toast } = useToast();
+
+  // Fetch cases from API
+  const fetchCases = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const data = await api.get<CaseData[]>('/cases');
+      setCases(Array.isArray(data) ? data : []);
+    } catch (error: any) {
+      toast({
+        title: 'Ralat',
+        description: error?.message || 'Gagal memuatkan data kes.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchCases();
+  }, [fetchCases]);
 
   // Filter cases
   const filteredCases = useMemo(() => {
@@ -1865,7 +1927,11 @@ export default function CasesPage() {
       </div>
 
       {/* Stats Cards */}
-      <StatsCards cases={cases} onFilterByCategory={handleFilterByCategory} />
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12 text-muted-foreground">Memuatkan data kes...</div>
+      ) : (
+        <StatsCards cases={cases} onFilterByCategory={handleFilterByCategory} />
+      )}
 
       {/* Filter Bar */}
       <FilterBar
@@ -1930,6 +1996,7 @@ export default function CasesPage() {
         open={dialogOpen}
         onOpenChange={handleDialogClose}
         editingCase={editingCase}
+        onCaseSaved={fetchCases}
       />
 
       {/* Detail Sheet */}

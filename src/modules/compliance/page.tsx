@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -29,7 +29,10 @@ import {
   ListChecks,
   BarChart3,
   ArrowDownToLine,
+  Loader2,
 } from 'lucide-react';
+import { api } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 // ──────────────────────────────────────────────
 // Types
@@ -342,9 +345,61 @@ function CircularProgress({
 // ──────────────────────────────────────────────
 
 export default function CompliancePage() {
-  const [items, setItems] = useState<ChecklistItem[]>(INITIAL_ITEMS);
+  const [items, setItems] = useState<ChecklistItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey | 'semua'>('semua');
   const checklistRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  // Fetch compliance data from API
+  const fetchCompliance = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const data = await api.get<{
+        checklistItems: Array<{
+          id: string;
+          category: string;
+          item: string;
+          description: string | null;
+          isCompleted: boolean;
+          completedAt: string | null;
+        }>;
+      }>('/compliance');
+
+      if (data?.checklistItems) {
+        const mapped: ChecklistItem[] = data.checklistItems.map((ci) => ({
+          id: ci.id,
+          category: ci.category as CategoryKey,
+          title: ci.item,
+          description: ci.description || '',
+          completed: ci.isCompleted,
+          completedAt: ci.completedAt
+            ? new Date(ci.completedAt).toLocaleDateString('ms-MY', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+              })
+            : undefined,
+        }));
+        setItems(mapped);
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Ralat',
+        description: error?.message || 'Gagal memuatkan data pematuhan.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchCompliance();
+  }, [fetchCompliance]);
 
   // ── Computed Values ─────────────────────────
 
@@ -390,28 +445,59 @@ export default function CompliancePage() {
 
   // ── Handlers ────────────────────────────────
 
-  const toggleItem = useCallback((id: string) => {
+  const toggleItem = useCallback(async (id: string) => {
+    // Find current item and compute new state optimistically
+    const currentItem = items.find((i) => i.id === id);
+    if (!currentItem) return;
+    const nowCompleted = !currentItem.completed;
+    const completedAtStr = nowCompleted
+      ? new Date().toLocaleDateString('ms-MY', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        })
+      : undefined;
+
+    // Optimistic update
     setItems((prev) =>
-      prev.map((item) => {
-        if (item.id !== id) return item;
-        const nowCompleted = !item.completed;
-        return {
-          ...item,
-          completed: nowCompleted,
-          completedAt: nowCompleted
-            ? new Date().toLocaleDateString('ms-MY', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true,
-              }).replace('PG', 'PG').replace('PTG', 'PTG')
-            : undefined,
-        };
-      }),
+      prev.map((item) =>
+        item.id !== id
+          ? item
+          : { ...item, completed: nowCompleted, completedAt: completedAtStr }
+      ),
     );
-  }, []);
+
+    // Persist to API
+    try {
+      await api.put('/compliance', {
+        id,
+        isCompleted: nowCompleted,
+      });
+      toast({
+        title: nowCompleted ? 'Protokol disahkan' : 'Protokol dibatalkan',
+        description: nowCompleted
+          ? 'Status pematuhan telah dikemas kini.'
+          : 'Pengesahan protokol telah dibatalkan.',
+      });
+    } catch (error: any) {
+      // Revert on error
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id !== id
+            ? item
+            : { ...item, completed: !nowCompleted, completedAt: currentItem.completedAt }
+        ),
+      );
+      toast({
+        title: 'Ralat',
+        description: error?.message || 'Gagal mengemas kini status pematuhan.',
+        variant: 'destructive',
+      });
+    }
+  }, [items, toast]);
 
   const scrollToChecklist = useCallback(() => {
     checklistRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -423,6 +509,15 @@ export default function CompliancePage() {
   }, [scrollToChecklist]);
 
   // ── Render ──────────────────────────────────
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-transparent flex flex-col items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-sm text-muted-foreground">Memuatkan data pematuhan...</p>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider delayDuration={300}>
