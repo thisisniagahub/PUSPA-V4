@@ -13,17 +13,27 @@ export interface HermesChatMessage {
   timestamp: string
   isToolResult?: boolean
   toolName?: string
+  toolResults?: { name: string; result: unknown }[]
   isStreaming?: boolean
   provider?: ProviderId
   model?: string
   latencyMs?: number
+  clientAction?: {
+    type: 'navigate' | 'create' | 'update' | 'delete' | 'export' | 'refresh' | 'notification'
+    viewId?: string
+    module?: string
+    recordId?: string
+    message?: string
+  }
 }
 
 export interface HermesClientAction {
-  type: 'navigate' | 'create'
+  type: 'navigate' | 'create' | 'update' | 'delete' | 'export'
   viewId?: ViewId
   module?: string
+  recordId?: string
   prefill?: Record<string, unknown>
+  message?: string
 }
 
 export interface HermesProviderState {
@@ -46,13 +56,14 @@ export interface HermesState {
   showSettings: boolean
   providerState: HermesProviderState
   conversationId: string | null
+  showHistory: boolean
 
   setOpen: (open: boolean) => void
   toggleOpen: () => void
   setStatus: (status: HermesStatus) => void
   addMessage: (msg: Omit<HermesChatMessage, 'id' | 'timestamp'>) => void
   updateLastMessage: (content: string) => void
-  finalizeLastMessage: (meta?: { provider?: ProviderId; model?: string; latencyMs?: number }) => void
+  finalizeLastMessage: (meta?: { provider?: ProviderId; model?: string; latencyMs?: number; clientAction?: HermesChatMessage['clientAction'] }) => void
   clearMessages: () => void
   setCurrentView: (view: ViewId) => void
   setUserRole: (role: AppRole) => void
@@ -60,6 +71,7 @@ export interface HermesState {
   addPendingAction: (action: HermesClientAction) => void
   consumePendingAction: () => HermesClientAction | undefined
   setShowSettings: (show: boolean) => void
+  setShowHistory: (show: boolean) => void
   setProviderState: (state: Partial<HermesProviderState>) => void
   sendMessage: (text: string) => Promise<void>
   sendMessageStream: (text: string) => Promise<void>
@@ -77,6 +89,7 @@ export const useHermesStore = create<HermesState>()(
       locale: 'ms',
       pendingActions: [],
       showSettings: false,
+      showHistory: false,
       providerState: {
         provider: 'zai' as ProviderId,
         model: 'default',
@@ -101,7 +114,7 @@ export const useHermesStore = create<HermesState>()(
         const msgs = [...s.messages]
         const last = msgs[msgs.length - 1]
         if (last && last.role === 'assistant') {
-          msgs[msgs.length - 1] = { ...last, content }
+          msgs[msgs.length - 1] = { ...last, content: last.content + content }
         }
         return { messages: msgs }
       }),
@@ -115,6 +128,7 @@ export const useHermesStore = create<HermesState>()(
             ...(meta?.provider ? { provider: meta.provider } : {}),
             ...(meta?.model ? { model: meta.model } : {}),
             ...(meta?.latencyMs ? { latencyMs: meta.latencyMs } : {}),
+            ...(meta?.clientAction ? { clientAction: meta.clientAction } : {}),
           }
         }
         return { messages: msgs, status: 'idle' }
@@ -134,6 +148,7 @@ export const useHermesStore = create<HermesState>()(
         return first
       },
       setShowSettings: (show) => set({ showSettings: show }),
+      setShowHistory: (show) => set({ showHistory: show }),
       setProviderState: (state) => set((s) => ({
         providerState: { ...s.providerState, ...state },
       })),
@@ -168,7 +183,20 @@ export const useHermesStore = create<HermesState>()(
             provider: data.provider,
             model: data.model,
             latencyMs: data.latencyMs,
+            clientAction: data.clientAction,
           })
+
+          // Process client actions
+          if (data.clientAction) {
+            const { addPendingAction } = get()
+            addPendingAction(data.clientAction)
+          }
+          if (data.clientActions) {
+            const { addPendingAction } = get()
+            for (const action of data.clientActions) {
+              addPendingAction(action)
+            }
+          }
 
           setStatus('idle')
         } catch (error) {
@@ -205,7 +233,6 @@ export const useHermesStore = create<HermesState>()(
           // Check if response is actually a stream
           const contentType = response.headers.get('content-type') || ''
           if (contentType.includes('text/event-stream')) {
-            // Handle SSE stream
             const reader = response.body?.getReader()
             if (!reader) throw new Error('No stream reader')
 
@@ -229,7 +256,12 @@ export const useHermesStore = create<HermesState>()(
                 try {
                   const chunk = JSON.parse(data)
                   if (chunk.type === 'content' && chunk.content) {
-                    updateLastMessage(chunk.content) // Append-style handled in component
+                    updateLastMessage(chunk.content)
+                  }
+                  if (chunk.type === 'tool_call' && chunk.toolCall) {
+                    // Handle streaming tool calls
+                    const { addPendingAction } = get()
+                    // Will be processed after stream completes
                   }
                   if (chunk.type === 'done') {
                     finalizeLastMessage({
@@ -260,7 +292,13 @@ export const useHermesStore = create<HermesState>()(
               provider: data.provider,
               model: data.model,
               latencyMs: data.latencyMs,
+              clientAction: data.clientAction,
             })
+
+            // Process client actions
+            if (data.clientAction) {
+              get().addPendingAction(data.clientAction)
+            }
           }
         } catch (error) {
           finalizeLastMessage()
@@ -298,7 +336,7 @@ export const useHermesStore = create<HermesState>()(
         locale: state.locale,
         messages: state.messages.slice(-30).map(m => ({
           ...m,
-          isStreaming: false, // Don't persist streaming state
+          isStreaming: false,
         })),
         providerState: {
           provider: state.providerState.provider,

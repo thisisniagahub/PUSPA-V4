@@ -2,6 +2,7 @@
 // Hermes Agent — Multi-Provider Transport System
 // Inspired by NousResearch Hermes Agent provider architecture
 // Supports: z-ai-web-dev-sdk (default/free), OpenRouter, Ollama
+// Enhanced with native function calling & retry logic
 // ============================================================
 
 export type ProviderId = 'zai' | 'openrouter' | 'ollama'
@@ -17,6 +18,19 @@ export interface LLMMessage {
 export interface LLMToolCall {
   name: string
   arguments: Record<string, unknown>
+}
+
+export interface LLMToolDefinition {
+  type: 'function'
+  function: {
+    name: string
+    description: string
+    parameters: {
+      type: 'object'
+      properties: Record<string, unknown>
+      required: string[]
+    }
+  }
 }
 
 export interface LLMResponse {
@@ -66,17 +80,31 @@ async function callZAI(
 }
 
 // ============================================================
-// OpenRouter Provider
+// OpenRouter Provider (with native function calling support)
 // ============================================================
 async function callOpenRouter(
   messages: LLMMessage[],
   model: string,
   apiKey: string,
+  tools?: LLMToolDefinition[],
 ): Promise<LLMResponse> {
   const start = Date.now()
   const baseUrl = 'https://openrouter.ai/api/v1'
 
-  const response = await fetch(`${baseUrl}/chat/completions`, {
+  const body: Record<string, unknown> = {
+    model,
+    messages: messages.map(m => ({ role: m.role, content: m.content })),
+    temperature: 0.7,
+    max_tokens: 4096,
+  }
+
+  // Add native function calling tools if provided
+  if (tools && tools.length > 0) {
+    body.tools = tools
+    body.tool_choice = 'auto'
+  }
+
+  const response = await fetchWithRetry(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -84,12 +112,7 @@ async function callOpenRouter(
       'HTTP-Referer': 'https://puspacare.app',
       'X-Title': 'PuspaCare Hermes Agent',
     },
-    body: JSON.stringify({
-      model,
-      messages: messages.map(m => ({ role: m.role, content: m.content })),
-      temperature: 0.7,
-      max_tokens: 4096,
-    }),
+    body: JSON.stringify(body),
   })
 
   if (!response.ok) {
@@ -98,10 +121,27 @@ async function callOpenRouter(
   }
 
   const data = await response.json()
-  const content = data.choices?.[0]?.message?.content || ''
+  const choice = data.choices?.[0]
+  const content = choice?.message?.content || ''
+
+  // Parse native tool calls if present
+  const toolCalls: LLMToolCall[] = []
+  if (choice?.message?.tool_calls) {
+    for (const tc of choice.message.tool_calls) {
+      try {
+        const args = typeof tc.function.arguments === 'string'
+          ? JSON.parse(tc.function.arguments)
+          : tc.function.arguments
+        toolCalls.push({ name: tc.function.name, arguments: args })
+      } catch {
+        // Skip malformed tool calls
+      }
+    }
+  }
 
   return {
     content,
+    toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
     provider: 'openrouter',
     model: data.model || model,
     usage: data.usage ? {
@@ -124,7 +164,7 @@ async function callOllama(
   const start = Date.now()
   const url = baseUrl.replace(/\/$/, '')
 
-  const response = await fetch(`${url}/chat/completions`, {
+  const response = await fetchWithRetry(`${url}/chat/completions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -157,6 +197,67 @@ async function callOllama(
 }
 
 // ============================================================
+// Fetch with Retry (exponential backoff, max 2 retries)
+// ============================================================
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 2): Promise<Response> {
+  let lastError: Error | null = null
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options)
+      if (response.status === 429 || response.status >= 500) {
+        if (attempt < maxRetries) {
+          const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500
+          await new Promise(resolve => setTimeout(resolve, delay))
+          continue
+        }
+      }
+      return response
+    } catch (error: any) {
+      lastError = error
+      if (attempt < maxRetries) {
+        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+    }
+  }
+
+  throw lastError || new Error('Request failed after retries')
+}
+
+// ============================================================
+// Convert Hermes tools to OpenAI function calling format
+// ============================================================
+export async function convertToOpenAITools(): Promise<LLMToolDefinition[]> {
+  // Import lazily to avoid circular deps
+  const { hermesTools } = await import('./advanced-tools')
+  return hermesTools.map(tool => ({
+    type: 'function' as const,
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: {
+        type: 'object' as const,
+        properties: Object.fromEntries(
+          Object.entries(tool.parameters).map(([name, p]) => [
+            name,
+            {
+              type: p.type,
+              description: p.description,
+              ...(p.enum ? { enum: p.enum } : {}),
+              ...(p.default !== undefined ? { default: p.default } : {}),
+            },
+          ])
+        ),
+        required: Object.entries(tool.parameters)
+          .filter(([, p]) => p.required)
+          .map(([name]) => name),
+      },
+    },
+  }))
+}
+
+// ============================================================
 // Unified Provider Call
 // ============================================================
 export async function callLLM(params: {
@@ -165,16 +266,19 @@ export async function callLLM(params: {
   model?: string
   apiKey?: string
   baseUrl?: string
+  useFunctionCalling?: boolean
 }): Promise<LLMResponse> {
-  const { provider, messages, model, apiKey, baseUrl } = params
+  const { provider, messages, model, apiKey, baseUrl, useFunctionCalling } = params
 
   switch (provider) {
     case 'zai':
       return callZAI(messages, model)
 
-    case 'openrouter':
+    case 'openrouter': {
       if (!apiKey) throw new Error('OpenRouter memerlukan API key. Dapatkan di openrouter.ai/keys')
-      return callOpenRouter(messages, model || PROVIDERS.openrouter.defaultModel, apiKey)
+      const tools = useFunctionCalling ? await convertToOpenAITools() : undefined
+      return callOpenRouter(messages, model || PROVIDERS.openrouter.defaultModel, apiKey, tools)
+    }
 
     case 'ollama':
       if (!baseUrl) throw new Error('Ollama memerlukan base URL (contoh: http://localhost:11434/v1)')
@@ -221,7 +325,6 @@ export async function streamLLM(params: {
       'X-Title': 'PuspaCare Hermes Agent',
     }
   } else {
-    // ollama
     if (!baseUrl) throw new Error('Ollama memerlukan base URL')
     url = `${baseUrl.replace(/\/$/, '')}/chat/completions`
     headers = { 'Content-Type': 'application/json' }
@@ -273,6 +376,24 @@ export async function streamLLM(params: {
           const delta = parsed.choices?.[0]?.delta
           if (delta?.content) {
             onChunk({ type: 'content', content: delta.content })
+          }
+          // Handle streaming tool calls from OpenRouter
+          if (delta?.tool_calls) {
+            for (const tc of delta.tool_calls) {
+              if (tc.function?.name) {
+                try {
+                  const args = typeof tc.function.arguments === 'string'
+                    ? JSON.parse(tc.function.arguments)
+                    : tc.function.arguments || {}
+                  onChunk({
+                    type: 'tool_call',
+                    toolCall: { name: tc.function.name, arguments: args },
+                  })
+                } catch {
+                  // Skip malformed
+                }
+              }
+            }
           }
           if (parsed.usage) {
             onChunk({

@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { buildHermesSystemPrompt } from '@/lib/hermes/prompt'
-import { executeToolCall, hermesTools } from '@/lib/hermes/tools'
+import { parseToolCalls, parseActionCalls, cleanToolTags, executeToolCall, executeToolChain } from '@/lib/hermes/tools'
 import { detectLocale } from '@/lib/hermes/lang-detect'
 import { callLLM, streamLLM, getProviderConfig } from '@/lib/hermes/providers'
 import type { ProviderId } from '@/lib/hermes/providers'
-import { buildMemoryContext, extractAndStoreMemories } from '@/lib/hermes/memory'
-import { findMatchingSkills, buildSkillsContext, recordSkillUsage } from '@/lib/hermes/skills'
+import { buildEnhancedMemoryContext, extractAndStoreMemories } from '@/lib/hermes/memory'
+import { findMatchingSkills, buildEnhancedSkillsContext, recordSkillUsage } from '@/lib/hermes/skills'
 import { db } from '@/lib/db'
 import type { HermesChatRequest } from '@/lib/hermes/types'
+import type { ToolExecutionContext, HermesClientAction } from '@/lib/hermes/types'
 
 export const runtime = 'nodejs'
 
 // ============================================================
-// Non-streaming chat endpoint
+// Main Chat Endpoint — Enhanced with multi-step tool execution
 // ============================================================
 export async function POST(request: NextRequest) {
   try {
@@ -42,48 +43,45 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Build context
-    const systemPrompt = buildHermesSystemPrompt({ currentView, userRole, locale })
-    const memoryContext = await buildMemoryContext(userId)
-    const skillsContext = await buildSkillsContext(userId)
+    // Build execution context
+    const toolContext: ToolExecutionContext = { userId, userRole, currentView }
+
+    // Gather context data for prompt
+    const pendingCasesCount = await db.case.count({ where: { status: { in: ['submitted', 'verifying', 'verified', 'scoring'] } } }).catch(() => 0)
+    const unreadNotifications = await db.notification.count({ where: { userId, isRead: false } }).catch(() => 0)
+
+    // Build enhanced system prompt
+    const systemPrompt = buildHermesSystemPrompt({
+      currentView,
+      userRole,
+      locale,
+      pendingCasesCount,
+      unreadNotifications,
+    })
+
+    // Build memory and skills context
+    const memoryContext = await buildEnhancedMemoryContext(userId, lastUserMsg?.content)
+    const skillsContext = await buildEnhancedSkillsContext(userId, lastUserMsg?.content)
 
     // Find matching skills
     const matchingSkills = lastUserMsg ? await findMatchingSkills(lastUserMsg.content, userId) : []
 
-    // Build tool descriptions
-    const toolDescriptions = hermesTools.map(t => {
-      const params = Object.entries(t.parameters)
-        .map(([name, p]) => `${name}: ${p.type}${p.required ? ' (required)' : ''} — ${p.description}`)
-        .join('; ')
-      return `[${t.name}](${params}): ${t.description}`
-    }).join('\n')
-
-    // Build skill tools
-    const skillTools = matchingSkills.length > 0
-      ? `\n\n## Active Skills\n${matchingSkills.map(s =>
-          `[skill:${s.name}](instruction: string): Execute the "${s.name}" skill — ${s.description}`
-        ).join('\n')}`
-      : ''
-
+    // Build the full system message
     const fullSystemMessage = `${systemPrompt}
 
 ${memoryContext ? `\n${memoryContext}\n` : ''}
 ${skillsContext ? `\n${skillsContext}\n` : ''}
 
-## Available Data Tools
-You have these tools to query REAL data from the database. Respond with a JSON tool call embedded in your response using this exact format:
+## Tool Call Instructions
+When you need to access data or perform actions, use tools by embedding them in your response:
+<<TOOL:tool_name>>{"param":"value"}<</TOOL>>
 
-<<TOOL:tool_name>>{"param1":"value1","param2":"value2"}<</TOOL>>
-
-For example: <<TOOL:query_stats>>{"module":"members"}<</TOOL>>
-
-Available tools:
-${toolDescriptions}
-${skillTools}
+You can make MULTIPLE tool calls in one response. For client actions:
+<<ACTION:navigate>>{"viewId":"members"}<</ACTION>>
 
 IMPORTANT: 
 - Use tools whenever users ask about numbers, statistics, or data
-- Only use ONE tool call per response
+- You can call multiple tools in a single response for comprehensive answers
 - After getting tool results, provide a clear, formatted answer
 - If you don't need a tool, just respond normally without any <<TOOL>> tags`
 
@@ -95,7 +93,7 @@ IMPORTANT:
       })),
     ]
 
-    // Call LLM with the selected provider
+    // Call LLM
     const startTime = Date.now()
     const result = await callLLM({
       provider: providerConfig.provider,
@@ -103,35 +101,28 @@ IMPORTANT:
       model: providerConfig.model,
       apiKey: providerConfig.apiKey,
       baseUrl: providerConfig.baseUrl,
+      useFunctionCalling: providerConfig.provider === 'openrouter', // Use native function calling for OpenRouter
     })
 
     let assistantContent = result.content || 'Maaf, saya tidak dapat memproses permintaan anda.'
+    let clientActions: HermesClientAction[] = []
 
-    // Check for tool calls and execute them
-    const toolCallRegex = /<<TOOL:(\w+)>>([\s\S]*?)<<\/TOOL>>/
-    const toolMatch = assistantContent.match(toolCallRegex)
-
-    let toolResult: unknown = null
-    let toolName: string | undefined
-    let finalContent = assistantContent
-
-    if (toolMatch) {
-      toolName = toolMatch[1]
-      let toolArgs: Record<string, unknown> = {}
-      try {
-        toolArgs = JSON.parse(toolMatch[2].trim())
-      } catch {
-        toolArgs = {}
+    // Handle native function calling tool results (from OpenRouter)
+    if (result.toolCalls && result.toolCalls.length > 0) {
+      const toolResults: { name: string; result: unknown }[] = []
+      for (const tc of result.toolCalls) {
+        const toolResult = await executeToolCall(tc.name, tc.arguments, toolContext)
+        toolResults.push({ name: tc.name, result: toolResult })
+        if (toolResult.success && toolResult.clientAction) {
+          clientActions.push(toolResult.clientAction)
+        }
       }
-
-      // Execute the tool
-      toolResult = await executeToolCall(toolName, toolArgs)
 
       // Ask LLM to format the response with tool results
       const formatMessages = [
         { role: 'system' as const, content: fullSystemMessage },
-        { role: 'user' as const, content: messages[messages.length - 1]?.content || '' },
-        { role: 'assistant' as const, content: `I called tool ${toolName} with args ${JSON.stringify(toolArgs)} and got this result:\n\n${JSON.stringify(toolResult, null, 2)}\n\nPlease format a helpful response based on this data. Respond in ${locale === 'ms' ? 'Bahasa Melayu' : 'English'}.` },
+        { role: 'user' as const, content: lastUserMsg?.content || '' },
+        { role: 'assistant' as const, content: `I called tools and got results:\n\n${toolResults.map(r => `**${r.name}**: ${JSON.stringify(r.result, null, 2)}`).join('\n\n')}\n\nPlease format a helpful response based on this data. Respond in ${locale === 'ms' ? 'Bahasa Melayu' : 'English'}.` },
       ]
 
       const formatResult = await callLLM({
@@ -141,38 +132,88 @@ IMPORTANT:
         apiKey: providerConfig.apiKey,
         baseUrl: providerConfig.baseUrl,
       })
+      assistantContent = formatResult.content || assistantContent
+    } else {
+      // Parse embedded <<TOOL:>> calls from text
+      const toolCalls = parseToolCalls(assistantContent)
+      const actionCalls = parseActionCalls(assistantContent)
 
-      finalContent = formatResult.content || assistantContent.replace(toolCallRegex, '').trim()
+      if (toolCalls.length > 0) {
+        // Execute tool chain (supports multiple tools)
+        const chainResult = await executeToolChain(toolCalls, toolContext)
 
-      // Record skill usage if matched
-      if (matchingSkills.length > 0) {
-        for (const skill of matchingSkills) {
-          await recordSkillUsage(skill.id, true)
+        // Collect client actions from tool results
+        clientActions = chainResult.clientActions
+
+        // Parse action calls too
+        for (const ac of actionCalls) {
+          if (ac.actionType === 'navigate') {
+            clientActions.push({ type: 'navigate', viewId: ac.args.viewId as string })
+          } else if (ac.actionType === 'create') {
+            clientActions.push({ type: 'create', module: ac.args.module as string, prefill: ac.args.prefill as Record<string, unknown> })
+          }
+        }
+
+        // Format response with tool results
+        const toolResultSummary = chainResult.allResults.map((r, i) => {
+          const name = toolCalls[i]?.toolName || 'unknown'
+          return `**${name}**: ${JSON.stringify(r.data || r.error, null, 2)}`
+        }).join('\n\n')
+
+        const formatMessages = [
+          { role: 'system' as const, content: fullSystemMessage },
+          { role: 'user' as const, content: lastUserMsg?.content || '' },
+          { role: 'assistant' as const, content: `I called ${chainResult.steps.length} tool(s) and got results:\n\n${toolResultSummary}\n\nPlease format a helpful, concise response based on this data. Respond in ${locale === 'ms' ? 'Bahasa Melayu' : 'English'}.` },
+        ]
+
+        const formatResult = await callLLM({
+          provider: providerConfig.provider,
+          messages: formatMessages,
+          model: providerConfig.model,
+          apiKey: providerConfig.apiKey,
+          baseUrl: providerConfig.baseUrl,
+        })
+        assistantContent = formatResult.content || cleanToolTags(assistantContent)
+
+        // Record skill usage for matched skills
+        if (matchingSkills.length > 0) {
+          for (const skill of matchingSkills) {
+            await recordSkillUsage(skill.id, chainResult.success).catch(() => {})
+          }
+        }
+      } else {
+        // Clean any stray tags
+        assistantContent = cleanToolTags(assistantContent)
+
+        // Process action calls even without tool calls
+        for (const ac of actionCalls) {
+          if (ac.actionType === 'navigate') {
+            clientActions.push({ type: 'navigate', viewId: ac.args.viewId as string })
+          }
         }
       }
     }
 
-    // Extract and store memories
+    // Extract and store memories (non-blocking)
     if (lastUserMsg) {
-      await extractAndStoreMemories({
+      extractAndStoreMemories({
         userId,
         userMessage: lastUserMsg.content,
-        assistantMessage: finalContent,
+        assistantMessage: assistantContent,
         provider: providerConfig.provider,
         model: providerConfig.model,
-      }).catch(() => {}) // Non-blocking
+      }).catch(() => {})
 
-      // Save conversation to DB
-      await saveConversationTurn(userId, {
+      // Save conversation to DB (non-blocking)
+      saveConversationTurn(userId, {
         currentView: currentView || 'dashboard',
         provider: providerConfig.provider,
         model: providerConfig.model,
         userMessage: lastUserMsg.content,
-        assistantMessage: finalContent,
-        toolName,
-        toolResult,
+        assistantMessage: assistantContent,
+        toolCallsMade: parseToolCalls(result.content).map(tc => tc.toolName),
         latencyMs: Date.now() - startTime,
-      }).catch(() => {}) // Non-blocking
+      }).catch(() => {})
     }
 
     return NextResponse.json({
@@ -180,12 +221,13 @@ IMPORTANT:
       data: {
         message: {
           role: 'assistant',
-          content: finalContent,
+          content: assistantContent,
         },
-        toolResult: toolResult ? { name: toolName, result: toolResult } : undefined,
+        clientAction: clientActions[0] || undefined,
+        clientActions: clientActions.length > 1 ? clientActions : undefined,
         provider: providerConfig.provider,
         model: result.model,
-        latencyMs: result.latencyMs,
+        latencyMs: Date.now() - startTime,
       },
     })
   } catch (error: any) {
@@ -198,7 +240,7 @@ IMPORTANT:
 }
 
 // ============================================================
-// Streaming handler (SSE)
+// Streaming handler (SSE) — Enhanced
 // ============================================================
 async function handleStreamingChat(params: {
   messages: HermesChatRequest['messages']
@@ -209,34 +251,22 @@ async function handleStreamingChat(params: {
   providerConfig: { provider: ProviderId; model: string; apiKey?: string; baseUrl?: string }
 }): Promise<NextResponse> {
   const { messages, currentView, userRole, locale, userId, providerConfig } = params
+  const toolContext: ToolExecutionContext = { userId, userRole, currentView }
 
   const systemPrompt = buildHermesSystemPrompt({ currentView, userRole, locale })
-  const memoryContext = await buildMemoryContext(userId)
-  const skillsContext = await buildSkillsContext(userId)
-
-  const toolDescriptions = hermesTools.map(t => {
-    const params = Object.entries(t.parameters)
-      .map(([name, p]) => `${name}: ${p.type}${p.required ? ' (required)' : ''} — ${p.description}`)
-      .join('; ')
-    return `[${t.name}](${params}): ${t.description}`
-  }).join('\n')
+  const memoryContext = await buildEnhancedMemoryContext(userId)
+  const skillsContext = await buildEnhancedSkillsContext(userId)
 
   const fullSystemMessage = `${systemPrompt}
 
 ${memoryContext ? `\n${memoryContext}\n` : ''}
 ${skillsContext ? `\n${skillsContext}\n` : ''}
 
-## Available Data Tools
-When users ask about data, respond with a JSON tool call embedded in your response using this exact format:
-<<TOOL:tool_name>>{"param1":"value1"}<</TOOL>>
+## Tool Call Instructions
+When you need data, respond with tool calls: <<TOOL:tool_name>>{"param":"value"}<</TOOL>>
+For navigation: <<ACTION:navigate>>{"viewId":"members"}<</ACTION>>
 
-Available tools:
-${toolDescriptions}
-
-IMPORTANT: 
-- Use tools whenever users ask about numbers, statistics, or data
-- Only use ONE tool call per response
-- If you don't need a tool, just respond normally without any <<TOOL>> tags`
+IMPORTANT: Use tools for data queries. Multiple tools allowed per response.`
 
   const allMessages = [
     { role: 'system' as const, content: fullSystemMessage },
@@ -288,13 +318,12 @@ async function saveConversationTurn(userId: string, data: {
   model: string
   userMessage: string
   assistantMessage: string
-  toolName?: string
-  toolResult?: unknown
+  toolCallsMade?: string[]
   latencyMs: number
 }) {
   // Find or create conversation
   let conversation = await db.hermesConversation.findFirst({
-    where: { userId, updatedAt: { gte: new Date(Date.now() - 3600000) } }, // Last hour
+    where: { userId, updatedAt: { gte: new Date(Date.now() - 3600000) } },
     orderBy: { updatedAt: 'desc' },
   })
 
@@ -326,8 +355,7 @@ async function saveConversationTurn(userId: string, data: {
       conversationId: conversation.id,
       role: 'assistant',
       content: data.assistantMessage,
-      toolCalls: data.toolName ? JSON.stringify([{ name: data.toolName }]) : null,
-      toolResults: data.toolResult ? JSON.stringify(data.toolResult) : null,
+      toolCalls: data.toolCallsMade && data.toolCallsMade.length > 0 ? JSON.stringify(data.toolCallsMade.map(name => ({ name }))) : null,
       provider: data.provider,
       model: data.model,
       latencyMs: data.latencyMs,

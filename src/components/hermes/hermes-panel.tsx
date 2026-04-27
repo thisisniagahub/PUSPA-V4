@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, RotateCcw, X, Settings, Send, Zap, Brain, ChevronDown, Loader2 } from 'lucide-react'
+import { Sparkles, RotateCcw, X, Settings, Send, Zap, Brain, ChevronDown, Loader2, History, Wrench, AlertTriangle, CheckCircle2, ArrowRight, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -20,7 +20,7 @@ export function HermesPanel() {
   const {
     isOpen, status, messages, currentView, showSettings,
     clearMessages, sendMessage, sendMessageStream,
-    providerState, setShowSettings,
+    providerState, setShowSettings, addPendingAction, consumePendingAction,
   } = useHermesStore()
 
   const [input, setInput] = useState('')
@@ -41,12 +41,19 @@ export function HermesPanel() {
     }
   }, [isOpen])
 
+  // Process pending actions
+  useEffect(() => {
+    const action = consumePendingAction()
+    if (action?.type === 'navigate' && action.viewId) {
+      // Navigation will be handled by the parent shell
+    }
+  }, [messages])
+
   const handleSend = useCallback(async () => {
     const text = input.trim()
     if (!text || status === 'thinking' || status === 'streaming') return
 
     setInput('')
-    // Use streaming for OpenRouter/Ollama, regular for Z-AI
     if (providerState.provider === 'zai') {
       await sendMessage(text)
     } else {
@@ -66,14 +73,17 @@ export function HermesPanel() {
 
   if (!isOpen) return null
 
+  // Count tools used in conversation
+  const toolsUsed = messages.filter(m => m.isToolResult || m.toolName).length
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20, scale: 0.95 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="fixed bottom-24 right-6 z-50 flex h-[560px] w-[400px] flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl lg:bottom-28 lg:right-8"
-      style={{ maxHeight: 'calc(100vh - 140px)' }}
+      className="fixed bottom-24 right-6 z-50 flex flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl lg:bottom-28 lg:right-8"
+      style={{ width: '420px', height: '600px', maxHeight: 'calc(100vh - 140px)' }}
     >
       {/* Header */}
       <HermesChatHeader />
@@ -104,9 +114,25 @@ export function HermesPanel() {
             </div>
             <div>
               <h3 className="text-lg font-bold text-foreground">Hermes ✨</h3>
-              <p className="text-sm text-muted-foreground mt-1 max-w-[260px]">
-                Ejen AI pintar PUSPA yang belajar dan bertambah baik dari pengalaman
+              <p className="text-sm text-muted-foreground mt-1 max-w-[280px]">
+                Ejen AI pintar PUSPA dengan akses penuh ke seluruh sistem — boleh cari, cipta, kemaskini, dan analisis data
               </p>
+            </div>
+
+            {/* Capability Badges */}
+            <div className="flex flex-wrap justify-center gap-1.5">
+              <Badge variant="outline" className="text-[10px] gap-1 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800">
+                <Search className="h-3 w-3" /> Carian
+              </Badge>
+              <Badge variant="outline" className="text-[10px] gap-1 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">
+                <Wrench className="h-3 w-3" /> CRUD
+              </Badge>
+              <Badge variant="outline" className="text-[10px] gap-1 bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800">
+                <Brain className="h-3 w-3" /> Analisis
+              </Badge>
+              <Badge variant="outline" className="text-[10px] gap-1 bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800">
+                <Zap className="h-3 w-3" /> Automasi
+              </Badge>
             </div>
 
             {/* Provider Badge */}
@@ -120,7 +146,7 @@ export function HermesPanel() {
 
             {/* Quick Actions */}
             <div className="flex flex-wrap justify-center gap-2 mt-2">
-              {quickActions.slice(0, 4).map((action) => (
+              {quickActions.slice(0, 5).map((action) => (
                 <button
                   key={action.id}
                   onClick={() => {
@@ -167,7 +193,7 @@ export function HermesPanel() {
       {messages.length > 0 && status === 'idle' && (
         <div className="border-t px-3 py-2">
           <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
-            {quickActions.slice(0, 3).map((action) => (
+            {quickActions.slice(0, 4).map((action) => (
               <button
                 key={action.id}
                 onClick={() => setInput(action.query)}
@@ -189,7 +215,7 @@ export function HermesPanel() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={status === 'thinking' || status === 'streaming' ? 'Hermes sedang berfikir...' : 'Tanya Hermes...'}
+              placeholder={status === 'thinking' || status === 'streaming' ? 'Hermes sedang berfikir...' : 'Tanya Hermes apa-apa tentang PUSPA...'}
               disabled={status === 'thinking' || status === 'streaming'}
               className="pr-2 text-sm h-10 rounded-xl border-border focus-visible:ring-emerald-500/30"
             />
@@ -220,6 +246,11 @@ export function HermesPanel() {
                 {providerState.model.split('/').pop()?.slice(0, 20)}
               </Badge>
             )}
+            {toolsUsed > 0 && (
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 gap-1 text-emerald-600 border-emerald-200">
+                <Wrench className="h-2.5 w-2.5" /> {toolsUsed}
+              </Badge>
+            )}
           </div>
 
           <div className="flex items-center gap-1">
@@ -245,5 +276,15 @@ export function HermesPanel() {
         </div>
       </div>
     </motion.div>
+  )
+}
+
+// Simple Search icon component for the capability badge
+function Search({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
   )
 }
