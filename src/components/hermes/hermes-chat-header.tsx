@@ -1,44 +1,68 @@
 'use client'
 
-import { Sparkles, RotateCcw, X } from 'lucide-react'
+import { Sparkles, RotateCcw, X, Settings, Brain, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useHermesStore } from '@/stores/hermes-store'
 import { viewLabels } from '@/types'
+import { PROVIDERS } from '@/lib/hermes/provider-types'
 
 export function HermesChatHeader() {
-  const { currentView, clearMessages, setOpen, messages } = useHermesStore()
+  const { currentView, clearMessages, setOpen, messages, showSettings, setShowSettings, providerState } = useHermesStore()
 
   const moduleLabel = viewLabels[currentView] || 'Dashboard'
+  const providerInfo = PROVIDERS[providerState.provider]
 
   return (
     <div className="flex items-center justify-between border-b bg-background/95 backdrop-blur-sm px-4 py-3">
       <div className="flex items-center gap-2.5 min-w-0">
         {/* Hermes avatar */}
         <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
           style={{
-            background: 'linear-gradient(135deg, #10b981 0%, #14b8a6 100%)',
+            background: 'linear-gradient(135deg, #10b981 0%, #14b8a6 50%, #0d9488 100%)',
           }}
         >
-          <Sparkles className="h-4 w-4 text-white" />
+          <Sparkles className="h-5 w-5 text-white" />
         </div>
 
         <div className="flex flex-col min-w-0">
-          <span className="text-sm font-semibold text-foreground flex items-center gap-1">
-            Hermes
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-bold text-foreground">Hermes</span>
             <span className="text-emerald-500">✨</span>
-          </span>
-          <Badge
-            variant="secondary"
-            className="text-[10px] px-1.5 py-0 h-4 w-fit mt-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-          >
-            {moduleLabel}
-          </Badge>
+            <Badge
+              variant="secondary"
+              className="text-[9px] px-1.5 py-0 h-4 gap-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+            >
+              {providerInfo.icon} {providerInfo.name}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <Badge
+              variant="secondary"
+              className="text-[10px] px-1.5 py-0 h-4 w-fit bg-muted text-muted-foreground"
+            >
+              {moduleLabel}
+            </Badge>
+            {messages.length > 0 && (
+              <span className="text-[9px] text-muted-foreground">
+                {messages.length} mesej
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-0.5 shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+          onClick={() => setShowSettings(!showSettings)}
+          aria-label="Tetapan provider"
+        >
+          <Settings className="h-3.5 w-3.5" />
+        </Button>
         {messages.length > 0 && (
           <Button
             variant="ghost"

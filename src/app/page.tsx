@@ -10,6 +10,7 @@ import { useTheme } from 'next-themes';
 
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/stores/app-store';
+import { useHermesStore } from '@/stores/hermes-store';
 import { cn } from '@/lib/utils';
 
 // Dynamic imports for heavy components
@@ -18,6 +19,8 @@ const CommandPalette = dynamic(() => import('@/components/command-palette').then
 const NotificationBell = dynamic(() => import('@/components/notification-bell').then(m => ({ default: m.NotificationBell })), { ssr: false });
 const Aurora = dynamic(() => import('@/components/Aurora'), { ssr: false });
 const ViewRenderer = dynamic(() => import('@/components/view-renderer').then(m => ({ default: m.ViewRenderer })), { ssr: false });
+const HermesFab = dynamic(() => import('@/components/hermes/hermes-fab').then(m => ({ default: m.HermesFab })), { ssr: false });
+const HermesPanel = dynamic(() => import('@/components/hermes/hermes-panel').then(m => ({ default: m.HermesPanel })), { ssr: false });
 
 import { viewLabels } from '@/types';
 
@@ -25,16 +28,33 @@ export default function Shell() {
   const { data: session, status } = useSession();
   const { currentView, sidebarCollapsed, toggleSidebar, setCommandPaletteOpen } = useAppStore();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const { setCurrentView, setUserRole, loadProviderConfig } = useHermesStore();
 
   // Constants
   const desktopSidebarWidth = sidebarCollapsed ? 80 : 280;
   const isDark = resolvedTheme === 'dark';
 
-  // Prevent hydration mismatch
+  // Sync Hermes state
   useEffect(() => {
-    setMounted(true);
+    loadProviderConfig();
   }, []);
+
+  // Mark as mounted (deferred to avoid setState in effect)
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    requestAnimationFrame(() => setMounted(true));
+  }, []);
+
+  // Sync current view and user role to Hermes
+  useEffect(() => {
+    setCurrentView(currentView);
+  }, [currentView, setCurrentView]);
+
+  useEffect(() => {
+    if (session?.user?.role) {
+      setUserRole(session.user.role as any);
+    }
+  }, [session?.user?.role, setUserRole]);
 
   if (status === 'loading' || !mounted) {
     return (
@@ -211,6 +231,8 @@ export default function Shell() {
       </div>
 
       <CommandPalette />
+      <HermesFab />
+      <HermesPanel />
     </div>
   );
 }

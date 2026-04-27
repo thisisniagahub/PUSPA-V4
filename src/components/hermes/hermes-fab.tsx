@@ -1,16 +1,18 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle, Sparkles } from 'lucide-react'
 import { useHermesStore } from '@/stores/hermes-store'
+import { PROVIDERS } from '@/lib/hermes/provider-types'
 
 export function HermesFab() {
-  const { isOpen, toggleOpen, messages } = useHermesStore()
+  const { isOpen, toggleOpen, messages, providerState } = useHermesStore()
 
-  // Count assistant messages that the user hasn't "seen" (when panel is closed)
   const unseenCount = isOpen
     ? 0
     : messages.filter((m) => m.role === 'assistant').length
+
+  const providerInfo = PROVIDERS[providerState.provider]
 
   return (
     <motion.button
@@ -59,8 +61,9 @@ export function HermesFab() {
             animate={{ rotate: 0, opacity: 1 }}
             exit={{ rotate: -90, opacity: 0 }}
             transition={{ duration: 0.2 }}
+            className="relative"
           >
-            <MessageCircle className="h-6 w-6 text-white" />
+            <Sparkles className="h-6 w-6 text-white" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -78,6 +81,13 @@ export function HermesFab() {
           </motion.span>
         )}
       </AnimatePresence>
+
+      {/* Provider indicator */}
+      {!isOpen && providerState.provider !== 'zai' && (
+        <span className="absolute -bottom-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-background border text-[9px] font-bold shadow-sm">
+          {providerInfo.icon}
+        </span>
+      )}
     </motion.button>
   )
 }
