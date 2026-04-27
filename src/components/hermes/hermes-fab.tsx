@@ -1,12 +1,12 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageCircle, Sparkles } from 'lucide-react'
+import { Maximize2, Sparkles } from 'lucide-react'
 import { useHermesStore } from '@/stores/hermes-store'
 import { PROVIDERS } from '@/lib/hermes/provider-types'
 
 export function HermesFab() {
-  const { isOpen, toggleOpen, messages, providerState } = useHermesStore()
+  const { isOpen, toggleOpen, messages, providerState, viewMode, setViewMode } = useHermesStore()
 
   const unseenCount = isOpen
     ? 0
@@ -17,11 +17,11 @@ export function HermesFab() {
   return (
     <motion.button
       onClick={toggleOpen}
-      className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-shadow hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-background lg:bottom-8 lg:right-8"
+      className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg transition-shadow hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-background lg:bottom-8 lg:right-8"
       style={{
         background: 'linear-gradient(135deg, #10b981 0%, #14b8a6 50%, #0d9488 100%)',
       }}
-      whileHover={{ scale: 1.08 }}
+      whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
@@ -30,7 +30,7 @@ export function HermesFab() {
     >
       {/* Pulse ring */}
       {!isOpen && (
-        <span className="absolute inset-0 rounded-full animate-ping bg-emerald-400/30" />
+        <span className="absolute inset-0 rounded-2xl animate-ping bg-emerald-400/30" />
       )}
 
       <AnimatePresence mode="wait">

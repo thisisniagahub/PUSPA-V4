@@ -20,7 +20,7 @@ const NotificationBell = dynamic(() => import('@/components/notification-bell').
 const Aurora = dynamic(() => import('@/components/Aurora'), { ssr: false });
 const ViewRenderer = dynamic(() => import('@/components/view-renderer').then(m => ({ default: m.ViewRenderer })), { ssr: false });
 const HermesFab = dynamic(() => import('@/components/hermes/hermes-fab').then(m => ({ default: m.HermesFab })), { ssr: false });
-const HermesPanel = dynamic(() => import('@/components/hermes/hermes-panel').then(m => ({ default: m.HermesPanel })), { ssr: false });
+const HermesDashboard = dynamic(() => import('@/components/hermes/hermes-dashboard').then(m => ({ default: m.HermesDashboard })), { ssr: false });
 
 import { viewLabels } from '@/types';
 
@@ -232,7 +232,7 @@ export default function Shell() {
 
       <CommandPalette />
       <HermesFab />
-      <HermesPanel />
+      <HermesDashboard />
     </div>
   );
 }

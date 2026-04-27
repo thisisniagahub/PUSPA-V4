@@ -6,6 +6,24 @@ import type { ProviderId } from '@/lib/hermes/provider-types'
 
 export type HermesStatus = 'idle' | 'thinking' | 'streaming' | 'error'
 
+// ============================================================
+// Execution Trace Types (Retail Agent Dashboard)
+// ============================================================
+export type AgentStepStatus = 'pending' | 'running' | 'completed' | 'error'
+
+export interface AgentStep {
+  id: string
+  type: 'planning' | 'tool_call' | 'processing' | 'thinking' | 'success' | 'error'
+  label: string
+  detail?: string
+  status: AgentStepStatus
+  timestamp: number
+  duration?: number
+  toolName?: string
+  toolArgs?: Record<string, unknown>
+  result?: string
+}
+
 export interface HermesChatMessage {
   id: string
   role: 'user' | 'assistant'
@@ -25,6 +43,8 @@ export interface HermesChatMessage {
     recordId?: string
     message?: string
   }
+  // Execution trace steps for this message
+  steps?: AgentStep[]
 }
 
 export interface HermesClientAction {
@@ -45,8 +65,11 @@ export interface HermesProviderState {
   isConfigured: boolean
 }
 
+export type HermesViewMode = 'panel' | 'fullscreen'
+
 export interface HermesState {
   isOpen: boolean
+  viewMode: HermesViewMode
   status: HermesStatus
   messages: HermesChatMessage[]
   currentView: ViewId
@@ -57,9 +80,12 @@ export interface HermesState {
   providerState: HermesProviderState
   conversationId: string | null
   showHistory: boolean
+  // Execution trace
+  activeSteps: AgentStep[]
 
   setOpen: (open: boolean) => void
   toggleOpen: () => void
+  setViewMode: (mode: HermesViewMode) => void
   setStatus: (status: HermesStatus) => void
   addMessage: (msg: Omit<HermesChatMessage, 'id' | 'timestamp'>) => void
   updateLastMessage: (content: string) => void
@@ -76,13 +102,21 @@ export interface HermesState {
   sendMessage: (text: string) => Promise<void>
   sendMessageStream: (text: string) => Promise<void>
   loadProviderConfig: () => Promise<void>
+  // Execution trace
+  addStep: (step: Omit<AgentStep, 'id' | 'timestamp'>) => string
+  updateStep: (stepId: string, updates: Partial<AgentStep>) => void
+  clearSteps: () => void
+  finalizeSteps: () => void
 }
+
+let stepCounter = 0
 
 export const useHermesStore = create<HermesState>()(
   persist(
     (set, get) => ({
       isOpen: false,
-      status: 'idle',
+      viewMode: 'panel' as HermesViewMode,
+      status: 'idle' as HermesStatus,
       messages: [],
       currentView: 'dashboard',
       userRole: 'staff',
@@ -99,9 +133,11 @@ export const useHermesStore = create<HermesState>()(
         isConfigured: true,
       },
       conversationId: null,
+      activeSteps: [],
 
       setOpen: (open) => set({ isOpen: open }),
       toggleOpen: () => set((s) => ({ isOpen: !s.isOpen })),
+      setViewMode: (mode) => set({ viewMode: mode }),
       setStatus: (status) => set({ status }),
       addMessage: (msg) => set((s) => ({
         messages: [...s.messages, {
@@ -125,15 +161,16 @@ export const useHermesStore = create<HermesState>()(
           msgs[msgs.length - 1] = {
             ...last,
             isStreaming: false,
+            steps: [...s.activeSteps],
             ...(meta?.provider ? { provider: meta.provider } : {}),
             ...(meta?.model ? { model: meta.model } : {}),
             ...(meta?.latencyMs ? { latencyMs: meta.latencyMs } : {}),
             ...(meta?.clientAction ? { clientAction: meta.clientAction } : {}),
           }
         }
-        return { messages: msgs, status: 'idle' }
+        return { messages: msgs, status: 'idle', activeSteps: [] }
       }),
-      clearMessages: () => set({ messages: [], conversationId: null }),
+      clearMessages: () => set({ messages: [], conversationId: null, activeSteps: [] }),
       setCurrentView: (view) => set({ currentView: view }),
       setUserRole: (role) => set({ userRole: role }),
       setLocale: (locale) => set({ locale }),
@@ -153,11 +190,37 @@ export const useHermesStore = create<HermesState>()(
         providerState: { ...s.providerState, ...state },
       })),
 
+      // Execution trace
+      addStep: (step) => {
+        const id = `step-${++stepCounter}-${Date.now()}`
+        set((s) => ({
+          activeSteps: [...s.activeSteps, { ...step, id, timestamp: Date.now() }],
+        }))
+        return id
+      },
+      updateStep: (stepId, updates) => set((s) => ({
+        activeSteps: s.activeSteps.map((step) =>
+          step.id === stepId ? { ...step, ...updates } : step
+        ),
+      })),
+      clearSteps: () => set({ activeSteps: [] }),
+      finalizeSteps: () => {
+        // Mark all running steps as completed
+        set((s) => ({
+          activeSteps: s.activeSteps.map((step) =>
+            step.status === 'running' ? { ...step, status: 'completed' as AgentStepStatus } : step
+          ),
+        }))
+      },
+
       sendMessage: async (text: string) => {
-        const { messages, currentView, userRole, locale, addMessage, setStatus } = get()
+        const { messages, currentView, userRole, locale, addMessage, setStatus, addStep, updateStep, finalizeLastMessage } = get()
 
         addMessage({ role: 'user', content: text })
         setStatus('thinking')
+
+        // Add execution trace steps
+        const planStepId = addStep({ type: 'planning', label: 'Merancang', detail: 'Menganalisis permintaan anda...', status: 'running' })
 
         try {
           const response = await fetch('/api/v1/hermes/chat', {
@@ -171,10 +234,22 @@ export const useHermesStore = create<HermesState>()(
             }),
           })
 
+          updateStep(planStepId, { status: 'completed', detail: 'Permintaan dianalisis' })
+
           const json = await response.json()
           if (!json.success) throw new Error(json.error || 'Chat failed')
 
           const data = json.data
+
+          // If tool was used, add tool step
+          if (data.toolResult) {
+            const toolStepId = addStep({ type: 'tool_call', label: `Alat: ${data.toolResult.name}`, detail: 'Menjalankan alat...', status: 'running', toolName: data.toolResult.name })
+            updateStep(toolStepId, { status: 'completed', detail: 'Alat berjaya dilaksanakan' })
+          }
+
+          // Add success step
+          addStep({ type: 'success', label: 'Selesai', detail: 'Respons dijana', status: 'completed' })
+
           addMessage({
             role: 'assistant',
             content: data.message.content || 'Maaf, saya tidak faham.',
@@ -188,31 +263,38 @@ export const useHermesStore = create<HermesState>()(
 
           // Process client actions
           if (data.clientAction) {
-            const { addPendingAction } = get()
-            addPendingAction(data.clientAction)
+            get().addPendingAction(data.clientAction)
           }
           if (data.clientActions) {
-            const { addPendingAction } = get()
             for (const action of data.clientActions) {
-              addPendingAction(action)
+              get().addPendingAction(action)
             }
           }
 
-          setStatus('idle')
+          finalizeLastMessage({
+            provider: data.provider,
+            model: data.model,
+            latencyMs: data.latencyMs,
+            clientAction: data.clientAction,
+          })
         } catch (error) {
+          updateStep(planStepId, { status: 'error', detail: 'Ralat berlaku' })
           addMessage({
             role: 'assistant',
             content: 'Maaf, saya mengalami masalah teknikal. Sila cuba lagi sebentar.',
           })
-          setStatus('error')
+          finalizeLastMessage()
         }
       },
 
       sendMessageStream: async (text: string) => {
-        const { messages, currentView, userRole, locale, addMessage, setStatus, updateLastMessage, finalizeLastMessage, providerState } = get()
+        const { messages, currentView, userRole, locale, addMessage, setStatus, updateLastMessage, finalizeLastMessage, providerState, addStep, updateStep } = get()
 
         addMessage({ role: 'user', content: text })
         setStatus('streaming')
+
+        // Add execution trace steps
+        const planStepId = addStep({ type: 'planning', label: 'Merancang', detail: 'Menganalisis permintaan anda...', status: 'running' })
 
         // Add placeholder streaming message
         addMessage({ role: 'assistant', content: '', isStreaming: true })
@@ -233,11 +315,15 @@ export const useHermesStore = create<HermesState>()(
           // Check if response is actually a stream
           const contentType = response.headers.get('content-type') || ''
           if (contentType.includes('text/event-stream')) {
+            updateStep(planStepId, { status: 'completed', detail: 'Permintaan dianalisis' })
+            addStep({ type: 'thinking', label: 'Menjana respons', detail: 'AI sedang memproses...', status: 'running' })
+
             const reader = response.body?.getReader()
             if (!reader) throw new Error('No stream reader')
 
             const decoder = new TextDecoder()
             let buffer = ''
+            let hasToolCall = false
 
             while (true) {
               const { done, value } = await reader.read()
@@ -259,11 +345,17 @@ export const useHermesStore = create<HermesState>()(
                     updateLastMessage(chunk.content)
                   }
                   if (chunk.type === 'tool_call' && chunk.toolCall) {
-                    // Handle streaming tool calls
-                    const { addPendingAction } = get()
-                    // Will be processed after stream completes
+                    hasToolCall = true
+                    const toolStepId = addStep({ type: 'tool_call', label: `Alat: ${chunk.toolCall.name || 'unknown'}`, detail: 'Menjalankan alat...', status: 'running', toolName: chunk.toolCall.name })
+                    updateStep(toolStepId, { status: 'completed', detail: 'Alat dilaksanakan' })
                   }
                   if (chunk.type === 'done') {
+                    // Add success step
+                    if (hasToolCall) {
+                      addStep({ type: 'success', label: 'Selesai', detail: 'Alat & respons berjaya', status: 'completed' })
+                    } else {
+                      addStep({ type: 'success', label: 'Selesai', detail: 'Respons dijana', status: 'completed' })
+                    }
                     finalizeLastMessage({
                       provider: providerState.provider,
                       latencyMs: chunk.usage?.totalTokens,
@@ -283,10 +375,20 @@ export const useHermesStore = create<HermesState>()(
             }
           } else {
             // Non-streaming response (Z-AI fallback)
+            updateStep(planStepId, { status: 'completed', detail: 'Permintaan dianalisis' })
+
             const json = await response.json()
             if (!json.success) throw new Error(json.error || 'Chat failed')
 
             const data = json.data
+
+            if (data.toolResult) {
+              addStep({ type: 'tool_call', label: `Alat: ${data.toolResult.name}`, detail: 'Menjalankan alat...', status: 'running', toolName: data.toolResult.name })
+              addStep({ type: 'success', label: 'Selesai', detail: 'Alat & respons berjaya', status: 'completed' })
+            } else {
+              addStep({ type: 'success', label: 'Selesai', detail: 'Respons dijana', status: 'completed' })
+            }
+
             updateLastMessage(data.message.content || 'Maaf, saya tidak faham.')
             finalizeLastMessage({
               provider: data.provider,
@@ -301,12 +403,12 @@ export const useHermesStore = create<HermesState>()(
             }
           }
         } catch (error) {
+          updateStep(planStepId, { status: 'error', detail: 'Ralat berlaku' })
           finalizeLastMessage()
           addMessage({
             role: 'assistant',
             content: 'Maaf, saya mengalami masalah teknikal. Sila cuba lagi sebentar.',
           })
-          setStatus('error')
         }
       },
 
@@ -337,11 +439,13 @@ export const useHermesStore = create<HermesState>()(
         messages: state.messages.slice(-30).map(m => ({
           ...m,
           isStreaming: false,
+          steps: m.steps?.map(s => ({ ...s, status: 'completed' as AgentStepStatus })),
         })),
         providerState: {
           provider: state.providerState.provider,
           model: state.providerState.model,
         },
+        viewMode: state.viewMode,
       }),
     },
   ),
