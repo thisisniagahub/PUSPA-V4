@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { hash, compare } from 'bcryptjs'
+import { hashPassword, verifyPassword } from '@/lib/password'
 
 // GET /api/v1/users — List all users
 export async function GET(req: NextRequest) {
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Emel sudah wujud' }, { status: 409 })
     }
 
-    const hashedPassword = await hash(password, 12)
+    const hashedPassword = await hashPassword(password)
 
     const user = await db.user.create({
       data: {
@@ -120,11 +120,11 @@ export async function PUT(req: NextRequest) {
 
     // Password change
     if (currentPassword && newPassword) {
-      const isValid = await compare(currentPassword, existing.password)
+      const isValid = await verifyPassword(currentPassword, existing.password)
       if (!isValid) {
         return NextResponse.json({ success: false, error: 'Kata laluan semasa tidak sah' }, { status: 401 })
       }
-      updateData.password = await hash(newPassword, 12)
+      updateData.password = await hashPassword(newPassword)
     }
 
     const updated = await db.user.update({
