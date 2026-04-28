@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback, useSyncExternalStore } from 'react';
-import { signOut, useSession } from 'next-auth/react';
+import { useAuth } from '@/components/auth-provider';
 import Image from 'next/image';
 import {
   ChevronRight,
@@ -167,7 +167,7 @@ function SidebarNavGroup({ group, currentView, onNavigate, collapsed, isLastGrou
   );
 }
 
-function SidebarFooter({ collapsed, role, userLabel }: { collapsed: boolean; role: UserRole; userLabel: string }) {
+function SidebarFooter({ collapsed, role, userLabel, onSignOut }: { collapsed: boolean; role: UserRole; userLabel: string; onSignOut: () => void }) {
   const config = ROLE_CONFIG[role];
   const avatarLabel = userLabel.trim().charAt(0).toUpperCase() || 'P';
 
@@ -183,7 +183,7 @@ function SidebarFooter({ collapsed, role, userLabel }: { collapsed: boolean; rol
         </div>
       </div>
 
-      <Button type="button" variant="outline" size={collapsed ? 'icon' : 'sm'} className={cn('w-full border-border/70', collapsed ? 'h-9 w-9' : 'justify-start gap-2')} onClick={() => void signOut({ callbackUrl: '/login' })} aria-label="Log keluar">
+      <Button type="button" variant="outline" size={collapsed ? 'icon' : 'sm'} className={cn('w-full border-border/70', collapsed ? 'h-9 w-9' : 'justify-start gap-2')} onClick={onSignOut} aria-label="Log keluar">
         <LogOut aria-hidden="true" className="h-4 w-4" />
         {!collapsed && <span>Log keluar</span>}
       </Button>
@@ -206,9 +206,9 @@ function SidebarContent({ onNavigate, onClose, collapsed }: { onNavigate: (id: V
   const currentView = useAppStore((s) => s.currentView);
   const userRole = useAppStore((s) => s.userRole);
   const setUserRole = useAppStore((s) => s.setUserRole);
-  const { data: session } = useSession();
+  const { user: authUser, signOut } = useAuth();
   const isCollapsed = !!collapsed;
-  const effectiveRole = normalizeUserRole(session?.user?.role || userRole);
+  const effectiveRole = normalizeUserRole(authUser?.role || userRole);
   const visibleGroups = getVisibleGroups(effectiveRole);
 
   useEffect(() => {
@@ -218,6 +218,10 @@ function SidebarContent({ onNavigate, onClose, collapsed }: { onNavigate: (id: V
   const handleNavigate = (id: ViewId) => {
     onNavigate(id);
     onClose?.();
+  };
+
+  const handleSignOut = () => {
+    void signOut();
   };
 
   return (
@@ -240,7 +244,7 @@ function SidebarContent({ onNavigate, onClose, collapsed }: { onNavigate: (id: V
           </nav>
         </ScrollArea>
         <Separator className="mx-4" />
-        <SidebarFooter collapsed={isCollapsed} role={effectiveRole} userLabel={session?.user?.name || session?.user?.email || 'Pengguna PUSPA'} />
+        <SidebarFooter collapsed={isCollapsed} role={effectiveRole} userLabel={authUser?.name || authUser?.email || 'Pengguna PUSPA'} onSignOut={handleSignOut} />
       </div>
     </TooltipProvider>
   );

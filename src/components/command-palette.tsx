@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import Image from 'next/image'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/components/auth-provider'
 import { useAppStore } from '@/stores/app-store'
 import { canAccessView } from '@/lib/access-control'
 import { normalizeUserRole } from '@/lib/auth-shared'
@@ -65,9 +65,9 @@ const SECTIONS = SIDEBAR_GROUPS.map((group) => ({
 
 export function CommandPalette() {
   const { commandPaletteOpen, setCommandPaletteOpen, setView } = useAppStore()
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const [query, setQuery] = useState('')
-  const effectiveRole = normalizeUserRole(session?.user?.role)
+  const effectiveRole = normalizeUserRole(user?.role)
 
   const handleSelect = useCallback(
     (viewId: ViewId) => {

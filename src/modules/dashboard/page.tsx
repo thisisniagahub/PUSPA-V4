@@ -42,7 +42,7 @@ import {
 } from 'lucide-react'
 import { useAppStore } from '@/stores/app-store'
 import { cn } from '@/lib/utils'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/components/auth-provider'
 import { normalizeUserRole } from '@/lib/auth-shared'
 import {
   BarChart,
@@ -256,8 +256,8 @@ function StatCard({
 // ---------------------------------------------------------------------------
 
 export default function DashboardPage() {
-  const { data: session } = useSession()
-  const effectiveRole = normalizeUserRole(session?.user?.role)
+  const { user } = useAuth()
+  const effectiveRole = normalizeUserRole(user?.role)
   const isDeveloper = effectiveRole === 'developer'
 
   const [stats, setStats] = useState<DashboardStats>({

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/components/auth-provider'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Settings, User, Shield, Bell, Users, Key, Eye, EyeOff,
@@ -76,8 +76,8 @@ function getInitials(name: string): string {
 // Component
 // ─────────────────────────────────────────────
 export default function SettingsPage() {
-  const { data: session } = useSession()
-  const currentUser = session?.user
+  const { user } = useAuth()
+  const currentUser = user
 
   // ── Profile State ──
   const [profileName, setProfileName] = useState(currentUser?.name || '')
