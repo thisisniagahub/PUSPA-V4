@@ -1,3 +1,6 @@
+// NOTE: In-memory rate limiting does NOT persist across Vercel serverless invocations.
+// Each cold start resets the map, so this provides only single-instance protection.
+// For production-grade distributed rate limiting, use Upstash Redis or Vercel KV.
 const buckets = new Map<string, { count: number; resetAt: number }>()
 
 export interface RateLimitOptions {

@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import path from 'node:path'
+import { createAdminClient } from '@/lib/supabase/server'
 
 export type UploadBucket = 'documents' | 'ekyc'
 
@@ -48,34 +47,8 @@ export function isUploadBucket(value: string): value is UploadBucket {
   return value === 'documents' || value === 'ekyc'
 }
 
-export function getUploadRoot() {
-  return path.resolve(process.cwd(), 'upload')
-}
-
-function sanitizePathSegment(value: string) {
-  if (!value || value === '.' || value === '..' || value.includes('/') || value.includes('\\')) {
-    throw new Error('Laluan fail tidak sah')
-  }
-
-  const sanitized = value.replace(/[^a-zA-Z0-9._-]/g, '-')
-
-  if (!sanitized || sanitized === '.' || sanitized === '..') {
-    throw new Error('Laluan fail tidak sah')
-  }
-
-  return sanitized
-}
-
-function sanitizeStem(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 32) || 'file'
-}
-
 function inferMimeType(fileName: string) {
-  const extension = path.extname(fileName).toLowerCase()
+  const extension = fileName.includes('.') ? '.' + fileName.split('.').pop()!.toLowerCase() : ''
   return MIME_FALLBACKS[extension] || 'application/octet-stream'
 }
 
@@ -109,18 +82,18 @@ function assertFileAllowed(bucket: UploadBucket, fileName: string, mimeType: str
   }
 }
 
-function ensureUploadPath(segments: string[]) {
-  const root = getUploadRoot()
-  const safeSegments = segments.map(sanitizePathSegment)
-  const resolvedPath = path.resolve(root, ...safeSegments)
-
-  if (resolvedPath !== root && !resolvedPath.startsWith(`${root}${path.sep}`)) {
-    throw new Error('Laluan fail tidak sah')
-  }
-
-  return resolvedPath
+function sanitizeStem(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 32) || 'file'
 }
 
+/**
+ * Store a file upload in Supabase Storage.
+ * Replaces the old filesystem-based upload that doesn't work on Vercel serverless.
+ */
 export async function storeUpload(options: {
   bucket: UploadBucket
   file: File
@@ -129,7 +102,7 @@ export async function storeUpload(options: {
   const { bucket, file, scopeId } = options
   const fileName = file.name || `${bucket}-upload`
   const mimeType = normalizeMimeType(fileName, file.type)
-  const extension = path.extname(fileName).toLowerCase() || '.bin'
+  const extension = fileName.includes('.') ? '.' + fileName.split('.').pop()!.toLowerCase() : '.bin'
   const buffer = Buffer.from(await file.arrayBuffer())
 
   assertFileAllowed(bucket, fileName, mimeType, buffer.byteLength)
@@ -139,54 +112,85 @@ export async function storeUpload(options: {
   const month = String(now.getMonth() + 1).padStart(2, '0')
   const scopeSuffix = scopeId ? `-${sanitizeStem(scopeId)}` : ''
   const storedName = `${Date.now()}-${randomUUID().slice(0, 8)}${scopeSuffix}${extension}`
-  const relativeSegments = [bucket, year, month, storedName]
-  const absolutePath = ensureUploadPath(relativeSegments)
+  const storagePath = `${year}/${month}/${storedName}`
 
-  await mkdir(path.dirname(absolutePath), { recursive: true })
-  await writeFile(absolutePath, buffer)
+  const supabase = createAdminClient()
 
-  const relativePath = relativeSegments.join('/')
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(storagePath, buffer, {
+      contentType: mimeType,
+      upsert: false,
+    })
+
+  if (error) {
+    throw new Error(`Gagal memuat naik fail: ${error.message}`)
+  }
 
   return {
-    path: relativePath,
-    url: `/api/v1/upload/${relativePath}`,
+    path: `${bucket}/${storagePath}`,
+    url: `/api/v1/upload/${bucket}/${storagePath}`,
     fileName,
     size: buffer.byteLength,
     mimeType,
   }
 }
 
-export function resolveUploadFile(relativePathSegments: string[]) {
-  if (relativePathSegments.length < 4) {
-    throw new Error('Laluan fail tidak sah')
+/**
+ * Get a signed URL for a stored file (for secure downloads).
+ */
+export async function getSignedUrl(bucket: UploadBucket, storagePath: string, expiresIn = 3600) {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(storagePath, expiresIn)
+
+  if (error) {
+    throw new Error(`Gagal mendapatkan URL fail: ${error.message}`)
   }
 
-  const [bucket, ...rest] = relativePathSegments
-  if (!isUploadBucket(bucket)) {
-    throw new Error('Bucket fail tidak sah')
+  return data.signedUrl
+}
+
+/**
+ * Download a stored file from Supabase Storage.
+ */
+export async function readStoredUpload(bucket: UploadBucket, storagePath: string) {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .download(storagePath)
+
+  if (error) {
+    throw new Error(`Gagal memuat turun fail: ${error.message}`)
   }
 
-  const absolutePath = ensureUploadPath([bucket, ...rest])
+  const buffer = Buffer.from(await data.arrayBuffer())
+  const fileName = storagePath.split('/').pop() || 'file'
 
   return {
     bucket,
-    absolutePath,
-    relativePath: [bucket, ...rest].join('/'),
-    fileName: path.basename(absolutePath),
+    storagePath,
+    buffer,
+    fileName,
+    mimeType: inferMimeType(fileName),
+  }
+}
+
+/**
+ * Delete a stored file from Supabase Storage.
+ */
+export async function deleteStoredUpload(bucket: UploadBucket, storagePath: string) {
+  const supabase = createAdminClient()
+  const { error } = await supabase.storage
+    .from(bucket)
+    .remove([storagePath])
+
+  if (error) {
+    throw new Error(`Gagal memadam fail: ${error.message}`)
   }
 }
 
 export function getMimeTypeForStoredFile(fileName: string) {
   return inferMimeType(fileName)
-}
-
-export async function readStoredUpload(relativePathSegments: string[]) {
-  const file = resolveUploadFile(relativePathSegments)
-  const buffer = await readFile(file.absolutePath)
-
-  return {
-    ...file,
-    buffer,
-    mimeType: getMimeTypeForStoredFile(file.fileName),
-  }
 }

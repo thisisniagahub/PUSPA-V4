@@ -2,6 +2,9 @@
 
 import React, { useState, useCallback, useMemo, useEffect, useRef, useOptimistic, startTransition } from "react";
 import { io, Socket } from "socket.io-client";
+// NOTE: Socket.IO only works in local dev (mini-services on port 3003).
+// On Vercel serverless, WebSocket is unavailable — features degrade gracefully
+// (Live badge shows "Disconnected", real-time sync disabled).
 import { updateActivityStatus } from "@/app/actions/activities";
 import {
   DndContext,
@@ -893,34 +896,39 @@ export default function ActivitiesKanbanPage() {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const socket = io('/?XTransformPort=3003', {
-      transports: ['websocket', 'polling'],
-      forceNew: true,
-      reconnection: true,
-    });
-    socketRef.current = socket;
+    // Only attempt WebSocket in development (local server on port 3003)
+    // On Vercel, this gracefully fails and real-time sync is disabled
+    if (process.env.NODE_ENV !== 'production') {
+      const socket = io('/?XTransformPort=3003', {
+        transports: ['websocket', 'polling'],
+        forceNew: true,
+        reconnection: true,
+        timeout: 3000,
+      });
+      socketRef.current = socket;
 
-    socket.on('connect', () => setIsConnected(true));
-    socket.on('disconnect', () => setIsConnected(false));
+      socket.on('connect', () => setIsConnected(true));
+      socket.on('disconnect', () => setIsConnected(false));
 
-    socket.on('activity-action', (data: { action: string; activity?: Activity; id?: string }) => {
-      if (data.action === 'add' && data.activity) {
-        setActivities((prev) => {
-          if (prev.find(a => a.id === data.activity!.id)) return prev;
-          return [...prev, data.activity!];
-        });
-      } else if (data.action === 'update' && data.activity) {
-        setActivities((prev) =>
-          prev.map((a) => (a.id === data.activity!.id ? data.activity! : a))
-        );
-      } else if (data.action === 'delete' && data.id) {
-        setActivities((prev) => prev.filter((a) => a.id !== data.id));
-      }
-    });
+      socket.on('activity-action', (data: { action: string; activity?: Activity; id?: string }) => {
+        if (data.action === 'add' && data.activity) {
+          setActivities((prev) => {
+            if (prev.find(a => a.id === data.activity!.id)) return prev;
+            return [...prev, data.activity!];
+          });
+        } else if (data.action === 'update' && data.activity) {
+          setActivities((prev) =>
+            prev.map((a) => (a.id === data.activity!.id ? data.activity! : a))
+          );
+        } else if (data.action === 'delete' && data.id) {
+          setActivities((prev) => prev.filter((a) => a.id !== data.id));
+        }
+      });
 
-    return () => {
-      socket.disconnect();
-    };
+      return () => {
+        socket.disconnect();
+      };
+    }
   }, []);
 
   const emitAction = useCallback((action: 'add' | 'update' | 'delete', payload: { activity?: Activity, id?: string }) => {
