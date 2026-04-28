@@ -83,3 +83,102 @@ Stage Summary:
 - Quick actions: NGO-specific (Semak Status Kes, Status Bantuan, Bantuan Program, Hubungi Pentadbir)
 - All user-facing text changed from "Hermes" to "PUSPA"
 - Internal type names kept as "Hermes*" for backward compatibility
+
+---
+Task ID: 3
+Agent: Prisma Schema Agent
+Task: Create complete PostgreSQL Prisma schema for PUSPA NGO (Supabase)
+
+Work Log:
+- Read existing SQLite schema at /home/z/my-project/prisma/schema.prisma (835 lines)
+- Changed datasource from SQLite to PostgreSQL with directUrl for Supabase
+- Created 35 Prisma enums replacing all String-typed status/category/role fields
+- Fixed 14 missing relations (Donation→Case, Donation→Donor, CaseNote→User, CaseDocument→User, Disbursement→User, EKYCVerification→User, DonorCommunication→User, Capture→User, HermesConversation→User, HermesSkill→User, HermesProviderConfig→User, VolunteerDeployment→Activity, VolunteerHourLog→VolunteerDeployment, TaxReceipt→Donation)
+- Added 20 cascade delete rules (SetNull for optional parents, Cascade for dependent children, Restrict for Case creator)
+- Added 25+ missing indexes across Donation, Disbursement, Activity, Case, AuditLog, Notification, SecurityLog, Donor, DonorCommunication
+- Added soft delete (deletedAt DateTime?) to 10 main models: User, Member, Case, Donation, Disbursement, Programme, Volunteer, Donor, Partner, Branch
+- Fixed User.role default from "ops" to "staff" via UserRole enum
+- Converted 9 Float money fields to Decimal @db.Decimal(12,2): monthlyIncome, income, budget, totalSpent, amount (Case/Donation/Disbursement/TaxReceipt), totalDonated
+- Changed all @default(cuid()) to @default(uuid()) across all 35 models
+- Added supabaseId String? @unique to User model for Supabase Auth integration
+- Wrote complete schema (1193 lines) to /home/z/my-project/prisma/schema.prisma
+
+Stage Summary:
+- Complete PostgreSQL migration schema ready for Supabase
+- 35 enums ensure type safety at database level
+- All relations properly defined with appropriate cascade behaviors
+- Decimal precision for all monetary values (12,2)
+- UUID primary keys for Supabase compatibility
+- Soft delete support on core entities
+- Comprehensive indexing for query performance
+
+---
+Task ID: 4
+Agent: Supabase Client Agent
+Task: Create Supabase client utilities for the PUSPA project
+
+Work Log:
+- Verified @supabase/ssr (v0.10.2) and @supabase/supabase-js (v2.105.0) already installed in package.json
+- Noted existing /src/lib/supabase.ts (simple single-client approach) — new utilities supersede it
+- Created /src/lib/supabase/server.ts — Server-side Supabase client with createClient() (async, uses cookies()) and createAdminClient() (sync, service role key, bypasses RLS)
+- Created /src/lib/supabase/client.ts — Browser-side Supabase client using createBrowserClient() from @supabase/ssr
+- Created /src/lib/supabase/middleware.ts — Standalone updateSession() helper for refreshing Supabase auth sessions in request pipeline
+- Discovered Next.js 16 uses proxy.ts instead of middleware.ts — creating both causes crash ("Both middleware file and proxy file detected")
+- Deleted /src/middleware.ts to avoid conflict with existing /src/proxy.ts
+- Integrated Supabase session refresh directly into /src/proxy.ts:
+  - Added createServerClient from @supabase/ssr at top of proxy function
+  - Added supabase.auth.getUser() call for session validation
+  - Modified auth check to accept either NextAuth session cookie OR Supabase user
+  - Preserved all existing auth logic (public API paths, bot routes, login redirect)
+- All lint checks pass (eslint clean)
+- Dev server compiles and serves pages successfully
+
+Stage Summary:
+- 3 new Supabase utility files created in /src/lib/supabase/:
+  - server.ts: createClient() for Server Components/API routes + createAdminClient() for RLS bypass
+  - client.ts: createBrowserClient() for Client Components
+  - middleware.ts: updateSession() helper (reusable utility)
+- /src/proxy.ts updated to integrate Supabase auth session refresh (Next.js 16 proxy pattern)
+- /src/middleware.ts NOT created — Next.js 16 uses proxy.ts instead; having both causes crash
+- Dual auth support: NextAuth session cookies + Supabase JWT sessions both accepted
+- Existing /src/lib/supabase.ts (legacy simple client) remains but is superseded by new utilities
+
+---
+Task ID: 5
+Agent: Supabase Auth Agent
+Task: Create Supabase Auth integration for PUSPA project (primary auth with existing fallback)
+
+Work Log:
+- Read existing auth systems: NextAuth at /api/auth/[...nextauth] (email/password DB), puspa-auth at /api/v1/auth/login (operator password)
+- Read existing Supabase client utilities (server.ts, client.ts, middleware.ts) from Task 4
+- Read Prisma schema — confirmed User model has `supabaseId String? @unique` field
+- Read auth-shared.ts (normalizeUserRole, AppRole type), password.ts (hashPassword), auth.ts (requireAuth, requireRole)
+- Read proxy.ts — already has Supabase session refresh and dual auth (NextAuth + Supabase)
+- Created /src/lib/supabase/auth.ts — Core auth utilities with:
+  - signInWithSupabase(): Email/password sign-in via Supabase Auth + Prisma User sync
+  - signUpWithSupabase(): Admin-only user creation via Supabase Auth admin API + Prisma sync
+  - syncSupabaseUser(): Bidirectional sync between Supabase Auth users and Prisma User table
+  - getSupabaseAuthUser(): Get current authenticated user from Supabase session
+  - signOutSupabase(): Sign out from Supabase Auth
+  - seedSupabaseAuthUsers(): Seed 3 default users (staff, admin, developer) into Supabase Auth + Prisma
+- Created /src/app/api/v1/auth/supabase/login/route.ts — POST login endpoint
+- Created /src/app/api/v1/auth/supabase/signup/route.ts — POST signup endpoint (admin/developer only)
+- Created /src/app/api/v1/auth/supabase/logout/route.ts — POST logout endpoint
+- Created /src/app/api/v1/auth/supabase/me/route.ts — GET current user endpoint
+- Created /src/app/api/v1/auth/supabase/seed/route.ts — POST seed endpoint (developer only)
+- Updated /src/proxy.ts — Added 3 Supabase auth routes to PUBLIC_API_PATHS (login, logout, me)
+- Fixed user-provided code issues: changed `import from 'next-server'` to `import from 'next/server'`, improved error typing with `unknown` catch
+- All lint checks pass (eslint clean)
+
+Stage Summary:
+- 6 new files created for Supabase Auth integration:
+  - /src/lib/supabase/auth.ts — Core auth utilities (sign-in, sign-up, sync, get-user, sign-out, seed)
+  - /src/app/api/v1/auth/supabase/login/route.ts — Login endpoint
+  - /src/app/api/v1/auth/supabase/signup/route.ts — Signup endpoint (admin-only)
+  - /src/app/api/v1/auth/supabase/logout/route.ts — Logout endpoint
+  - /src/app/api/v1/auth/supabase/me/route.ts — Current user endpoint
+  - /src/app/api/v1/auth/supabase/seed/route.ts — Seed default users endpoint (developer-only)
+- /src/proxy.ts updated with Supabase auth public routes
+- Dual auth maintained: NextAuth + puspa-auth continue working as fallback
+- Supabase Auth acts as primary auth method going forward
+- User sync: Supabase Auth users are automatically linked to Prisma User records via supabaseId field
