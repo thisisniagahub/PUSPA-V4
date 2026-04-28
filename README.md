@@ -37,11 +37,11 @@ _Cerdas. Mesra. Sentiasa di sisi anda._
 - [Hermes — AI Assistant](#-hermes--ai-assistant)
   - [Architecture & Workflow](#architecture--workflow)
   - [Multi-Provider LLM Support](#multi-provider-llm-support)
-  - [Tool Registry (30+)](#tool-registry-30)
+  - [Tool Registry (38 Tools)](#tool-registry-38-tools)
   - [Self-Improving Skills System](#self-improving-skills-system)
   - [Persistent Memory System](#persistent-memory-system)
 - [Database Schema](#-database-schema)
-  - [35+ Prisma Models](#35-prisma-models)
+  - [42 Prisma Models](#42-prisma-models)
   - [Switching to PostgreSQL](#switching-to-postgresql)
 - [API Reference](#-api-reference)
   - [Authentication](#authentication)
@@ -160,7 +160,7 @@ PUSPA V4 is the **fourth-generation** NGO management platform that integrates **
 
 ### 🤖 Hermes — Self-Improving AI Assistant
 - Autonomous AI assistant that learns from every interaction
-- 30+ tools for full database & operation access
+- 38 tools for full database & operation access
 - Self-improving skills system with usage tracking & success rates
 - Persistent memory with 5 categories (preference, fact, procedure, relationship, context)
 - 3 AI provider support (Z-AI SDK, OpenRouter, Ollama) with auto-fallback
@@ -243,11 +243,11 @@ PUSPA V4 is the **fourth-generation** NGO management platform that integrates **
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────────┐  ┌───────────────────┐ │
 │  │   Frontend   │  │   API Routes     │  │   AI Engine       │ │
-│  │  (React 19)  │  │  (50+ endpoints) │  │  (Hermes Agent)   │ │
+│  │  (React 19)  │  │  (80 endpoints)  │  │  (Hermes Agent)   │ │
 │  │              │  │                  │  │                   │ │
 │  │ • Sidebar    │  │ • /api/v1/auth   │  │ • Multi-provider  │ │
 │  │ • Modules    │  │ • /api/v1/member │  │   LLM transport   │ │
-│  │ • Hermes UI  │  │ • /api/v1/cases  │  │ • 30+ tools       │ │
+│  │ • Hermes UI  │  │ • /api/v1/cases  │  │ • 38 tools        │ │
 │  │ • Dashboard  │  │ • /api/v1/hermes │  │ • Skills system   │ │
 │  │ • ⌘K Palette │  │ • /api/v1/ops    │  │ • Memory system   │ │
 │  │ • Aurora BG  │  │ • /api/v1/bot    │  │ • SSE streaming   │ │
@@ -262,7 +262,7 @@ PUSPA V4 is the **fourth-generation** NGO management platform that integrates **
 │  ┌─────────────────────────────────────────────────────────────┐│
 │  │                    Prisma ORM 6                             ││
 │  │               (SQLite ↔ PostgreSQL)                         ││
-│  │              35+ models • Multi-DB URL resolution           ││
+│  │              42 models • Multi-DB URL resolution            ││
 │  └─────────────────────────────────────────────────────────────┘│
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────────┐│
@@ -303,7 +303,7 @@ src/
 │   ├── asnafpreneur/                 # Standalone public page route
 │   ├── actions/                      # Server actions
 │   │   └── activities.ts
-│   └── api/                          # API routes (50+ endpoints)
+│   └── api/                          # API routes (80 endpoints)
 │       ├── route.ts                  # Health check endpoint
 │       ├── auth/[...nextauth]/       # NextAuth handler
 │       └── v1/                       # REST API v1
@@ -357,7 +357,7 @@ src/
 │   ├── plugins/                      # Plugin system
 │   │   ├── PluginSlot.tsx            # Plugin component renderer by slot name
 │   │   └── ErrorBoundary.tsx         # Plugin error isolation
-│   ├── ui/                           # 45+ shadcn/ui components (Radix-based)
+│   ├── ui/                           # 52 shadcn/ui components (Radix-based)
 │   ├── Aurora.tsx                    # WebGL aurora background (OGL shader)
 │   ├── auth-provider.tsx             # NextAuth SessionProvider wrapper
 │   ├── command-palette.tsx           # ⌘K command palette
@@ -429,11 +429,11 @@ src/
 │       ├── providers.ts              # Multi-provider LLM transport (callLLM, streamLLM)
 │       ├── prompt.ts                 # System prompt builder (context-aware)
 │       ├── tools.ts                  # Tool call parsing (<<TOOL:name>>{}<</TOOL>>)
-│       ├── advanced-tools.ts         # 30+ tool definitions with handlers
+│       ├── advanced-tools.ts         # 38 tool definitions with handlers
 │       ├── skills.ts                 # Self-learning skills (create, match, auto-create)
 │       ├── memory.ts                 # Persistent memory (5 categories, auto-extraction)
 │       ├── quick-actions.ts          # Per-module quick action suggestions
-│       ├── module-descriptions.ts    # Context descriptions for 30+ views
+│       ├── module-descriptions.ts    # Context descriptions for 25+ views
 │       └── lang-detect.ts            # Language detection (Malay/English)
 │
 ├── stores/                           # Zustand state management
@@ -599,7 +599,7 @@ User Input
 
 Provider switching is per-user via HermesProviderConfig in the database. The system automatically detects the best calling method (SSE streaming for OpenRouter/Ollama, SDK for Z-AI).
 
-### Tool Registry (30+)
+### Tool Registry (38 Tools)
 
 #### Query Tools (Read-only)
 | Tool | Description |
@@ -679,7 +679,7 @@ Features:
 
 ## 🗄️ Database Schema
 
-### 35+ Prisma Models
+### 42 Prisma Models
 
 #### Core Business
 | Model | Purpose | Key Fields |
@@ -772,7 +772,7 @@ The Vercel build script automatically switches schemas when `DATABASE_PROVIDER=p
 
 ## 🛣️ API Reference
 
-50+ REST API endpoints under `/api/v1/`:
+80 REST API endpoints under `/api/v1/`:
 
 ### Authentication
 
@@ -1074,7 +1074,7 @@ PUSPA V4 uses a **Zinc/Black/Emerald** design system inspired by Stripe and Line
 | **Destructive** | `--destructive` | Red-500 |
 
 ### UI Components
-- **45+ shadcn/ui components** (New York style, Radix UI primitives)
+- **52 shadcn/ui components** (New York style, Radix UI primitives)
 - **Lucide icons** throughout the application
 - **Framer Motion** for animations (hover, focus, page transitions)
 - **Responsive breakpoints**: mobile-first with `sm:`, `md:`, `lg:`, `xl:` prefixes
