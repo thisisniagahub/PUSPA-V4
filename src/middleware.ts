@@ -22,7 +22,7 @@ const PUBLIC_API_PATHS = new Set([
   '/api/v1/auth/supabase/seed',
 ])
 
-export default async function proxy(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // --- Supabase Auth Session Refresh ---

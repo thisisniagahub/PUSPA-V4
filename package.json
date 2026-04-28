@@ -13,7 +13,7 @@
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
     "db:seed": "npx tsx prisma/seed.ts",
-    "vercel-build": "if [ \"$DATABASE_PROVIDER\" = \"postgresql\" ]; then cp prisma/schema.postgres.prisma prisma/schema.prisma; fi && prisma generate && next build"
+    "vercel-build": "prisma generate && next build"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

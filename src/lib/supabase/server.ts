@@ -28,9 +28,13 @@ export async function createClient() {
 
 // Admin client with service role key (bypasses RLS)
 export function createAdminClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceRoleKey) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is required')
+  }
   return createServerClient(
     supabaseUrl,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    serviceRoleKey,
     {
       cookies: {
         getAll() { return [] },
