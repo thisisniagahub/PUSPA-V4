@@ -26,9 +26,9 @@ import { viewLabels } from '@/types';
 
 export default function Shell() {
   const { data: session, status } = useSession();
-  const { currentView, sidebarCollapsed, toggleSidebar, setCommandPaletteOpen } = useAppStore();
+  const { currentView, sidebarCollapsed, toggleSidebar, setCommandPaletteOpen, setUserRole: setAppUserRole } = useAppStore();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const { setCurrentView, setUserRole, loadProviderConfig } = useHermesStore();
+  const { setCurrentView, setUserRole: setHermesUserRole, loadProviderConfig } = useHermesStore();
 
   // Constants
   const desktopSidebarWidth = sidebarCollapsed ? 80 : 280;
@@ -52,9 +52,10 @@ export default function Shell() {
 
   useEffect(() => {
     if (session?.user?.role) {
-      setUserRole(session.user.role as any);
+      setHermesUserRole(session.user.role as any);
+      setAppUserRole(session.user.role as any);
     }
-  }, [session?.user?.role, setUserRole]);
+  }, [session?.user?.role, setHermesUserRole, setAppUserRole]);
 
   if (status === 'loading' || !mounted) {
     return (
