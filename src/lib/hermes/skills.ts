@@ -23,6 +23,30 @@ export interface SkillEntry {
   updatedAt: string
 }
 
+function toSkillEntry(s: {
+  id: string
+  name: string
+  description: string
+  category: string
+  instructions: string
+  triggerPatterns: string | null
+  version: number
+  usageCount: number
+  successRate: number
+  source: string
+  isActive: boolean
+  userId: string | null
+  createdAt: Date
+  updatedAt: Date
+}): SkillEntry {
+  return {
+    ...s,
+    triggerPatterns: s.triggerPatterns ? JSON.parse(s.triggerPatterns) : [],
+    createdAt: s.createdAt.toISOString(),
+    updatedAt: s.updatedAt.toISOString(),
+  }
+}
+
 // Create a new skill
 export async function createSkill(params: {
   name: string
@@ -47,10 +71,7 @@ export async function createSkill(params: {
     },
   })
 
-  return {
-    ...skill,
-    triggerPatterns: skill.triggerPatterns ? JSON.parse(skill.triggerPatterns) : [],
-  } as SkillEntry
+  return toSkillEntry(skill)
 }
 
 // List all active skills
@@ -74,20 +95,14 @@ export async function listSkills(params?: {
     ],
   })
 
-  return skills.map(s => ({
-    ...s,
-    triggerPatterns: s.triggerPatterns ? JSON.parse(s.triggerPatterns) : [],
-  })) as SkillEntry[]
+  return skills.map(s => toSkillEntry(s))
 }
 
 // Get a specific skill
 export async function getSkill(skillId: string): Promise<SkillEntry | null> {
   const skill = await db.hermesSkill.findUnique({ where: { id: skillId } })
   if (!skill) return null
-  return {
-    ...skill,
-    triggerPatterns: skill.triggerPatterns ? JSON.parse(skill.triggerPatterns) : [],
-  } as SkillEntry
+  return toSkillEntry(skill)
 }
 
 // Record skill usage (increment count, update success rate)

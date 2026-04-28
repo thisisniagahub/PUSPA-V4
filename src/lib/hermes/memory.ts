@@ -100,7 +100,12 @@ export async function recallMemories(params: {
     )
   }
 
-  return memories as MemoryEntry[]
+  return memories.map(m => ({
+    ...m,
+    createdAt: m.createdAt.toISOString(),
+    updatedAt: m.updatedAt.toISOString(),
+    lastAccessed: m.lastAccessed?.toISOString() ?? null,
+  })) as MemoryEntry[]
 }
 
 // Remove a memory entry

@@ -298,7 +298,7 @@ const complianceStatusTool: HermesToolDefinition = {
         db.complianceChecklist.count(),
         db.complianceChecklist.count({ where: { isCompleted: true } }),
       ])
-      const byCategory = await db.complianceChecklist.groupBy({ by: ['category'], _count: true, _sum: { isCompleted: true } })
+      const byCategory = await db.complianceChecklist.groupBy({ by: ['category'], _count: true })
       const pendingItems = await db.complianceChecklist.findMany({
         where: { isCompleted: false },
         take: 10,
