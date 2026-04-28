@@ -1,5 +1,4 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
-import { db } from '@/lib/db'
 import { normalizeUserRole, type AppRole } from '@/lib/auth-shared'
 
 export type SupabaseAuthResult = {
@@ -16,7 +15,7 @@ export type SupabaseAuthResult = {
 
 /**
  * Sign in with email and password using Supabase Auth
- * Then sync the Supabase user with our Prisma User table
+ * Then sync the Supabase user with our User table via REST API
  */
 export async function signInWithSupabase(email: string, password: string): Promise<SupabaseAuthResult> {
   const supabase = await createClient()
@@ -34,7 +33,7 @@ export async function signInWithSupabase(email: string, password: string): Promi
     return { success: false, error: 'Pengguna tidak dijumpai' }
   }
 
-  // Sync Supabase user with our Prisma User table
+  // Sync Supabase user with our User table
   const syncedUser = await syncSupabaseUser(data.user.id, data.user.email || email)
 
   return {
@@ -45,7 +44,7 @@ export async function signInWithSupabase(email: string, password: string): Promi
 
 /**
  * Sign up a new user with Supabase Auth
- * Then create a corresponding record in our Prisma User table
+ * Then create a corresponding record in our User table
  */
 export async function signUpWithSupabase(
   email: string,
@@ -53,9 +52,9 @@ export async function signUpWithSupabase(
   name: string,
   role: AppRole = 'staff',
 ): Promise<SupabaseAuthResult> {
-  const supabase = createAdminClient()
+  const adminClient = createAdminClient()
 
-  const { data, error } = await supabase.auth.admin.createUser({
+  const { data, error } = await adminClient.auth.admin.createUser({
     email,
     password,
     email_confirm: true, // Auto-confirm for admin-created users
@@ -69,7 +68,7 @@ export async function signUpWithSupabase(
     return { success: false, error: 'Gagal mencipta pengguna' }
   }
 
-  // Create or update the Prisma User record
+  // Create or update the User record
   const syncedUser = await syncSupabaseUser(data.user.id, data.user.email || email, name, role)
 
   return {
@@ -79,7 +78,8 @@ export async function signUpWithSupabase(
 }
 
 /**
- * Sync a Supabase Auth user with our Prisma User table
+ * Sync a Supabase Auth user with our User table
+ * Uses Supabase REST API directly to avoid Prisma connection issues
  */
 async function syncSupabaseUser(
   supabaseId: string,
@@ -87,50 +87,54 @@ async function syncSupabaseUser(
   name?: string,
   role?: AppRole,
 ): Promise<NonNullable<SupabaseAuthResult['user']>> {
+  const adminClient = createAdminClient()
+
   // Try to find existing user by supabaseId or email
-  let user = await db.user.findFirst({
-    where: {
-      OR: [
-        { supabaseId },
-        { email },
-      ],
-    },
-  })
+  const { data: existingUsers } = await adminClient
+    .from('User')
+    .select('*')
+    .or(`supabaseId.eq.${supabaseId},email.eq.${email}`)
+    .limit(1)
+
+  let user = existingUsers?.[0]
 
   if (user) {
-    // Update existing user with supabaseId if not set
-    if (!user.supabaseId) {
-      user = await db.user.update({
-        where: { id: user.id },
-        data: {
-          supabaseId,
-          lastLogin: new Date(),
-          ...(name ? { name } : {}),
-        },
-      })
-    } else {
-      // Just update lastLogin
-      user = await db.user.update({
-        where: { id: user.id },
-        data: { lastLogin: new Date() },
-      })
+    // Update existing user
+    const updateData: Record<string, unknown> = {
+      lastLogin: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }
-  } else {
-    // Create new user in Prisma
-    const { hashPassword } = await import('@/lib/password')
-    const hashedPassword = await hashPassword('temp_supabase_auth_' + Date.now()) // Placeholder - auth is via Supabase
+    if (!user.supabaseId) updateData.supabaseId = supabaseId
+    if (name) updateData.name = name
 
-    user = await db.user.create({
-      data: {
+    const { data: updated } = await adminClient
+      .from('User')
+      .update(updateData)
+      .eq('id', user.id)
+      .select()
+      .single()
+
+    user = updated || user
+  } else {
+    // Create new user
+    const { data: created, error: createErr } = await adminClient
+      .from('User')
+      .insert({
         supabaseId,
         email,
         name: name || email.split('@')[0],
-        password: hashedPassword,
+        password: 'supabase_auth_managed',
         role: role || 'staff',
         isActive: true,
-        lastLogin: new Date(),
-      },
-    })
+        lastLogin: new Date().toISOString(),
+      })
+      .select()
+      .single()
+
+    if (createErr || !created) {
+      throw new Error('Gagal mencipta rekod pengguna: ' + (createErr?.message || 'Unknown error'))
+    }
+    user = created
   }
 
   if (!user.isActive) {
@@ -148,6 +152,7 @@ async function syncSupabaseUser(
 
 /**
  * Get the current authenticated user from Supabase session
+ * Uses Supabase REST API to fetch user profile
  */
 export async function getSupabaseAuthUser(): Promise<SupabaseAuthResult['user'] | null> {
   const supabase = await createClient()
@@ -156,15 +161,17 @@ export async function getSupabaseAuthUser(): Promise<SupabaseAuthResult['user'] 
 
   if (!supabaseUser) return null
 
-  // Find the corresponding Prisma user
-  const user = await db.user.findFirst({
-    where: {
-      OR: [
-        { supabaseId: supabaseUser.id },
-        { email: supabaseUser.email },
-      ],
-    },
-  })
+  // Use admin client to bypass RLS for user lookup
+  const adminClient = createAdminClient()
+
+  // Find the corresponding User record
+  const { data: users } = await adminClient
+    .from('User')
+    .select('*')
+    .or(`supabaseId.eq.${supabaseUser.id},email.eq.${supabaseUser.email}`)
+    .limit(1)
+
+  const user = users?.[0]
 
   if (!user || !user.isActive) return null
 
@@ -215,7 +222,7 @@ export async function seedSupabaseAuthUsers() {
 
       if (existing) {
         results.push({ email: userData.email, status: 'already_exists', id: existing.id })
-        // Sync with Prisma
+        // Sync with User table
         await syncSupabaseUser(existing.id, userData.email, userData.name, userData.role)
         continue
       }
@@ -232,7 +239,7 @@ export async function seedSupabaseAuthUsers() {
         continue
       }
 
-      // Sync with Prisma
+      // Sync with User table
       await syncSupabaseUser(data.user.id, userData.email, userData.name, userData.role)
 
       results.push({ email: userData.email, status: 'created', id: data.user.id })
