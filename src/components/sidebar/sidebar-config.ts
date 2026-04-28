@@ -120,6 +120,7 @@ export const SIDEBAR_GROUPS: SidebarNavGroup[] = [
     roles: ['staff', 'admin', 'developer'],
     items: [
       { id: 'docs', label: 'Panduan', icon: BookOpen, roles: ['staff', 'admin', 'developer'] },
+      { id: 'settings', label: 'Tetapan', icon: Settings, roles: ['staff', 'admin', 'developer'] },
     ],
   },
 ]

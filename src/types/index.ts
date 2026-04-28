@@ -32,6 +32,7 @@ export type ViewId =
   | 'asnafpreneur'
   | 'kelas-ai'
   | 'gudang-barangan'
+  | 'settings'
 
 export const viewLabels: Record<ViewId, string> = {
   'dashboard': 'Dashboard',
@@ -65,6 +66,7 @@ export const viewLabels: Record<ViewId, string> = {
   'asnafpreneur': 'Asnafpreneur',
   'kelas-ai': 'Kelas AI',
   'gudang-barangan': 'Gudang Barangan',
+  'settings': 'Tetapan',
 }
 
 export interface NavItem {
