@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/components/auth-provider';
 import { X } from 'lucide-react';
 import { normalizeUserRole } from '@/lib/auth-shared';
 import { useAppStore } from '@/stores/app-store';
@@ -27,9 +27,9 @@ export function SidebarContent({
   const currentView = useAppStore((s) => s.currentView);
   const userRole = useAppStore((s) => s.userRole);
   const setUserRole = useAppStore((s) => s.setUserRole);
-  const { data: session } = useSession();
+  const { user } = useAuth();
 
-  const effectiveRole = normalizeUserRole(session?.user?.role || userRole);
+  const effectiveRole = normalizeUserRole(user?.role || userRole);
   const visibleGroups = getVisibleGroups(effectiveRole);
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export function SidebarContent({
         <SidebarFooter
           collapsed={collapsed}
           role={effectiveRole}
-          userLabel={session?.user?.name || session?.user?.email || 'Pengguna PUSPA'}
+          userLabel={user?.name || user?.email || 'Pengguna PUSPA'}
         />
       </div>
     </TooltipProvider>

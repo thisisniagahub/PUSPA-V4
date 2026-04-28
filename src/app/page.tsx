@@ -3,7 +3,7 @@
 import { CSSProperties, Suspense, useEffect, useState } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/components/auth-provider';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Command, Menu, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -25,7 +25,7 @@ const HermesDashboard = dynamic(() => import('@/components/hermes/hermes-dashboa
 import { viewLabels } from '@/types';
 
 export default function Shell() {
-  const { data: session, status } = useSession();
+  const { user, loading: authLoading } = useAuth();
   const { currentView, sidebarCollapsed, toggleSidebar, setCommandPaletteOpen, setUserRole: setAppUserRole } = useAppStore();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { setCurrentView, setUserRole: setHermesUserRole, loadProviderConfig } = useHermesStore();
@@ -51,13 +51,13 @@ export default function Shell() {
   }, [currentView, setCurrentView]);
 
   useEffect(() => {
-    if (session?.user?.role) {
-      setHermesUserRole(session.user.role as any);
-      setAppUserRole(session.user.role as any);
+    if (user?.role) {
+      setHermesUserRole(user.role as any);
+      setAppUserRole(user.role as any);
     }
-  }, [session?.user?.role, setHermesUserRole, setAppUserRole]);
+  }, [user?.role, setHermesUserRole, setAppUserRole]);
 
-  if (status === 'loading' || !mounted) {
+  if (authLoading || !mounted) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4 text-center">
@@ -84,7 +84,6 @@ export default function Shell() {
   // Ensure currentView is valid or default to 'dashboard'
   const safeCurrentView = currentView || 'dashboard';
 
-  const user = session?.user;
   const displayName = user?.name || user?.email?.split('@')[0] || 'User';
   const avatarLabel = displayName.substring(0, 2).toUpperCase();
   const effectiveRole = user?.role || 'staff';

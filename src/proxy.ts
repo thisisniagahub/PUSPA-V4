@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
 function buildUnauthorizedApiResponse() {
   return NextResponse.json(
     {
@@ -12,12 +15,11 @@ function buildUnauthorizedApiResponse() {
 }
 
 const PUBLIC_API_PATHS = new Set([
-  '/api/v1/auth/login',
-  '/api/v1/auth/logout',
-  '/api/v1/auth/me',
   '/api/v1/auth/supabase/login',
   '/api/v1/auth/supabase/logout',
   '/api/v1/auth/supabase/me',
+  '/api/v1/auth/supabase/signup',
+  '/api/v1/auth/supabase/seed',
 ])
 
 export default async function proxy(request: NextRequest) {
@@ -26,29 +28,25 @@ export default async function proxy(request: NextRequest) {
   // --- Supabase Auth Session Refresh ---
   // Refresh the Supabase auth session on every request so the user
   // stays authenticated. This is the recommended pattern from Supabase
-  // for SSR apps (replaces the old middleware approach).
+  // for SSR apps.
   let supabaseResponse = NextResponse.next({ request })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          )
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
-          )
-        },
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value),
+        )
+        supabaseResponse = NextResponse.next({ request })
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options),
+        )
       },
     },
-  )
+  })
 
   // IMPORTANT: Do not add any logic between createServerClient and
   // supabase.auth.getUser() — doing so can cause random log-outs.
@@ -56,31 +54,33 @@ export default async function proxy(request: NextRequest) {
     data: { user: supabaseUser },
   } = await supabase.auth.getUser()
 
-  // --- Existing auth logic ---
+  // --- Auth logic ---
   if (PUBLIC_API_PATHS.has(pathname)) {
     return supabaseResponse
   }
 
-  // Check for NextAuth session cookie
-  const sessionToken =
-    request.cookies.get('next-auth.session-token')?.value ||
-    request.cookies.get('__Secure-next-auth.session-token')?.value
-
-  // If user has either NextAuth session or Supabase session, allow through
-  if (sessionToken || supabaseUser) {
+  // If user has a valid Supabase session, allow through
+  if (supabaseUser) {
     return supabaseResponse
   }
 
+  // Bot API routes use API key auth, not session auth
   if (pathname.startsWith('/api/v1/bot/')) {
     return supabaseResponse
   }
 
+  // Unauthenticated API access — return 401
   if (pathname.startsWith('/api/')) {
     return buildUnauthorizedApiResponse()
   }
 
   // Static assets — just pass through
   if (pathname.match(/\.(ico|png|jpg|jpeg|svg|css|js|woff2?)$/)) {
+    return supabaseResponse
+  }
+
+  // Login page — allow access (redirect to home if authenticated is handled client-side)
+  if (pathname === '/login') {
     return supabaseResponse
   }
 

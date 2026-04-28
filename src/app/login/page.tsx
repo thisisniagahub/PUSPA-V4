@@ -3,13 +3,13 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { signIn, useSession } from 'next-auth/react'
 import { Loader2, LockKeyhole, Mail } from 'lucide-react'
 import { Toaster, toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useAuth } from '@/components/auth-provider'
 
 function LoginCard({ loading }: { loading: boolean }) {
   return (
@@ -50,7 +50,7 @@ function LoginCard({ loading }: { loading: boolean }) {
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { status } = useSession()
+  const { user, loading: authLoading, signIn } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -66,10 +66,10 @@ function LoginContent() {
   }, [searchParams])
 
   useEffect(() => {
-    if (status === 'authenticated') {
+    if (user && !authLoading) {
       router.replace(callbackUrl)
     }
-  }, [callbackUrl, router, status])
+  }, [callbackUrl, router, user, authLoading])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -81,16 +81,11 @@ function LoginContent() {
 
     setIsSubmitting(true)
 
-    const result = await signIn('credentials', {
-      email: email.trim().toLowerCase(),
-      password,
-      redirect: false,
-      callbackUrl,
-    })
+    const result = await signIn(email.trim().toLowerCase(), password)
 
     setIsSubmitting(false)
 
-    if (!result || result.error) {
+    if (!result.success) {
       toast.error('Log masuk gagal. Semak emel dan kata laluan anda.')
       return
     }
@@ -199,7 +194,7 @@ function LoginContent() {
             <Button
               type="submit"
               className="h-11 w-full bg-[linear-gradient(135deg,#4B0082,#6D28D9)] text-white shadow-lg shadow-violet-200 hover:opacity-95"
-              disabled={isSubmitting || status === 'loading'}
+              disabled={isSubmitting || authLoading}
             >
               {isSubmitting ? (
                 <>

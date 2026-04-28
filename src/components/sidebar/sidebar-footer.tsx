@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { signOut } from 'next-auth/react';
+import { useAuth } from '@/components/auth-provider';
 import { LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -14,6 +14,7 @@ const BRAND_COLOR = '#ecb2ff';
 export function SidebarFooter({ collapsed, role, userLabel }: { collapsed: boolean; role: UserRole; userLabel: string }) {
   const config = ROLE_CONFIG[role];
   const avatarLabel = userLabel.trim().charAt(0).toUpperCase() || 'P';
+  const { signOut } = useAuth();
 
   return (
     <div className={cn('px-4 py-3 transition-[padding] duration-300 motion-reduce:transition-none', collapsed ? 'flex flex-col items-center gap-2' : 'space-y-2')}>
@@ -41,7 +42,7 @@ export function SidebarFooter({ collapsed, role, userLabel }: { collapsed: boole
         variant="outline"
         size={collapsed ? 'icon' : 'sm'}
         className={cn('w-full border-border/70', collapsed ? 'h-9 w-9' : 'justify-start gap-2')}
-        onClick={() => void signOut({ callbackUrl: '/login' })}
+        onClick={() => void signOut()}
         aria-label="Log keluar"
       >
         <LogOut className="h-4 w-4" aria-hidden="true" />

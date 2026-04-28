@@ -1,31 +1,30 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
       },
-    }
-  )
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+        supabaseResponse = NextResponse.next({
+          request,
+        })
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options)
+        )
+      },
+    },
+  })
 
   // IMPORTANT: Avoid writing any logic between createServerClient and
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
@@ -34,19 +33,26 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protected routes - redirect to login if not authenticated
-  const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/api/v1/auth/')
-  const isNextAuthRoute = request.nextUrl.pathname.startsWith('/api/auth/')
-  const isStaticAsset = request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|svg|css|js|woff2?)$/)
-  
-  if (!user && !isApiRoute && !isAuthRoute && !isNextAuthRoute && !isStaticAsset) {
-    // User is not authenticated and trying to access a protected page
+  // Define route categories
+  const pathname = request.nextUrl.pathname
+  const isLoginPage = pathname === '/login'
+  const isApiRoute = pathname.startsWith('/api/')
+  const isStaticAsset = pathname.match(/\.(ico|png|jpg|jpeg|svg|css|js|woff2?)$/)
+
+  // If user is not signed in and the current route is not the login page or API,
+  // redirect the user to the login page.
+  if (!user && !isLoginPage && !isApiRoute && !isStaticAsset) {
     const url = request.nextUrl.clone()
-    // Don't redirect if already on login page
-    if (request.nextUrl.pathname !== '/login') {
-      // For now, allow access - we'll implement proper auth later
-    }
+    url.pathname = '/login'
+    url.searchParams.set('callbackUrl', pathname)
+    return NextResponse.redirect(url)
+  }
+
+  // If user is signed in and on the login page, redirect to home
+  if (user && isLoginPage) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/'
+    return NextResponse.redirect(url)
   }
 
   return supabaseResponse
