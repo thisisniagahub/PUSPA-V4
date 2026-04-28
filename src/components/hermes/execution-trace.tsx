@@ -21,28 +21,28 @@ const stepIcons: Record<AgentStep['type'], React.ReactNode> = {
 
 const stepColors: Record<AgentStep['type'], string> = {
   planning: 'text-zinc-500',
-  tool_call: 'text-emerald-600',
+  tool_call: 'text-violet-600',
   processing: 'text-amber-600',
   thinking: 'text-zinc-400',
-  success: 'text-emerald-600',
+  success: 'text-violet-600',
   error: 'text-red-500',
 }
 
 const stepBgColors: Record<AgentStep['type'], string> = {
   planning: 'bg-zinc-100',
-  tool_call: 'bg-emerald-50 border-emerald-200',
+  tool_call: 'bg-violet-50 border-violet-200',
   processing: 'bg-amber-50 border-amber-200',
   thinking: 'bg-zinc-50',
-  success: 'bg-emerald-50',
+  success: 'bg-violet-50',
   error: 'bg-red-50 border-red-200',
 }
 
 const stepBadgeColors: Record<AgentStep['type'], string> = {
   planning: 'bg-zinc-900 text-white',
-  tool_call: 'bg-emerald-600 text-white',
+  tool_call: 'bg-violet-600 text-white',
   processing: 'bg-amber-600 text-white',
   thinking: 'bg-zinc-400 text-white',
-  success: 'bg-emerald-600 text-white',
+  success: 'bg-violet-600 text-white',
   error: 'bg-red-500 text-white',
 }
 
@@ -77,8 +77,8 @@ export function ExecutionTrace({ steps, isLive = false }: ExecutionTraceProps) {
           <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Trace</span>
           {isLive && hasRunningStep && (
             <span className="flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[9px] font-semibold text-emerald-600 uppercase">Live</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" />
+              <span className="text-[9px] font-semibold text-violet-600 uppercase">Live</span>
             </span>
           )}
         </div>
@@ -108,7 +108,7 @@ export function ExecutionTrace({ steps, isLive = false }: ExecutionTraceProps) {
                     'flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border text-[10px] transition-colors',
                     step.status === 'completed' ? stepBadgeColors[step.type] : 'bg-zinc-100 border-zinc-200 text-zinc-400',
                     step.status === 'error' && stepBadgeColors[step.type],
-                    step.status === 'running' && 'bg-emerald-500 text-white border-emerald-500 animate-pulse',
+                    step.status === 'running' && 'bg-violet-500 text-white border-violet-500 animate-pulse',
                   )}
                 >
                   {step.status === 'running'
@@ -123,7 +123,7 @@ export function ExecutionTrace({ steps, isLive = false }: ExecutionTraceProps) {
                     <span className={cn(
                       'text-[10px] font-semibold uppercase tracking-wider',
                       step.status === 'completed' ? stepColors[step.type] : 'text-zinc-400',
-                      step.status === 'running' && 'text-emerald-600',
+                      step.status === 'running' && 'text-violet-600',
                     )}>
                       {step.label}
                     </span>
@@ -146,7 +146,7 @@ export function ExecutionTrace({ steps, isLive = false }: ExecutionTraceProps) {
                     </p>
                   )}
                   {step.toolName && step.status === 'completed' && (
-                    <span className="inline-flex items-center gap-1 mt-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-medium text-emerald-700 border border-emerald-100">
+                    <span className="inline-flex items-center gap-1 mt-1 rounded-full bg-violet-50 px-2 py-0.5 text-[9px] font-medium text-violet-700 border border-violet-100">
                       <Wrench className="h-2 w-2" />
                       {step.toolName}
                     </span>

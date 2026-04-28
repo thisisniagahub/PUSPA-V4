@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Send, Loader2, Settings, RotateCcw, Wrench, ArrowUp } from 'lucide-react'
+import { Send, Loader2, Settings, RotateCcw, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -69,8 +69,8 @@ export function HermesChatInput({
   }, [handleSend])
 
   const defaultPlaceholder = isBusy
-    ? 'Hermes sedang berfikir...'
-    : 'Tanya Hermes apa-apa tentang PUSPA...'
+    ? 'PUSPA sedang berfikir...'
+    : 'Taip mesej anda...'
 
   return (
     <div className="space-y-2">
@@ -78,7 +78,7 @@ export function HermesChatInput({
       <div className={cn(
         'relative flex items-end gap-2 rounded-2xl border bg-white dark:bg-zinc-900 px-3 py-2 transition-all',
         'border-black/10 dark:border-white/10',
-        'focus-within:ring-2 focus-within:ring-emerald-500/30 focus-within:border-emerald-500/50',
+        'focus-within:ring-2 focus-within:ring-violet-500/30 focus-within:border-violet-500/50',
         isBusy && 'opacity-80',
       )}>
         <textarea
@@ -102,9 +102,9 @@ export function HermesChatInput({
           onClick={handleSend}
           disabled={!input.trim() || isBusy}
           className={cn(
-            'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all',
+            'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all',
             input.trim() && !isBusy
-              ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:opacity-80 active:scale-95'
+              ? 'bg-violet-600 dark:bg-violet-500 text-white hover:opacity-80 active:scale-95'
               : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed',
           )}
           aria-label="Hantar mesej"
@@ -112,7 +112,7 @@ export function HermesChatInput({
           {isBusy ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <ArrowUp className="h-4 w-4" />
+            <Send className="h-4 w-4" />
           )}
         </button>
       </div>
@@ -130,7 +130,7 @@ export function HermesChatInput({
             </Badge>
           )}
           {toolsUsed > 0 && (
-            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 gap-1 text-emerald-600 border-emerald-200 dark:border-emerald-800">
+            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 gap-1 text-violet-600 border-violet-200 dark:border-violet-800">
               <Wrench className="h-2.5 w-2.5" />
               {toolsUsed}
             </Badge>

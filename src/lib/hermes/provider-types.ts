@@ -31,7 +31,7 @@ export const PROVIDERS: Record<ProviderId, ProviderInfo> = {
   openrouter: {
     id: 'openrouter',
     name: 'OpenRouter',
-    description: 'Akses 200+ model termasuk Hermes 4, DeepSeek, Llama — percuma & berbayar',
+    description: 'Akses 200+ model termasuk DeepSeek, Llama, Qwen — percuma & berbayar',
     requiresApiKey: true,
     requiresBaseUrl: false,
     defaultBaseUrl: 'https://openrouter.ai/api/v1',

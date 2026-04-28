@@ -231,9 +231,9 @@ IMPORTANT:
       },
     })
   } catch (error: any) {
-    console.error('Hermes chat error:', error)
+    console.error('PUSPA AI chat error:', error)
     return NextResponse.json(
-      { success: false, error: error?.message || 'Hermes mengalami masalah teknikal' },
+      { success: false, error: error?.message || 'PUSPA AI mengalami masalah teknikal' },
       { status: 500 },
     )
   }

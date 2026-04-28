@@ -84,8 +84,8 @@ export function HermesMessage({ message }: HermesMessageProps) {
         className={cn(
           'flex h-8 w-8 shrink-0 items-center justify-center rounded-full mt-0.5',
           isUser
-            ? 'bg-emerald-600 text-white'
-            : 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white',
+            ? 'bg-violet-600 text-white'
+            : 'bg-gradient-to-br from-violet-500 to-purple-500 text-white',
         )}
       >
         {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
@@ -96,14 +96,14 @@ export function HermesMessage({ message }: HermesMessageProps) {
         className={cn(
           'relative max-w-[85%] rounded-2xl text-sm leading-relaxed',
           isUser
-            ? 'bg-emerald-600 text-white dark:bg-emerald-700 px-4 py-3'
+            ? 'bg-violet-600 text-white dark:bg-violet-700 px-4 py-3'
             : 'bg-muted text-foreground px-4 py-3',
         )}
       >
         {/* Tool result badge */}
         {message.isToolResult && message.toolName && (
           <div className="mb-2 flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/20 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+            <span className="inline-flex items-center gap-1 rounded-md bg-violet-500/20 px-2 py-0.5 text-[10px] font-medium text-violet-400">
               <Wrench className="h-2.5 w-2.5" />
               {message.toolName}
             </span>
@@ -114,7 +114,7 @@ export function HermesMessage({ message }: HermesMessageProps) {
         <div
           className={cn(
             'whitespace-pre-wrap break-words hermes-content',
-            isUser ? '' : '[&_strong]:font-semibold [&_code]:text-emerald-600 dark:[&_code]:text-emerald-400 [&_pre]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_h4]:text-foreground',
+            isUser ? '' : '[&_strong]:font-semibold [&_code]:text-violet-600 dark:[&_code]:text-violet-400 [&_pre]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_h4]:text-foreground',
           )}
           dangerouslySetInnerHTML={isUser ? undefined : { __html: renderedContent }}
         >
@@ -123,7 +123,7 @@ export function HermesMessage({ message }: HermesMessageProps) {
 
         {/* Streaming cursor */}
         {message.isStreaming && (
-          <span className="inline-block w-1.5 h-4 bg-emerald-500 animate-pulse ml-0.5 align-middle rounded-sm" />
+          <span className="inline-block w-1.5 h-4 bg-violet-500 animate-pulse ml-0.5 align-middle rounded-sm" />
         )}
 
         {/* Footer */}
@@ -137,7 +137,7 @@ export function HermesMessage({ message }: HermesMessageProps) {
             <span
               className={cn(
                 'text-[10px]',
-                isUser ? 'text-emerald-100/70' : 'text-muted-foreground',
+                isUser ? 'text-violet-100/70' : 'text-muted-foreground',
               )}
             >
               {formattedTime}
@@ -167,7 +167,7 @@ export function HermesMessage({ message }: HermesMessageProps) {
               aria-label="Salin mesej"
             >
               {copied ? (
-                <Check className="h-3 w-3 text-emerald-500" />
+                <Check className="h-3 w-3 text-violet-500" />
               ) : (
                 <Copy className="h-3 w-3" />
               )}

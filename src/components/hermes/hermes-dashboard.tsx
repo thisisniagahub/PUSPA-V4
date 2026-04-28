@@ -80,12 +80,12 @@ export function HermesDashboard() {
         <div className="hidden lg:flex w-[200px] flex-col border-r border-black/5 dark:border-white/5 bg-zinc-50 dark:bg-zinc-900">
           {/* Logo */}
           <div className="flex items-center gap-2 px-4 py-4 border-b border-black/5 dark:border-white/5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-purple-700">
               <Sparkles className="h-4 w-4 text-white" />
             </div>
             <div>
-              <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Hermes</p>
-              <p className="text-[9px] text-zinc-400 uppercase tracking-wider">AI Agent</p>
+              <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">PUSPA</p>
+              <p className="text-[9px] text-zinc-400 uppercase tracking-wider">AI ASSISTANT</p>
             </div>
           </div>
 
@@ -129,8 +129,8 @@ export function HermesDashboard() {
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Execution Trace</span>
                   {isLive && (
                     <span className="flex items-center gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[9px] font-semibold text-emerald-600 uppercase">Live</span>
+                      <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" />
+                      <span className="text-[9px] font-semibold text-violet-600 uppercase">Live</span>
                     </span>
                   )}
                 </div>
@@ -167,17 +167,17 @@ export function HermesDashboard() {
             {/* Chat Header */}
             <div className="flex items-center justify-between px-6 py-3 border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500">
+                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700">
                   <Sparkles className="h-5 w-5 text-white" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Hermes AI</span>
-                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 gap-0.5 bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800">
+                    <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">PUSPA AI</span>
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 gap-0.5 bg-violet-50 text-violet-600 border-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:border-violet-800">
                       {moduleLabel}
                     </Badge>
                   </div>
-                  <p className="text-[11px] text-zinc-400">Ejen AI pintar PUSPA</p>
+                  <p className="text-[11px] text-zinc-400">Cerdas. Mesra. Sentiasa di sisi anda.</p>
                 </div>
               </div>
 
@@ -225,22 +225,23 @@ export function HermesDashboard() {
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center gap-5 py-12">
                   {/* Hero */}
-                  <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/20">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-violet-600 to-purple-700 shadow-lg shadow-violet-500/20">
                     <Sparkles className="h-10 w-10 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Hermes ✨</h2>
+                    <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Hai! 😊</h2>
                     <p className="text-sm text-zinc-500 mt-2 max-w-[400px] leading-relaxed">
-                      Ejen AI pintar PUSPA dengan akses penuh ke seluruh sistem — boleh cari, cipta, kemaskini, dan analisis data dalam satu perbualan
+                      Saya PUSPA, AI Assistant anda. Ada apa yang boleh saya bantu hari ini?
                     </p>
+                    <p className="text-[11px] text-violet-500/70 mt-1 italic">Cerdas. Mesra. Sentiasa di sisi anda.</p>
                   </div>
 
                   {/* Capability Cards */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2 max-w-lg">
                     {[
-                      { icon: <Search className="h-4 w-4" />, label: 'Carian', desc: 'Cari data', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
-                      { icon: <Wrench className="h-4 w-4" />, label: 'CRUD', desc: 'Cipta & edit', color: 'text-amber-600 bg-amber-50 border-amber-100' },
-                      { icon: <Brain className="h-4 w-4" />, label: 'Analisis', desc: 'Insight data', color: 'text-purple-600 bg-purple-50 border-purple-100' },
+                      { icon: <Search className="h-4 w-4" />, label: 'Carian', desc: 'Cari data', color: 'text-violet-600 bg-violet-50 border-violet-100' },
+                      { icon: <Wrench className="h-4 w-4" />, label: 'CRUD', desc: 'Cipta & edit', color: 'text-purple-600 bg-purple-50 border-purple-100' },
+                      { icon: <Brain className="h-4 w-4" />, label: 'Analisis', desc: 'Insight data', color: 'text-fuchsia-600 bg-fuchsia-50 border-fuchsia-100' },
                       { icon: <Zap className="h-4 w-4" />, label: 'Automasi', desc: 'Proses pantas', color: 'text-rose-600 bg-rose-50 border-rose-100' },
                     ].map((cap) => (
                       <div key={cap.label} className={cn('flex flex-col items-center gap-1.5 p-3 rounded-2xl border', cap.color)}>
@@ -257,7 +258,7 @@ export function HermesDashboard() {
                       <button
                         key={action.id}
                         onClick={() => handleSend(action.query)}
-                        className="text-[11px] px-3 py-1.5 rounded-full border border-black/5 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-all hover:shadow-sm active:scale-95"
+                        className="text-[11px] px-3 py-1.5 rounded-full border border-violet-200 dark:border-violet-800 bg-white dark:bg-zinc-800 hover:bg-violet-50 dark:hover:bg-violet-900/40 text-violet-700 dark:text-violet-300 transition-all hover:shadow-sm active:scale-95"
                       >
                         {action.label}
                       </button>
@@ -287,18 +288,18 @@ export function HermesDashboard() {
                   {status === 'streaming' && messages[messages.length - 1]?.isStreaming && (
                     <div className="flex items-center gap-2 px-2">
                       <div className="flex gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '300ms' }} />
                       </div>
-                      <span className="text-[10px] text-zinc-400">Hermes sedang menaip...</span>
+                      <span className="text-[10px] text-zinc-400">PUSPA sedang menaip...</span>
                     </div>
                   )}
 
                   {/* Thinking indicator */}
                   {status === 'thinking' && (
                     <div className="flex items-center gap-2 px-2">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
                       <span className="text-[11px] text-zinc-400">Memproses...</span>
                     </div>
                   )}
@@ -315,7 +316,7 @@ export function HermesDashboard() {
                     <button
                       key={action.id}
                       onClick={() => handleSend(action.query)}
-                      className="shrink-0 text-[10px] px-2.5 py-1 rounded-full border border-black/5 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 transition-all whitespace-nowrap active:scale-95"
+                      className="shrink-0 text-[10px] px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-800 bg-white dark:bg-zinc-800 hover:bg-violet-50 dark:hover:bg-violet-900/40 text-violet-600 dark:text-violet-400 transition-all whitespace-nowrap active:scale-95"
                     >
                       {action.label}
                     </button>
@@ -353,13 +354,13 @@ export function HermesDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-black/5 dark:border-white/5 bg-white dark:bg-zinc-950">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700">
             <Sparkles className="h-5 w-5 text-white" />
           </div>
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Hermes</span>
-              <span className="text-emerald-500">✨</span>
+              <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">PUSPA</span>
+              <span className="text-violet-500">✨</span>
               <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 gap-0.5 border-black/5 dark:border-white/10">
                 <span>{providerInfo.icon}</span>
                 {providerInfo.name}
@@ -371,8 +372,8 @@ export function HermesDashboard() {
               </Badge>
               {isLive && (
                 <span className="flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[9px] text-emerald-600">Live</span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" />
+                  <span className="text-[9px] text-violet-600">Live</span>
                 </span>
               )}
             </div>
@@ -435,19 +436,20 @@ export function HermesDashboard() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center gap-4 py-6">
-            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/20">
+            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-violet-600 to-purple-700 shadow-lg shadow-violet-500/20">
               <Sparkles className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Hermes ✨</h3>
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Hai! 😊</h3>
               <p className="text-[12px] text-zinc-500 mt-1 max-w-[280px] leading-relaxed">
-                Ejen AI pintar dengan akses penuh ke seluruh sistem PUSPA
+                Saya PUSPA, AI Assistant anda. Ada apa yang boleh saya bantu hari ini?
               </p>
+              <p className="text-[10px] text-violet-500/70 mt-0.5 italic">Cerdas. Mesra. Sentiasa di sisi anda.</p>
             </div>
 
             {/* Capabilities */}
             <div className="flex flex-wrap justify-center gap-1.5">
-              <Badge variant="outline" className="text-[10px] gap-1 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800">
+              <Badge variant="outline" className="text-[10px] gap-1 bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:border-violet-800">
                 <Search className="h-3 w-3" /> Carian
               </Badge>
               <Badge variant="outline" className="text-[10px] gap-1 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800">
@@ -467,7 +469,7 @@ export function HermesDashboard() {
                 <button
                   key={action.id}
                   onClick={() => handleSend(action.query)}
-                  className="text-[11px] px-3 py-1.5 rounded-full border border-black/5 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-all active:scale-95"
+                  className="text-[11px] px-3 py-1.5 rounded-full border border-violet-200 dark:border-violet-800 bg-white dark:bg-zinc-800 hover:bg-violet-50 dark:hover:bg-violet-900/40 text-violet-700 dark:text-violet-300 transition-all active:scale-95"
                 >
                   {action.label}
                 </button>
@@ -487,17 +489,17 @@ export function HermesDashboard() {
             {status === 'streaming' && messages[messages.length - 1]?.isStreaming && (
               <div className="flex items-center gap-2 px-2">
                 <div className="flex gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
-                <span className="text-[10px] text-zinc-400">Hermes sedang menaip...</span>
+                <span className="text-[10px] text-zinc-400">PUSPA sedang menaip...</span>
               </div>
             )}
 
             {status === 'thinking' && (
               <div className="flex items-center gap-2 px-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
                 <span className="text-[11px] text-zinc-400">Memproses...</span>
               </div>
             )}
@@ -513,7 +515,7 @@ export function HermesDashboard() {
               <button
                 key={action.id}
                 onClick={() => handleSend(action.query)}
-                className="shrink-0 text-[10px] px-2.5 py-1 rounded-full border border-black/5 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 transition-all whitespace-nowrap active:scale-95"
+                className="shrink-0 text-[10px] px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-800 bg-white dark:bg-zinc-800 hover:bg-violet-50 dark:hover:bg-violet-900/40 text-violet-600 dark:text-violet-400 transition-all whitespace-nowrap active:scale-95"
               >
                 {action.label}
               </button>

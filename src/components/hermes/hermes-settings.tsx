@@ -94,7 +94,7 @@ export function HermesSettings() {
 
   return (
     <div className="p-4 space-y-4 bg-zinc-50 dark:bg-zinc-900/50">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">⚙ Tetapan Provider</div>
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">⚙ Tetapan Provider</div>
 
       {/* Provider Selection */}
       <div className="space-y-2">
@@ -107,14 +107,14 @@ export function HermesSettings() {
               className={cn(
                 'flex flex-col items-center gap-1 p-2.5 rounded-xl border text-center transition-all',
                 localProvider === provider.id
-                  ? 'border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-zinc-900'
-                  : 'border-black/5 dark:border-white/10 hover:border-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400',
+                  ? 'border-violet-600 bg-violet-600 text-white'
+                  : 'border-black/5 dark:border-white/10 hover:border-violet-300 hover:bg-violet-50 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400',
               )}
             >
               <span className="text-lg">{provider.icon}</span>
               <span className="text-[10px] font-medium leading-tight">{provider.name}</span>
               {provider.id !== 'zai' && (
-                <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3 bg-zinc-200 dark:bg-zinc-700">
+                <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3 bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">
                   {provider.id === 'openrouter' ? 'Free tier' : 'Local'}
                 </Badge>
               )}
@@ -131,7 +131,7 @@ export function HermesSettings() {
           <select
             value={localModel}
             onChange={(e) => setLocalModel(e.target.value)}
-            className="w-full h-9 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+            className="w-full h-9 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 px-3 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-violet-500/30"
           >
             {currentProvider.models.map((model) => (
               <option key={model.id} value={model.id}>
@@ -149,7 +149,7 @@ export function HermesSettings() {
           <label className="text-xs font-medium text-muted-foreground">
             API Key
             {providerState.hasApiKey && (
-              <span className="text-emerald-500 ml-2">✓ Disimpan ({providerState.apiKeyPrefix})</span>
+              <span className="text-violet-500 ml-2">✓ Disimpan ({providerState.apiKeyPrefix})</span>
             )}
           </label>
           <div className="relative">
@@ -169,7 +169,7 @@ export function HermesSettings() {
           </div>
           <p className="text-[10px] text-muted-foreground">
             Dapatkan API key percuma di{' '}
-            <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-emerald-500 underline">
+            <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-violet-500 underline">
               openrouter.ai/keys
             </a>
           </p>
@@ -188,7 +188,7 @@ export function HermesSettings() {
           />
           <p className="text-[10px] text-muted-foreground">
             Pastikan Ollama berjalan di komputer anda. Muat turun di{' '}
-            <a href="https://ollama.com" target="_blank" rel="noopener noreferrer" className="text-emerald-500 underline">
+            <a href="https://ollama.com" target="_blank" rel="noopener noreferrer" className="text-violet-500 underline">
               ollama.com
             </a>
           </p>
@@ -201,7 +201,7 @@ export function HermesSettings() {
           onClick={handleSave}
           disabled={saving}
           size="sm"
-          className="flex-1 h-8 text-xs gap-1.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:opacity-90"
+          className="flex-1 h-8 text-xs gap-1.5 bg-violet-600 text-white hover:bg-violet-700"
         >
           {saving ? (
             <Loader2 className="h-3 w-3 animate-spin" />
@@ -236,7 +236,7 @@ export function HermesSettings() {
           animate={{ opacity: 1, y: 0 }}
           className={cn(
             'text-xs px-3 py-2 rounded-xl border',
-            testResult === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100',
+            testResult === 'success' ? 'bg-violet-50 text-violet-600 border-violet-100' : 'bg-red-50 text-red-600 border-red-100',
           )}
         >
           {testResult === 'success' ? '✅ Sambungan berjaya!' : '❌ Sambungan gagal. Semak konfigurasi.'}

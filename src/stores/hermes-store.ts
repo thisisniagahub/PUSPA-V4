@@ -433,7 +433,7 @@ export const useHermesStore = create<HermesState>()(
       },
     }),
     {
-      name: 'puspa-hermes-state',
+      name: 'puspa-ai-state',
       partialize: (state) => ({
         locale: state.locale,
         messages: state.messages.slice(-30).map(m => ({

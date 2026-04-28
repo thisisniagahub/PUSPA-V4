@@ -108,12 +108,12 @@ export function HermesPanel() {
           <div className="flex flex-col items-center justify-center h-full text-center gap-4 py-8">
             <div
               className="flex h-16 w-16 items-center justify-center rounded-2xl"
-              style={{ background: 'linear-gradient(135deg, #10b981 0%, #14b8a6 50%, #0d9488 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #7e22ce 100%)' }}
             >
               <Sparkles className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-foreground">Hermes ✨</h3>
+              <h3 className="text-lg font-bold text-foreground">PUSPA AI</h3>
               <p className="text-sm text-muted-foreground mt-1 max-w-[280px]">
                 Ejen AI pintar PUSPA dengan akses penuh ke seluruh sistem — boleh cari, cipta, kemaskini, dan analisis data
               </p>
@@ -121,16 +121,16 @@ export function HermesPanel() {
 
             {/* Capability Badges */}
             <div className="flex flex-wrap justify-center gap-1.5">
-              <Badge variant="outline" className="text-[10px] gap-1 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800">
+              <Badge variant="outline" className="text-[10px] gap-1 bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:border-violet-800">
                 <Search className="h-3 w-3" /> Carian
               </Badge>
-              <Badge variant="outline" className="text-[10px] gap-1 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">
+              <Badge variant="outline" className="text-[10px] gap-1 bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 dark:border-indigo-800">
                 <Wrench className="h-3 w-3" /> CRUD
               </Badge>
-              <Badge variant="outline" className="text-[10px] gap-1 bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800">
+              <Badge variant="outline" className="text-[10px] gap-1 bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200 dark:bg-fuchsia-950 dark:text-fuchsia-300 dark:border-fuchsia-800">
                 <Brain className="h-3 w-3" /> Analisis
               </Badge>
-              <Badge variant="outline" className="text-[10px] gap-1 bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800">
+              <Badge variant="outline" className="text-[10px] gap-1 bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800">
                 <Zap className="h-3 w-3" /> Automasi
               </Badge>
             </div>
@@ -170,18 +170,18 @@ export function HermesPanel() {
             {status === 'streaming' && messages[messages.length - 1]?.isStreaming && (
               <div className="flex items-center gap-2 px-4">
                 <div className="flex gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
-                <span className="text-[10px] text-muted-foreground">Hermes sedang menaip...</span>
+                <span className="text-[10px] text-muted-foreground">PUSPA sedang menaip...</span>
               </div>
             )}
 
             {/* Thinking indicator */}
             {status === 'thinking' && (
               <div className="flex items-center gap-2 px-4">
-                <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
+                <Loader2 className="h-4 w-4 animate-spin text-violet-500" />
                 <span className="text-xs text-muted-foreground">Memproses...</span>
               </div>
             )}
@@ -215,9 +215,9 @@ export function HermesPanel() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={status === 'thinking' || status === 'streaming' ? 'Hermes sedang berfikir...' : 'Tanya Hermes apa-apa tentang PUSPA...'}
+              placeholder={status === 'thinking' || status === 'streaming' ? 'PUSPA sedang berfikir...' : 'Taip mesej anda...'}
               disabled={status === 'thinking' || status === 'streaming'}
-              className="pr-2 text-sm h-10 rounded-xl border-border focus-visible:ring-emerald-500/30"
+              className="pr-2 text-sm h-10 rounded-xl border-border focus-visible:ring-violet-500/30"
             />
           </div>
 
@@ -227,7 +227,7 @@ export function HermesPanel() {
             size="icon"
             className="h-10 w-10 shrink-0 rounded-xl"
             style={{
-              background: input.trim() ? 'linear-gradient(135deg, #10b981 0%, #14b8a6 100%)' : undefined,
+              background: input.trim() ? 'linear-gradient(135deg, #7c3aed 0%, #9333ea 100%)' : undefined,
             }}
           >
             <Send className="h-4 w-4" />
@@ -247,7 +247,7 @@ export function HermesPanel() {
               </Badge>
             )}
             {toolsUsed > 0 && (
-              <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 gap-1 text-emerald-600 border-emerald-200">
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 gap-1 text-violet-600 border-violet-200">
                 <Wrench className="h-2.5 w-2.5" /> {toolsUsed}
               </Badge>
             )}

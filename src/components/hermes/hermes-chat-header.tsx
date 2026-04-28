@@ -16,11 +16,11 @@ export function HermesChatHeader() {
   return (
     <div className="flex items-center justify-between border-b bg-background/95 backdrop-blur-sm px-4 py-3">
       <div className="flex items-center gap-2.5 min-w-0">
-        {/* Hermes avatar */}
+        {/* PUSPA avatar */}
         <div
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
           style={{
-            background: 'linear-gradient(135deg, #10b981 0%, #14b8a6 50%, #0d9488 100%)',
+            background: 'linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #7e22ce 100%)',
           }}
         >
           <Sparkles className="h-5 w-5 text-white" />
@@ -28,11 +28,11 @@ export function HermesChatHeader() {
 
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-bold text-foreground">Hermes</span>
-            <span className="text-emerald-500">✨</span>
+            <span className="text-sm font-bold text-foreground">PUSPA</span>
+            <span className="text-violet-500">✨</span>
             <Badge
               variant="secondary"
-              className="text-[9px] px-1.5 py-0 h-4 gap-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+              className="text-[9px] px-1.5 py-0 h-4 gap-0.5 bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20"
             >
               {providerInfo.icon} {providerInfo.name}
             </Badge>

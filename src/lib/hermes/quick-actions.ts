@@ -73,9 +73,10 @@ export const QUICK_ACTIONS: Partial<Record<string, QuickAction[]>> = {
 }
 
 export const UNIVERSAL_QUICK_ACTIONS: QuickAction[] = [
-  { id: 'u-1', label: '❓ Bantuan modul ini', query: 'Terangkan apa yang boleh saya buat di modul ini dan apa tools yang ada', category: 'navigate' },
-  { id: 'u-2', label: '🏠 Ke Dashboard', query: 'Bawa saya ke Dashboard', category: 'navigate' },
-  { id: 'u-3', label: '🧠 Cadangan tindakan', query: 'Apakah cadangan tindakan untuk modul ini?', category: 'action' },
+  { id: 'u-1', label: '📋 Semak Status Kes', query: 'Semak status kes bantuan yang menunggu tindakan', category: 'query' },
+  { id: 'u-2', label: '💰 Status Bantuan', query: 'Berapa jumlah bantuan yang telah disalurkan bulan ini?', category: 'query' },
+  { id: 'u-3', label: '🏫 Bantuan Program', query: 'Senaraikan program bantuan yang tersedia', category: 'query' },
+  { id: 'u-4', label: '👨‍💼 Hubungi Pentadbir', query: 'Saya perlukan bantuan pentadbir', category: 'action' },
 ]
 
 export function getQuickActions(viewId: string): QuickAction[] {

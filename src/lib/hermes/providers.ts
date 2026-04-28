@@ -110,7 +110,7 @@ async function callOpenRouter(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
       'HTTP-Referer': 'https://puspacare.app',
-      'X-Title': 'PuspaCare Hermes Agent',
+      'X-Title': 'PuspaCare PUSPA AI Assistant',
     },
     body: JSON.stringify(body),
   })
@@ -322,7 +322,7 @@ export async function streamLLM(params: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
       'HTTP-Referer': 'https://puspacare.app',
-      'X-Title': 'PuspaCare Hermes Agent',
+      'X-Title': 'PuspaCare PUSPA AI Assistant',
     }
   } else {
     if (!baseUrl) throw new Error('Ollama memerlukan base URL')

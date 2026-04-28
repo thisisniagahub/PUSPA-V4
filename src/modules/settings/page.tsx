@@ -8,6 +8,7 @@ import {
   Save, Plus, Pencil, Trash2, CheckCircle2, AlertCircle,
   Loader2, Mail, Phone, Lock, Camera, ToggleLeft, ToggleRight,
   Monitor, Moon, Sun, Globe, Clock, LogOut, Smartphone,
+  UserPlus, Crown, Code2, Briefcase, Flower2,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -57,14 +58,14 @@ interface NotificationSetting {
 }
 
 // ─────────────────────────────────────────────
-// Role Config
+// Role Config (with PUSPA violet theme)
 // ─────────────────────────────────────────────
-const ROLE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  staff: { label: 'Staf', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-400' },
-  admin: { label: 'Pentadbir', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-400' },
-  developer: { label: 'Developer', color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200 dark:bg-purple-950 dark:border-purple-800 dark:text-purple-400' },
-  ops: { label: 'Operasi', color: 'text-zinc-600', bg: 'bg-zinc-50 border-zinc-200 dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-400' },
-  finance: { label: 'Kewangan', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-400' },
+const ROLE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode; description: string }> = {
+  staff: { label: 'Staf', color: 'text-violet-600', bg: 'bg-violet-50 border-violet-200 dark:bg-violet-950 dark:border-violet-800 dark:text-violet-400', icon: <Briefcase className="h-3.5 w-3.5" />, description: 'Akses baca & operasi asas' },
+  admin: { label: 'Pentadbir', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-400', icon: <Crown className="h-3.5 w-3.5" />, description: 'Akses penuh CRUD & pentadbiran' },
+  developer: { label: 'Developer', color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200 dark:bg-purple-950 dark:border-purple-800 dark:text-purple-400', icon: <Code2 className="h-3.5 w-3.5" />, description: 'Akses penuh termasuk AI & sistem' },
+  ops: { label: 'Operasi', color: 'text-zinc-600', bg: 'bg-zinc-50 border-zinc-200 dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-400', icon: <Briefcase className="h-3.5 w-3.5" />, description: 'Akses operasi' },
+  finance: { label: 'Kewangan', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-400', icon: <Briefcase className="h-3.5 w-3.5" />, description: 'Akses kewangan' },
 }
 
 function getInitials(name: string): string {
@@ -237,6 +238,10 @@ export default function SettingsPage() {
       toast.error('Kata laluan diperlukan untuk pengguna baru')
       return
     }
+    if (!editingUser && userForm.password.length < 8) {
+      toast.error('Kata laluan mestilah sekurang-kurangnya 8 aksara')
+      return
+    }
     setSavingUser(true)
     try {
       if (editingUser) {
@@ -265,9 +270,9 @@ export default function SettingsPage() {
         })
         const json = await res.json()
         if (json.success) {
-          toast.success('Pengguna baru berjaya dicipta')
+          toast.success('Akaun baharu berjaya dicipta! 🌸')
         } else {
-          toast.error(json.error || 'Gagal mencipta pengguna')
+          toast.error(json.error || 'Gagal mencipta akaun')
         }
       }
       setUserDialogOpen(false)
@@ -300,12 +305,17 @@ export default function SettingsPage() {
   const effectiveRole = currentUser?.role || 'staff'
   const isAdmin = effectiveRole === 'admin' || effectiveRole === 'developer'
 
+  // Count users by role
+  const staffCount = users.filter(u => u.role === 'staff').length
+  const adminCount = users.filter(u => u.role === 'admin' || u.role === 'ops' || u.role === 'finance').length
+  const devCount = users.filter(u => u.role === 'developer').length
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/10">
-          <Settings className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-100 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-800">
+          <Settings className="h-5 w-5 text-violet-600 dark:text-violet-400" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Tetapan</h1>
@@ -316,17 +326,17 @@ export default function SettingsPage() {
       {/* Tabs */}
       <Tabs defaultValue="profil" className="space-y-6">
         <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 h-auto p-1.5 bg-zinc-100 dark:bg-zinc-800/50 border border-black/5 dark:border-white/5 rounded-2xl">
-          <TabsTrigger value="profil" className="flex items-center gap-2 py-2.5 rounded-xl text-xs data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-zinc-900">
+          <TabsTrigger value="profil" className="flex items-center gap-2 py-2.5 rounded-xl text-xs data-[state=active]:bg-violet-600 data-[state=active]:text-white dark:data-[state=active]:bg-violet-600 dark:data-[state=active]:text-white">
             <User className="h-3.5 w-3.5" /> Profil
           </TabsTrigger>
-          <TabsTrigger value="keselamatan" className="flex items-center gap-2 py-2.5 rounded-xl text-xs data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-zinc-900">
+          <TabsTrigger value="keselamatan" className="flex items-center gap-2 py-2.5 rounded-xl text-xs data-[state=active]:bg-violet-600 data-[state=active]:text-white dark:data-[state=active]:bg-violet-600 dark:data-[state=active]:text-white">
             <Shield className="h-3.5 w-3.5" /> Keselamatan
           </TabsTrigger>
-          <TabsTrigger value="notifikasi" className="flex items-center gap-2 py-2.5 rounded-xl text-xs data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-zinc-900">
+          <TabsTrigger value="notifikasi" className="flex items-center gap-2 py-2.5 rounded-xl text-xs data-[state=active]:bg-violet-600 data-[state=active]:text-white dark:data-[state=active]:bg-violet-600 dark:data-[state=active]:text-white">
             <Bell className="h-3.5 w-3.5" /> Notifikasi
           </TabsTrigger>
           {isAdmin && (
-            <TabsTrigger value="pengguna" className="flex items-center gap-2 py-2.5 rounded-xl text-xs data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-zinc-900">
+            <TabsTrigger value="pengguna" className="flex items-center gap-2 py-2.5 rounded-xl text-xs data-[state=active]:bg-violet-600 data-[state=active]:text-white dark:data-[state=active]:bg-violet-600 dark:data-[state=active]:text-white">
               <Users className="h-3.5 w-3.5" /> Pengguna
             </TabsTrigger>
           )}
@@ -341,8 +351,8 @@ export default function SettingsPage() {
             <CardContent className="p-6">
               <div className="flex flex-col sm:flex-row items-center gap-6">
                 <div className="relative group">
-                  <Avatar className="h-24 w-24 border-4 border-zinc-100 dark:border-zinc-700 shadow-lg">
-                    <AvatarFallback className="text-2xl font-bold bg-zinc-900 text-white dark:bg-white dark:text-zinc-900">
+                  <Avatar className="h-24 w-24 border-4 border-violet-100 dark:border-violet-900/50 shadow-lg">
+                    <AvatarFallback className="text-2xl font-bold bg-violet-600 text-white">
                       {getInitials(profileName || 'U')}
                     </AvatarFallback>
                   </Avatar>
@@ -354,7 +364,8 @@ export default function SettingsPage() {
                   <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{profileName || 'Pengguna'}</h2>
                   <p className="text-sm text-zinc-500 mt-0.5">{profileEmail}</p>
                   <Badge className={cn('mt-2 border', ROLE_CONFIG[effectiveRole]?.bg || ROLE_CONFIG.staff.bg)}>
-                    {ROLE_CONFIG[effectiveRole]?.label || effectiveRole}
+                    {ROLE_CONFIG[effectiveRole]?.icon}
+                    <span className="ml-1">{ROLE_CONFIG[effectiveRole]?.label || effectiveRole}</span>
                   </Badge>
                   <p className="text-xs text-zinc-400 mt-2">
                     Akaun aktif
@@ -374,7 +385,7 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-zinc-500">Nama Penuh</Label>
-                  <Input value={profileName} onChange={e => setProfileName(e.target.value)} className="rounded-xl border-black/10 dark:border-white/10" />
+                  <Input value={profileName} onChange={e => setProfileName(e.target.value)} className="rounded-xl border-black/10 dark:border-white/10 focus-visible:ring-violet-500/30" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-zinc-500">Emel</Label>
@@ -385,7 +396,7 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-zinc-500">No. Telefon</Label>
-                  <Input value={profilePhone} onChange={e => setProfilePhone(e.target.value)} placeholder="01x-xxxxxxx" className="rounded-xl border-black/10 dark:border-white/10" />
+                  <Input value={profilePhone} onChange={e => setProfilePhone(e.target.value)} placeholder="01x-xxxxxxx" className="rounded-xl border-black/10 dark:border-white/10 focus-visible:ring-violet-500/30" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-zinc-500">Peranan</Label>
@@ -394,10 +405,10 @@ export default function SettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-zinc-500">Bio</Label>
-                <Textarea value={profileBio} onChange={e => setProfileBio(e.target.value)} placeholder="Perkenalan ringkas tentang diri anda..." rows={3} className="rounded-xl border-black/10 dark:border-white/10" />
+                <Textarea value={profileBio} onChange={e => setProfileBio(e.target.value)} placeholder="Perkenalan ringkas tentang diri anda..." rows={3} className="rounded-xl border-black/10 dark:border-white/10 focus-visible:ring-violet-500/30" />
               </div>
               <div className="flex justify-end">
-                <Button onClick={handleSaveProfile} disabled={savingProfile} className="gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:opacity-90 rounded-xl">
+                <Button onClick={handleSaveProfile} disabled={savingProfile} className="gap-2 bg-violet-600 text-white hover:bg-violet-700 rounded-xl">
                   {savingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : profileSaved ? <CheckCircle2 className="h-4 w-4" /> : <Save className="h-4 w-4" />}
                   {profileSaved ? 'Disimpan!' : 'Simpan Profil'}
                 </Button>
@@ -414,7 +425,7 @@ export default function SettingsPage() {
             <CardContent className="space-y-5">
               <div className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                  <div className="h-9 w-9 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 dark:text-violet-400">
                     {theme === 'dark' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
                   </div>
                   <div>
@@ -436,7 +447,7 @@ export default function SettingsPage() {
               <Separator />
               <div className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                  <div className="h-9 w-9 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 dark:text-violet-400">
                     <Globe className="h-4 w-4" />
                   </div>
                   <div>
@@ -457,7 +468,7 @@ export default function SettingsPage() {
               <Separator />
               <div className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                  <div className="h-9 w-9 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 dark:text-violet-400">
                     <Monitor className="h-4 w-4" />
                   </div>
                   <div>
@@ -479,8 +490,8 @@ export default function SettingsPage() {
           <Card className="rounded-3xl border-black/5 dark:border-white/5">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                  <Key className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                <div className="h-9 w-9 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 dark:text-violet-400">
+                  <Key className="h-4 w-4" />
                 </div>
                 <div>
                   <CardTitle className="text-base">Tukar Kata Laluan</CardTitle>
@@ -492,7 +503,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-zinc-500">Kata Laluan Semasa</Label>
                 <div className="relative">
-                  <Input type={showCurrentPw ? 'text' : 'password'} value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className="rounded-xl border-black/10 dark:border-white/10 pr-10" />
+                  <Input type={showCurrentPw ? 'text' : 'password'} value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className="rounded-xl border-black/10 dark:border-white/10 pr-10 focus-visible:ring-violet-500/30" />
                   <button onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">
                     {showCurrentPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -502,7 +513,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-zinc-500">Kata Laluan Baru</Label>
                   <div className="relative">
-                    <Input type={showNewPw ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min. 8 aksara" className="rounded-xl border-black/10 dark:border-white/10 pr-10" />
+                    <Input type={showNewPw ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min. 8 aksara" className="rounded-xl border-black/10 dark:border-white/10 pr-10 focus-visible:ring-violet-500/30" />
                     <button onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">
                       {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -510,14 +521,14 @@ export default function SettingsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-zinc-500">Sahkan Kata Laluan</Label>
-                  <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Sahkan kata laluan" className="rounded-xl border-black/10 dark:border-white/10" />
+                  <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Sahkan kata laluan" className="rounded-xl border-black/10 dark:border-white/10 focus-visible:ring-violet-500/30" />
                 </div>
               </div>
               {newPassword && confirmPassword && newPassword !== confirmPassword && (
                 <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Kata laluan tidak sepadan</p>
               )}
               <div className="flex justify-end">
-                <Button onClick={handleSavePassword} disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword} className="gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:opacity-90 rounded-xl">
+                <Button onClick={handleSavePassword} disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword} className="gap-2 bg-violet-600 text-white hover:bg-violet-700 rounded-xl">
                   {savingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : passwordSaved ? <CheckCircle2 className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                   {passwordSaved ? 'Disimpan!' : 'Tukar Kata Laluan'}
                 </Button>
@@ -529,8 +540,8 @@ export default function SettingsPage() {
           <Card className="rounded-3xl border-black/5 dark:border-white/5">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
-                  <Shield className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <div className="h-9 w-9 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 dark:text-violet-400">
+                  <Shield className="h-4 w-4" />
                 </div>
                 <div>
                   <CardTitle className="text-base">Status Keselamatan</CardTitle>
@@ -552,7 +563,7 @@ export default function SettingsPage() {
                     </div>
                     <span className="text-sm text-zinc-700 dark:text-zinc-300">{item.label}</span>
                   </div>
-                  <Badge variant="outline" className={cn('text-[10px] border', item.ok ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800' : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800')}>
+                  <Badge variant="outline" className={cn('text-[10px] border', item.ok ? 'bg-violet-50 text-violet-600 border-violet-200 dark:bg-violet-950 dark:text-violet-400 dark:border-violet-800' : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800')}>
                     {item.status}
                   </Badge>
                 </div>
@@ -588,8 +599,8 @@ export default function SettingsPage() {
           <Card className="rounded-3xl border-black/5 dark:border-white/5">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                  <Bell className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                <div className="h-9 w-9 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 dark:text-violet-400">
+                  <Bell className="h-4 w-4" />
                 </div>
                 <div>
                   <CardTitle className="text-base">Keutamaan Notifikasi</CardTitle>
@@ -623,17 +634,49 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* ═══════════════════════════════════════
-            TAB 4: PENGGUNA (Admin Only)
+            TAB 4: PENGGUNA — CIPTA AKAUN (Admin Only)
         ═══════════════════════════════════════ */}
         {isAdmin && (
           <TabsContent value="pengguna" className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-3 gap-3">
+              <Card className="rounded-2xl border-black/5 dark:border-white/5">
+                <CardContent className="p-4 text-center">
+                  <div className="flex h-10 w-10 mx-auto items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-900/30 mb-2">
+                    <Briefcase className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                  </div>
+                  <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{staffCount}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Staf</p>
+                </CardContent>
+              </Card>
+              <Card className="rounded-2xl border-black/5 dark:border-white/5">
+                <CardContent className="p-4 text-center">
+                  <div className="flex h-10 w-10 mx-auto items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/30 mb-2">
+                    <Crown className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{adminCount}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Pentadbir</p>
+                </CardContent>
+              </Card>
+              <Card className="rounded-2xl border-black/5 dark:border-white/5">
+                <CardContent className="p-4 text-center">
+                  <div className="flex h-10 w-10 mx-auto items-center justify-center rounded-xl bg-purple-50 dark:bg-purple-900/30 mb-2">
+                    <Code2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{devCount}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Developer</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Header + Add Button */}
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Pengguna Sistem</h2>
                 <p className="text-sm text-zinc-500">{users.length} pengguna berdaftar</p>
               </div>
-              <Button onClick={() => openUserDialog()} className="gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:opacity-90 rounded-xl">
-                <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Tambah Pengguna</span>
+              <Button onClick={() => openUserDialog()} className="gap-2 bg-violet-600 text-white hover:bg-violet-700 rounded-xl">
+                <UserPlus className="h-4 w-4" /> <span className="hidden sm:inline">Cipta Akaun</span>
               </Button>
             </div>
 
@@ -641,25 +684,32 @@ export default function SettingsPage() {
             <Card className="rounded-3xl border-black/5 dark:border-white/5 overflow-hidden">
               {usersLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
+                  <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
                 </div>
               ) : users.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Users className="h-10 w-10 text-zinc-300 mb-3" />
-                  <p className="text-sm text-zinc-500">Tiada pengguna dijumpai</p>
+                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-violet-50 dark:bg-violet-900/30 mb-3">
+                    <Users className="h-8 w-8 text-violet-400" />
+                  </div>
+                  <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tiada pengguna dijumpai</p>
+                  <p className="text-xs text-zinc-400 mt-1">Cipta akaun baharu untuk mula</p>
+                  <Button onClick={() => openUserDialog()} className="gap-2 mt-4 bg-violet-600 text-white hover:bg-violet-700 rounded-xl" size="sm">
+                    <UserPlus className="h-3.5 w-3.5" /> Cipta Akaun Pertama
+                  </Button>
                 </div>
               ) : (
                 <div className="divide-y divide-black/5 dark:divide-white/5">
-                  {users.map((user) => (
+                  {users.map((user, idx) => (
                     <motion.div
                       key={user.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="flex items-center justify-between px-5 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.03 }}
+                      className="flex items-center justify-between px-5 py-4 hover:bg-violet-50/50 dark:hover:bg-violet-950/20 transition-colors group"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <Avatar className="h-10 w-10 border border-black/5 dark:border-white/10">
-                          <AvatarFallback className="text-sm bg-zinc-900 text-white dark:bg-white dark:text-zinc-900">
+                        <Avatar className="h-10 w-10 border border-violet-200 dark:border-violet-800">
+                          <AvatarFallback className="text-sm bg-violet-600 text-white font-semibold">
                             {getInitials(user.name)}
                           </AvatarFallback>
                         </Avatar>
@@ -674,14 +724,15 @@ export default function SettingsPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0 ml-4">
-                        <Badge className={cn('text-[10px] border', (ROLE_CONFIG[user.role]?.bg || ROLE_CONFIG.staff.bg))}>
+                        <Badge className={cn('text-[10px] border gap-1', (ROLE_CONFIG[user.role]?.bg || ROLE_CONFIG.staff.bg))}>
+                          {ROLE_CONFIG[user.role]?.icon}
                           {ROLE_CONFIG[user.role]?.label || user.role}
                         </Badge>
-                        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openUserDialog(user)}>
+                        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-violet-100 dark:hover:bg-violet-900/30" onClick={() => openUserDialog(user)}>
                             <Pencil className="h-3.5 w-3.5 text-zinc-400" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-red-600" onClick={() => { setDeletingUser(user); setDeleteDialogOpen(true) }}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30" onClick={() => { setDeletingUser(user); setDeleteDialogOpen(true) }}>
                             <Trash2 className="h-3.5 w-3.5 text-zinc-400" />
                           </Button>
                         </div>
@@ -692,53 +743,109 @@ export default function SettingsPage() {
               )}
             </Card>
 
-            {/* User Create/Edit Dialog */}
+            {/* ─── User Create/Edit Dialog ─── */}
             <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md rounded-3xl">
                 <DialogHeader>
-                  <DialogTitle>{editingUser ? 'Edit Pengguna' : 'Tambah Pengguna Baharu'}</DialogTitle>
-                  <DialogDescription>
-                    {editingUser ? 'Kemaskini maklumat pengguna' : 'Isikan maklumat untuk mencipta akaun baharu'}
-                  </DialogDescription>
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-100 dark:bg-violet-900/30">
+                      {editingUser ? <Pencil className="h-5 w-5 text-violet-600 dark:text-violet-400" /> : <UserPlus className="h-5 w-5 text-violet-600 dark:text-violet-400" />}
+                    </div>
+                    <div>
+                      <DialogTitle className="text-lg">{editingUser ? 'Edit Pengguna' : 'Cipta Akaun Baharu'}</DialogTitle>
+                      <DialogDescription className="text-xs">
+                        {editingUser ? 'Kemaskini maklumat pengguna' : 'Isikan maklumat untuk mencipta akaun baharu dalam sistem PUSPA'}
+                      </DialogDescription>
+                    </div>
+                  </div>
                 </DialogHeader>
+
                 <div className="space-y-4 py-2">
+                  {/* Name */}
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium">Nama Penuh <span className="text-red-500">*</span></Label>
-                    <Input value={userForm.name} onChange={e => setUserForm(f => ({ ...f, name: e.target.value }))} placeholder="Nama penuh" className="rounded-xl" />
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">Nama Penuh <span className="text-red-500">*</span></Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                      <Input value={userForm.name} onChange={e => setUserForm(f => ({ ...f, name: e.target.value }))} placeholder="Masukkan nama penuh" className="rounded-xl pl-9 focus-visible:ring-violet-500/30" />
+                    </div>
                   </div>
+
+                  {/* Email */}
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium">Emel <span className="text-red-500">*</span></Label>
-                    <Input type="email" value={userForm.email} onChange={e => setUserForm(f => ({ ...f, email: e.target.value }))} placeholder="emel@contoh.com" className="rounded-xl" />
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">Emel <span className="text-red-500">*</span></Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                      <Input type="email" value={userForm.email} onChange={e => setUserForm(f => ({ ...f, email: e.target.value }))} placeholder="emel@puspa.org.my" className="rounded-xl pl-9 focus-visible:ring-violet-500/30" />
+                    </div>
                   </div>
+
+                  {/* Password (only for new users) */}
                   {!editingUser && (
                     <div className="space-y-2">
-                      <Label className="text-xs font-medium">Kata Laluan <span className="text-red-500">*</span></Label>
-                      <Input type="password" value={userForm.password} onChange={e => setUserForm(f => ({ ...f, password: e.target.value }))} placeholder="Min. 8 aksara" className="rounded-xl" />
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">Kata Laluan <span className="text-red-500">*</span></Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                        <Input type="password" value={userForm.password} onChange={e => setUserForm(f => ({ ...f, password: e.target.value }))} placeholder="Min. 8 aksara" className="rounded-xl pl-9 focus-visible:ring-violet-500/30" />
+                      </div>
+                      <p className="text-[10px] text-zinc-400 ml-1">Kata laluan mestilah sekurang-kurangnya 8 aksara</p>
                     </div>
                   )}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium">Peranan</Label>
-                      <Select value={userForm.role} onValueChange={v => setUserForm(f => ({ ...f, role: v }))}>
-                        <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="staff">Staf</SelectItem>
-                          <SelectItem value="admin">Pentadbir</SelectItem>
-                          <SelectItem value="developer">Developer</SelectItem>
-                        </SelectContent>
-                      </Select>
+
+                  {/* Role Selection - Visual Cards */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">Peranan</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {['staff', 'admin', 'developer'].map((role) => {
+                        const config = ROLE_CONFIG[role]
+                        const isSelected = userForm.role === role
+                        return (
+                          <button
+                            key={role}
+                            type="button"
+                            onClick={() => setUserForm(f => ({ ...f, role }))}
+                            className={cn(
+                              'flex flex-col items-center gap-1.5 p-3 rounded-xl border text-center transition-all',
+                              isSelected
+                                ? 'border-violet-600 bg-violet-50 dark:bg-violet-900/30 ring-2 ring-violet-500/20'
+                                : 'border-black/5 dark:border-white/10 hover:border-violet-300 dark:hover:border-violet-700 hover:bg-violet-50/50 dark:hover:bg-violet-900/10',
+                            )}
+                          >
+                            <div className={cn(
+                              'flex h-8 w-8 items-center justify-center rounded-lg transition-colors',
+                              isSelected ? 'bg-violet-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
+                            )}>
+                              {config?.icon}
+                            </div>
+                            <span className={cn(
+                              'text-[11px] font-semibold',
+                              isSelected ? 'text-violet-700 dark:text-violet-300' : 'text-zinc-600 dark:text-zinc-400'
+                            )}>
+                              {config?.label}
+                            </span>
+                          </button>
+                        )
+                      })}
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium">No. Telefon</Label>
-                      <Input value={userForm.phone} onChange={e => setUserForm(f => ({ ...f, phone: e.target.value }))} placeholder="01x-xxxxxxx" className="rounded-xl" />
+                    {ROLE_CONFIG[userForm.role] && (
+                      <p className="text-[10px] text-zinc-400 ml-1">{ROLE_CONFIG[userForm.role].description}</p>
+                    )}
+                  </div>
+
+                  {/* Phone */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">No. Telefon</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                      <Input value={userForm.phone} onChange={e => setUserForm(f => ({ ...f, phone: e.target.value }))} placeholder="01x-xxxxxxx" className="rounded-xl pl-9 focus-visible:ring-violet-500/30" />
                     </div>
                   </div>
                 </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setUserDialogOpen(false)} className="rounded-xl">Batal</Button>
-                  <Button onClick={handleSaveUser} disabled={savingUser} className="gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:opacity-90 rounded-xl">
-                    {savingUser ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    {editingUser ? 'Kemaskini' : 'Cipta Pengguna'}
+
+                <DialogFooter className="gap-2">
+                  <Button variant="outline" onClick={() => setUserDialogOpen(false)} className="rounded-xl flex-1">Batal</Button>
+                  <Button onClick={handleSaveUser} disabled={savingUser} className="gap-2 bg-violet-600 text-white hover:bg-violet-700 rounded-xl flex-1">
+                    {savingUser ? <Loader2 className="h-4 w-4 animate-spin" /> : editingUser ? <Save className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+                    {editingUser ? 'Kemaskini' : 'Cipta Akaun'}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -746,16 +853,21 @@ export default function SettingsPage() {
 
             {/* Delete Confirm Dialog */}
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-              <AlertDialogContent>
+              <AlertDialogContent className="rounded-3xl">
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Nyahaktifkan Pengguna?</AlertDialogTitle>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-100 dark:bg-red-900/30">
+                      <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+                    </div>
+                    <AlertDialogTitle>Nyahaktifkan Pengguna?</AlertDialogTitle>
+                  </div>
                   <AlertDialogDescription>
                     Pengguna <strong>{deletingUser?.name}</strong> akan dinyahaktifkan dan tidak boleh log masuk. Tindakan ini boleh dibatalkan kemudian.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Batal</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteUser} className="bg-red-600 hover:bg-red-700">Nyahaktifkan</AlertDialogAction>
+                  <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteUser} className="bg-red-600 hover:bg-red-700 rounded-xl">Nyahaktifkan</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>

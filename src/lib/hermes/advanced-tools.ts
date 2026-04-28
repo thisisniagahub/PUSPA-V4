@@ -1443,7 +1443,7 @@ const getNotificationsTool: HermesToolDefinition = {
 
 const manageSkillTool: HermesToolDefinition = {
   name: 'manage_skill',
-  description: 'Create, update, or list Hermes skills. Skills are learned procedures that improve over time.',
+  description: 'Create, update, or list PUSPA AI skills. Skills are learned procedures that improve over time.',
   category: 'system',
   permission: 'write',
   parameters: {

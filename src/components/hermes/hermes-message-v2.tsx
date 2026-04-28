@@ -68,7 +68,7 @@ export function HermesMessageV2({ message, isLast }: HermesMessageV2Props) {
       {/* Tool badge */}
       {message.isToolResult && message.toolName && (
         <div className="mb-1.5 flex items-center gap-1.5">
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-100">
+          <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700 border border-violet-200">
             <Wrench className="h-2.5 w-2.5" />
             {message.toolName}
           </span>
@@ -89,7 +89,7 @@ export function HermesMessageV2({ message, isLast }: HermesMessageV2Props) {
             aria-label="Salin mesej"
           >
             {copied ? (
-              <Check className="h-3 w-3 text-emerald-600" />
+              <Check className="h-3 w-3 text-violet-600" />
             ) : (
               <Copy className="h-3 w-3 text-zinc-400" />
             )}
@@ -100,7 +100,7 @@ export function HermesMessageV2({ message, isLast }: HermesMessageV2Props) {
         <div
           className={cn(
             'whitespace-pre-wrap break-words hermes-content-v2',
-            isUser ? '' : '[&_strong]:font-semibold [&_code]:text-emerald-600 dark:[&_code]:text-emerald-400 [&_pre]:text-zinc-800 dark:[&_pre]:text-zinc-200 [&_h2]:text-zinc-900 [&_h3]:text-zinc-900 [&_h4]:text-zinc-900 [&_li]:text-zinc-700 dark:[&_li]:text-zinc-300',
+            isUser ? '' : '[&_strong]:font-semibold [&_code]:text-violet-600 dark:[&_code]:text-violet-400 [&_pre]:text-zinc-800 dark:[&_pre]:text-zinc-200 [&_h2]:text-zinc-900 [&_h3]:text-zinc-900 [&_h4]:text-zinc-900 [&_li]:text-zinc-700 dark:[&_li]:text-zinc-300',
           )}
           dangerouslySetInnerHTML={isUser ? undefined : { __html: renderedContent }}
         >
@@ -109,14 +109,14 @@ export function HermesMessageV2({ message, isLast }: HermesMessageV2Props) {
 
         {/* Streaming cursor */}
         {message.isStreaming && (
-          <span className="inline-block w-1.5 h-4 bg-emerald-500 animate-pulse ml-0.5 align-middle rounded-sm" />
+          <span className="inline-block w-1.5 h-4 bg-violet-500 animate-pulse ml-0.5 align-middle rounded-sm" />
         )}
 
         {/* Client action button */}
         {!isUser && message.clientAction && !message.isStreaming && (
           <div className="mt-2 pt-2 border-t border-black/5 dark:border-white/5">
             <button
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 transition-colors rounded-lg px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800"
+              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-violet-600 hover:text-violet-700 transition-colors rounded-lg px-2 py-1 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800"
             >
               {message.clientAction.type === 'navigate' ? <ExternalLink className="h-3 w-3" /> : <ArrowRight className="h-3 w-3" />}
               {message.clientAction.message || message.clientAction.type}
