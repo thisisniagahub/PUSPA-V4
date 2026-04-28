@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthorizationError, requireRole } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import type { FundType } from '@prisma/client';
 
 const querySchema = z.object({
   period: z.enum(['monthly', 'quarterly', 'yearly']).optional().default('yearly'),
@@ -49,17 +50,15 @@ export async function GET(request: NextRequest) {
     const { start, end } = getDateRange(period, year);
 
     // Build donation where clause
-    const donationWhere: Record<string, unknown> = {
-      status: { in: ['confirmed'] },
+    const donationWhere = {
+      status: { in: ['confirmed' as const] },
       donatedAt: { gte: start, lte: end },
+      ...(fundType ? { fundType: fundType as FundType } : {}),
     };
-    if (fundType) {
-      donationWhere.fundType = fundType;
-    }
 
-    // Build disbursement where clause
-    const disbursementWhere: Record<string, unknown> = {
-      status: { in: ['approved', 'processing', 'completed'] },
+    // Build disbursement where clause — 'completed' is not a valid DisbursementStatus, use 'disbursed'
+    const disbursementWhere = {
+      status: { in: ['approved', 'processing', 'disbursed'] as import('@prisma/client').DisbursementStatus[] },
       processedDate: { gte: start, lte: end },
     };
 
@@ -71,7 +70,7 @@ export async function GET(request: NextRequest) {
       _count: true,
     });
 
-    const isfBreakdown = {
+    const isfBreakdown: Record<string, { amount: number; count: number }> = {
       zakat: { amount: 0, count: 0 },
       sadaqah: { amount: 0, count: 0 },
       waqf: { amount: 0, count: 0 },
@@ -80,9 +79,9 @@ export async function GET(request: NextRequest) {
     };
 
     for (const item of donationsByFundType) {
-      const key = item.fundType as keyof typeof isfBreakdown;
+      const key = item.fundType as string;
       if (key && isfBreakdown[key]) {
-        isfBreakdown[key].amount = item._sum.amount || 0;
+        isfBreakdown[key].amount = Number(item._sum.amount || 0);
         isfBreakdown[key].count = item._count;
       }
     }
@@ -100,7 +99,7 @@ export async function GET(request: NextRequest) {
     const disbursementStatusMap: Record<string, { amount: number; count: number }> = {};
     for (const item of disbursementsByStatus) {
       disbursementStatusMap[item.status] = {
-        amount: item._sum.amount || 0,
+        amount: Number(item._sum?.amount || 0),
         count: item._count,
       };
     }
@@ -122,15 +121,15 @@ export async function GET(request: NextRequest) {
     });
 
     const budgetVsActual = programmes.map((p) => {
-      const utilization = p.budget > 0 ? Math.round((p.totalSpent / p.budget) * 100) : 0;
+      const utilization = Number(p.budget) > 0 ? Math.round((Number(p.totalSpent) / Number(p.budget)) * 100) : 0;
       return {
         programmeId: p.id,
         programmeName: p.name,
         category: p.category,
         status: p.status,
-        budget: p.budget,
-        actual: p.totalSpent,
-        variance: p.budget - p.totalSpent,
+        budget: Number(p.budget),
+        actual: Number(p.totalSpent),
+        variance: Number(p.budget) - Number(p.totalSpent),
         utilization,
         targetBeneficiaries: p.targetBeneficiaries,
         actualBeneficiaries: p.actualBeneficiaries,
@@ -151,8 +150,8 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-    const grossIncome = allDonations._sum.amount || 0;
-    const totalExpenses = allDisbursements._sum.amount || 0;
+    const grossIncome = Number(allDonations._sum?.amount || 0);
+    const totalExpenses = Number(allDisbursements._sum?.amount || 0);
     const netIncome = grossIncome - totalExpenses;
 
     // ─── 5. Period-based breakdown ───
@@ -164,15 +163,15 @@ export async function GET(request: NextRequest) {
         const [inc, exp] = await Promise.all([
           db.donation.aggregate({
             where: {
-              status: { in: ['confirmed'] },
+              status: { in: ['confirmed' as const] },
               donatedAt: { gte: ms, lte: me },
-              ...(fundType ? { fundType } : {}),
+              ...(fundType ? { fundType: fundType as FundType } : {}),
             },
             _sum: { amount: true },
           }),
           db.disbursement.aggregate({
             where: {
-              status: { in: ['approved', 'processing', 'completed'] },
+              status: { in: ['approved', 'processing', 'disbursed'] as import('@prisma/client').DisbursementStatus[] },
               processedDate: { gte: ms, lte: me },
             },
             _sum: { amount: true },
@@ -181,9 +180,9 @@ export async function GET(request: NextRequest) {
         const monthNames = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogo', 'Sep', 'Okt', 'Nov', 'Dis'];
         periodBreakdown.push({
           label: monthNames[m - 1],
-          income: inc._sum.amount || 0,
-          expenditure: exp._sum.amount || 0,
-          net: (inc._sum.amount || 0) - (exp._sum.amount || 0),
+          income: Number(inc._sum?.amount || 0),
+          expenditure: Number(exp._sum?.amount || 0),
+          net: Number(inc._sum?.amount || 0) - Number(exp._sum?.amount || 0),
         });
       }
     } else if (period === 'quarterly') {
@@ -193,15 +192,15 @@ export async function GET(request: NextRequest) {
         const [inc, exp] = await Promise.all([
           db.donation.aggregate({
             where: {
-              status: { in: ['confirmed'] },
+              status: { in: ['confirmed' as const] },
               donatedAt: { gte: qs, lte: qe },
-              ...(fundType ? { fundType } : {}),
+              ...(fundType ? { fundType: fundType as FundType } : {}),
             },
             _sum: { amount: true },
           }),
           db.disbursement.aggregate({
             where: {
-              status: { in: ['approved', 'processing', 'completed'] },
+              status: { in: ['approved', 'processing', 'disbursed'] as import('@prisma/client').DisbursementStatus[] },
               processedDate: { gte: qs, lte: qe },
             },
             _sum: { amount: true },
@@ -209,9 +208,9 @@ export async function GET(request: NextRequest) {
         ]);
         periodBreakdown.push({
           label: quarterNames[q - 1],
-          income: inc._sum.amount || 0,
-          expenditure: exp._sum.amount || 0,
-          net: (inc._sum.amount || 0) - (exp._sum.amount || 0),
+          income: Number(inc._sum?.amount || 0),
+          expenditure: Number(exp._sum?.amount || 0),
+          net: Number(inc._sum?.amount || 0) - Number(exp._sum?.amount || 0),
         });
       }
     } else {
@@ -237,7 +236,7 @@ export async function GET(request: NextRequest) {
 
     const zakatBreakdown = zakatByCategory.map((item) => ({
       category: item.zakatCategory || 'Tidak Dikategorikan',
-      amount: item._sum.amount || 0,
+      amount: Number(item._sum.amount || 0),
       count: item._count,
     }));
 

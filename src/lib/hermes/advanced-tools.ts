@@ -52,11 +52,11 @@ const queryStatsTool: HermesToolDefinition = {
             db.member.count({ where: { status: { not: 'active' } } }),
           ])
           const incomeAgg = await db.member.aggregate({ _avg: { monthlyIncome: true }, _sum: { householdSize: true } })
-          return ok({ total, active, inactive, avgIncome: Math.round(incomeAgg._avg.monthlyIncome || 0), totalHousehold: incomeAgg._sum.householdSize || 0 }, 'members', 'stats')
+          return ok({ total, active, inactive, avgIncome: Math.round(Number(incomeAgg._avg.monthlyIncome || 0)), totalHousehold: incomeAgg._sum.householdSize || 0 }, 'members', 'stats')
         }
         case 'cases': {
           const statuses = ['draft', 'submitted', 'verifying', 'verified', 'scoring', 'scored', 'approved', 'disbursing', 'disbursed', 'follow_up', 'closed', 'rejected']
-          const counts = await Promise.all(statuses.map(s => db.case.count({ where: { status: s } })))
+          const counts = await Promise.all(statuses.map(s => db.case.count({ where: { status: s as import('@prisma/client').CaseStatus } })))
           const total = counts.reduce((a, b) => a + b, 0)
           const pending = counts.slice(0, 6).reduce((a, b) => a + b, 0)
           const amountAgg = await db.case.aggregate({ _sum: { amount: true } })
@@ -91,7 +91,7 @@ const queryStatsTool: HermesToolDefinition = {
           const [total, pending, completed] = await Promise.all([
             db.disbursement.count(),
             db.disbursement.count({ where: { status: 'pending' } }),
-            db.disbursement.count({ where: { status: 'completed' } }),
+            db.disbursement.count({ where: { status: 'disbursed' } }),
           ])
           const amountAgg = await db.disbursement.aggregate({ _sum: { amount: true } })
           return ok({ total, pending, completed, totalAmount: amountAgg._sum.amount || 0 }, 'disbursements', 'stats')
@@ -236,7 +236,7 @@ const getDonationsSummaryTool: HermesToolDefinition = {
       if (period === 'this_month') dateFilter = new Date(now.getFullYear(), now.getMonth(), 1)
       else if (period === 'this_year') dateFilter = new Date(now.getFullYear(), 0, 1)
 
-      const where = { status: 'confirmed', ...(dateFilter ? { donatedAt: { gte: dateFilter } } : {}) }
+      const where = { status: 'confirmed' as const, ...(dateFilter ? { donatedAt: { gte: dateFilter } } : {}) }
       const [totalAmount, totalCount] = await Promise.all([
         db.donation.aggregate({ _sum: { amount: true }, where }),
         db.donation.count({ where }),
@@ -249,9 +249,9 @@ const getDonationsSummaryTool: HermesToolDefinition = {
         select: { donationNumber: true, donorName: true, amount: true, fundType: true, donatedAt: true, isAnonymous: true },
       })
       return ok({
-        totalAmount: totalAmount._sum.amount || 0,
+        totalAmount: Number(totalAmount._sum.amount || 0),
         totalCount,
-        byFundType: byFundType.map(f => ({ type: f.fundType, amount: f._sum.amount || 0, count: f._count })),
+        byFundType: byFundType.map(f => ({ type: f.fundType, amount: Number(f._sum.amount || 0), count: f._count })),
         recentDonations: recentDonations.map(d => ({ ...d, donorName: d.isAnonymous ? 'Tanpa Nama' : d.donorName })),
       }, 'donations', 'summary')
     } catch (error: any) {
@@ -537,7 +537,7 @@ const createMemberTool: HermesToolDefinition = {
           state: (args.state as string) || null,
           householdSize: (args.householdSize as number) || 1,
           monthlyIncome: (args.monthlyIncome as number) || 0,
-          maritalStatus: (args.maritalStatus as string) || 'single',
+          maritalStatus: (args.maritalStatus as import('@prisma/client').MaritalStatus) || 'single',
           occupation: (args.occupation as string) || null,
           status: 'active',
         },
@@ -624,9 +624,8 @@ const createCaseTool: HermesToolDefinition = {
         data: {
           caseNumber,
           title: args.title as string,
-          category: args.category as string,
-          amount: args.amount as number,
-          priority: (args.priority as string) || 'normal',
+          category: args.category as import('@prisma/client').CaseCategory,
+          priority: (args.priority as import('@prisma/client').CasePriority) || 'normal',
           status: 'draft',
           applicantName: (args.applicantName as string) || null,
           applicantIC: (args.applicantIC as string) || null,
@@ -668,7 +667,7 @@ const updateCaseStatusTool: HermesToolDefinition = {
       const updated = await db.case.update({
         where: { id: existing.id },
         data: {
-          status: args.status as string,
+          status: args.status as import('@prisma/client').CaseStatus,
           ...(args.status === 'closed' ? { closedAt: new Date() } : {}),
         },
       })
@@ -751,8 +750,8 @@ const createDonationTool: HermesToolDefinition = {
           donationNumber,
           donorName: args.donorName as string,
           amount: args.amount as number,
-          fundType: args.fundType as string,
-          method: (args.method as string) || 'cash',
+          fundType: args.fundType as import('@prisma/client').FundType,
+          method: (args.method as import('@prisma/client').DonationMethod) || 'cash',
           status: 'pending',
           donorPhone: (args.donorPhone as string) || null,
           donorEmail: (args.donorEmail as string) || null,
@@ -874,7 +873,7 @@ const createVolunteerTool: HermesToolDefinition = {
           phone: args.phone as string,
           email: (args.email as string) || null,
           skills: (args.skills as string) || null,
-          availability: (args.availability as string) || null,
+          availability: (args.availability as import('@prisma/client').VolunteerAvailability) || null,
           address: (args.address as string) || null,
           status: 'active',
         },
@@ -953,7 +952,7 @@ const createProgrammeTool: HermesToolDefinition = {
       const programme = await db.programme.create({
         data: {
           name: args.name as string,
-          category: args.category as string,
+          category: args.category as import('@prisma/client').ProgrammeCategory,
           budget: (args.budget as number) || 0,
           description: (args.description as string) || null,
           location: (args.location as string) || null,
@@ -1027,7 +1026,7 @@ const createActivityTool: HermesToolDefinition = {
       const activity = await db.activity.create({
         data: {
           title: args.title as string,
-          type: (args.type as string) || 'task',
+          type: (args.type as import('@prisma/client').ActivityType) || 'other',
           description: (args.description as string) || null,
           programmeId: (args.programmeId as string) || null,
           location: (args.location as string) || null,
@@ -1058,7 +1057,7 @@ const updateActivityStatusTool: HermesToolDefinition = {
     try {
       const updated = await db.activity.update({
         where: { id: args.activityId as string },
-        data: { status: args.status as string },
+        data: { status: args.status as import('@prisma/client').ActivityStatus },
       })
       return ok(updated, 'activities', 'update_status', {
         metadata: { module: 'activities', action: 'update_status', recordId: updated.id },
@@ -1090,7 +1089,7 @@ const createDonorTool: HermesToolDefinition = {
           name: args.name as string,
           phone: (args.phone as string) || null,
           email: (args.email as string) || null,
-          segment: (args.segment as string) || 'occasional',
+          segment: (args.segment as import('@prisma/client').DonorSegment) || 'occasional',
           address: (args.address as string) || null,
           status: 'active',
         },

@@ -6,8 +6,8 @@ import { z } from 'zod';
 const activityCreateSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  type: z.enum(['EVENT', 'MEETING', 'TRAINING', 'OUTREACH', 'FUNDRAISER', 'VOLUNTEER', 'AUDIT', 'VISIT', 'OTHER']).optional(),
-  status: z.enum(['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).optional().default('PLANNED'),
+  type: z.enum(['event', 'meeting', 'training', 'outreach', 'fundraiser', 'volunteer', 'audit', 'visit', 'other']).optional(),
+  status: z.enum(['planned', 'in_progress', 'completed', 'cancelled']).optional().default('planned'),
   date: z.string().optional(),
   endDate: z.string().optional(),
   location: z.string().optional(),

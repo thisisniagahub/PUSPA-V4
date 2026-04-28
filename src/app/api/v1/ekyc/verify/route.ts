@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
         walletEnabled: true,
         bankTransferEnabled: validated.riskLevel !== 'high',
         verifiedAt: new Date(),
-        verifiedBy: session.user.email || session.user.name || session.user.id,
+        verifiedById: session.user.id,
       },
       include: {
         member: {

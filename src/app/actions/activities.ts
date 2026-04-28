@@ -7,7 +7,7 @@ export async function updateActivityStatus(id: string, newStatus: string) {
   try {
     await db.activity.update({
       where: { id },
-      data: { status: newStatus },
+      data: { status: newStatus as import('@prisma/client').ActivityStatus },
     });
     revalidatePath("/activities");
     return { success: true };

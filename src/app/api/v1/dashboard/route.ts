@@ -113,17 +113,17 @@ const getCachedDashboardData = unstable_cache(
     return {
       totalMembers,
       activeProgrammes,
-      totalDonations: donations._sum.amount || 0,
+      totalDonations: Number(donations._sum.amount || 0),
       activeVolunteers,
       complianceScore,
       totalCases,
       pendingCases,
-      thisMonthDonations: thisMonthDonations._sum.amount || 0,
+      thisMonthDonations: Number(thisMonthDonations._sum.amount || 0),
       trendMembers: getTrendPercentage(currentMonthMembers, previousMonthMembers),
       trendProgrammes: getTrendPercentage(currentMonthProgrammes, previousMonthProgrammes),
       trendDonations: getTrendPercentage(
-        thisMonthDonations._sum.amount || 0,
-        previousMonthDonations._sum.amount || 0,
+        Number(thisMonthDonations._sum.amount || 0),
+        Number(previousMonthDonations._sum.amount || 0),
       ),
       trendVolunteers: getTrendPercentage(currentMonthVolunteers, previousMonthVolunteers),
       trendCompliance: getTrendPercentage(
@@ -195,11 +195,11 @@ async function buildMonthlyDonationTrend() {
     return {
       month,
       bulan: month,
-      zakat: monthDonations.filter((x: any) => x.fundType === 'zakat').reduce((sum: number, x: any) => sum + x.amount, 0),
-      sadaqah: monthDonations.filter((x: any) => x.fundType === 'sadaqah').reduce((sum: number, x: any) => sum + x.amount, 0),
-      waqf: monthDonations.filter((x: any) => x.fundType === 'waqf').reduce((sum: number, x: any) => sum + x.amount, 0),
-      infaq: monthDonations.filter((x: any) => x.fundType === 'infaq').reduce((sum: number, x: any) => sum + x.amount, 0),
-      general: monthDonations.filter((x: any) => x.fundType === 'donation_general').reduce((sum: number, x: any) => sum + x.amount, 0),
+      zakat: monthDonations.filter((x: any) => x.fundType === 'zakat').reduce((sum: number, x: any) => sum + Number(x.amount), 0),
+      sadaqah: monthDonations.filter((x: any) => x.fundType === 'sadaqah').reduce((sum: number, x: any) => sum + Number(x.amount), 0),
+      waqf: monthDonations.filter((x: any) => x.fundType === 'waqf').reduce((sum: number, x: any) => sum + Number(x.amount), 0),
+      infaq: monthDonations.filter((x: any) => x.fundType === 'infaq').reduce((sum: number, x: any) => sum + Number(x.amount), 0),
+      general: monthDonations.filter((x: any) => x.fundType === 'donation_general').reduce((sum: number, x: any) => sum + Number(x.amount), 0),
     };
   });
 }

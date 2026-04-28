@@ -62,9 +62,9 @@ export async function POST(request: NextRequest) {
     const partner = await db.partner.create({
       data: {
         ...validated,
-        type: normalizePartnerType(validated.type) || 'ngo',
+        type: (normalizePartnerType(validated.type) || 'ngo') as import('@prisma/client').PartnerType,
         relationship: normalizePartnerRelationship(validated.relationship) || null,
-        verifiedStatus: normalizePartnerVerifiedStatus(validated.verifiedStatus) || 'claimed',
+        verifiedStatus: (normalizePartnerVerifiedStatus(validated.verifiedStatus) || 'claimed') as import('@prisma/client').VerificationStatus,
         contactEmail: validated.contactEmail || null,
       },
     });
@@ -118,14 +118,14 @@ export async function PUT(request: NextRequest) {
     const dataToUpdate: Record<string, unknown> = { ...validated };
     if (validated.contactEmail === '') dataToUpdate.contactEmail = null;
     if (validated.type !== undefined) {
-      dataToUpdate.type = normalizePartnerType(validated.type) || 'ngo';
+      dataToUpdate.type = (normalizePartnerType(validated.type) || 'ngo') as import('@prisma/client').PartnerType;
     }
     if (validated.relationship !== undefined) {
       dataToUpdate.relationship = normalizePartnerRelationship(validated.relationship) || null;
     }
     if (validated.verifiedStatus !== undefined) {
       dataToUpdate.verifiedStatus =
-        normalizePartnerVerifiedStatus(validated.verifiedStatus) || 'claimed';
+        (normalizePartnerVerifiedStatus(validated.verifiedStatus) || 'claimed') as import('@prisma/client').VerificationStatus;
     }
 
     const partner = await db.partner.update({

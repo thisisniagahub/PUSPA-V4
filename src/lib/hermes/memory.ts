@@ -22,7 +22,7 @@ export interface MemoryEntry {
   lastAccessed: string | null
 }
 
-export type MemoryCategory = 'preference' | 'fact' | 'procedure' | 'context' | 'relationship'
+export type MemoryCategory = 'preference' | 'fact' | 'procedure' | 'context' | 'general'
 
 // Store a memory entry (upsert by userId + key)
 export async function storeMemory(params: {
@@ -39,16 +39,16 @@ export async function storeMemory(params: {
     },
     create: {
       userId: params.userId,
-      category: params.category,
+      category: params.category as import('@prisma/client').HermesMemoryCategory,
       key: params.key,
       value: params.value,
-      source: params.source || 'conversation',
+      source: (params.source || 'conversation') as import('@prisma/client').HermesMemorySource,
       confidence: params.confidence ?? 1.0,
     },
     update: {
       value: params.value,
-      category: params.category,
-      source: params.source || 'conversation',
+      category: params.category as import('@prisma/client').HermesMemoryCategory,
+      source: (params.source || 'conversation') as import('@prisma/client').HermesMemorySource,
       confidence: params.confidence ?? 1.0,
       updatedAt: new Date(),
     },
@@ -191,7 +191,7 @@ export async function extractAndStoreMemories(params: {
         category: pattern.category,
         key: `pref-${pattern.regex.source.slice(0, 20)}`,
         value: match[0],
-        source: 'auto-extracted',
+        source: 'skill',
         confidence: 0.7,
       })
     }
@@ -214,7 +214,7 @@ export async function extractAndStoreMemories(params: {
         category: 'fact',
         key: pattern.key,
         value: match[2] || match[0],
-        source: 'auto-extracted',
+        source: 'skill',
         confidence: 0.8,
       })
     }
@@ -229,7 +229,7 @@ export async function extractAndStoreMemories(params: {
       category: 'procedure',
       key: `proc-${Date.now()}`,
       value: userMessage.slice(0, 500),
-      source: 'auto-extracted',
+      source: 'skill',
       confidence: 0.6,
     })
   }
@@ -245,10 +245,10 @@ export async function extractAndStoreMemories(params: {
     if (match) {
       await storeMemory({
         userId,
-        category: 'relationship',
+        category: 'context',
         key: `rel-${Date.now()}`,
         value: match[0],
-        source: 'auto-extracted',
+        source: 'skill',
         confidence: 0.7,
       })
     }

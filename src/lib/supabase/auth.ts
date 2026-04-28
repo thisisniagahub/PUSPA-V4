@@ -212,7 +212,7 @@ export async function seedSupabaseAuthUsers() {
     { email: 'dev@puspa.org.my', password: 'Dev@2026', name: 'Pembangun PUSPA', role: 'developer' as AppRole },
   ]
 
-  const results = []
+  const results: { email: string; status: string; id?: string; error?: string }[] = []
 
   for (const userData of defaultUsers) {
     try {

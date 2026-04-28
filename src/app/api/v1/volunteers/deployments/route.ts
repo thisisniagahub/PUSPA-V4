@@ -11,7 +11,7 @@ const deploymentCreateSchema = z.object({
   programmeId: z.string().optional(),
   activityId: z.string().optional(),
   role: z.enum(['coordinator', 'participant', 'lead']).optional().default('participant'),
-  status: z.enum(['assigned', 'confirmed', 'completed', 'cancelled']).optional().default('assigned'),
+  status: z.enum(['assigned', 'active', 'completed', 'cancelled']).optional().default('assigned'),
   startDate: z.string().min(1, 'Tarikh mula diperlukan'),
   endDate: z.string().optional(),
   location: z.string().optional(),

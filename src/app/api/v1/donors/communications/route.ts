@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 const communicationCreateSchema = z.object({
   donorId: z.string().min(1, 'Penderma diperlukan'),
-  type: z.enum(['email', 'phone', 'whatsapp', 'letter']),
+  type: z.enum(['email', 'phone', 'whatsapp']),
   subject: z.string().min(1, 'Subjek diperlukan'),
   content: z.string().optional().or(z.literal('')),
   status: z.enum(['draft', 'sent', 'failed']).optional().default('sent'),
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         content: validated.content || null,
         status: validated.status,
         sentAt: validated.status === 'sent' ? new Date() : null,
-        sentBy: validated.status === 'sent' ? actor : null,
+        sentById: validated.status === 'sent' ? session.user.id : null,
       },
       include: {
         donor: { select: { id: true, name: true, donorNumber: true } },

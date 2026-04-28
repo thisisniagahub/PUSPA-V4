@@ -144,17 +144,17 @@ export async function GET(request: Request) {
       data: {
         totalMembers,
         activeProgrammes,
-        totalDonations: donations._sum.amount || 0,
+        totalDonations: Number(donations._sum.amount || 0),
         activeVolunteers,
         complianceScore,
         totalCases,
         pendingCases,
-        thisMonthDonations: thisMonthDonations._sum.amount || 0,
+        thisMonthDonations: Number(thisMonthDonations._sum.amount || 0),
         trendMembers: getTrendPercentage(currentMonthMembers, previousMonthMembers),
         trendProgrammes: getTrendPercentage(currentMonthProgrammes, previousMonthProgrammes),
         trendDonations: getTrendPercentage(
-          thisMonthDonations._sum.amount || 0,
-          previousMonthDonations._sum.amount || 0,
+          Number(thisMonthDonations._sum.amount || 0),
+          Number(previousMonthDonations._sum.amount || 0),
         ),
         trendVolunteers: getTrendPercentage(currentMonthVolunteers, previousMonthVolunteers),
         trendCompliance: getTrendPercentage(

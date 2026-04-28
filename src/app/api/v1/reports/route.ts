@@ -15,9 +15,9 @@ export async function GET(_request: NextRequest) {
       _count: true,
     });
 
-    // Expenditure by programme
+    // Expenditure by programme — 'completed' is not a valid DisbursementStatus, use 'disbursed'
     const expenditures = await db.disbursement.findMany({
-      where: { status: { in: ['approved', 'processing', 'completed'] } },
+      where: { status: { in: ['approved', 'processing', 'disbursed'] } },
       include: {
         programme: { select: { id: true, name: true } },
       },
@@ -26,7 +26,7 @@ export async function GET(_request: NextRequest) {
     const expenditureByProgramme: Record<string, number> = {};
     for (const exp of expenditures) {
       const key = exp.programme?.name || 'Unassigned';
-      expenditureByProgramme[key] = (expenditureByProgramme[key] || 0) + exp.amount;
+      expenditureByProgramme[key] = (expenditureByProgramme[key] || 0) + Number(exp.amount);
     }
 
     const expenditureByProgrammeArray = Object.entries(expenditureByProgramme).map(
@@ -50,15 +50,15 @@ export async function GET(_request: NextRequest) {
         }),
         db.disbursement.aggregate({
           where: {
-            status: { in: ['approved', 'processing', 'completed'] },
+            status: { in: ['approved', 'processing', 'disbursed'] },
             processedDate: { gte: start, lte: end },
           },
           _sum: { amount: true },
         }),
       ]);
 
-      const income = incomeResult._sum.amount || 0;
-      const expenditure = expenditureResult._sum.amount || 0;
+      const income = Number(incomeResult._sum.amount || 0);
+      const expenditure = Number(expenditureResult._sum.amount || 0);
 
       monthlyTrend.push({
         month: date.toLocaleString('en-US', { month: 'short', year: '2-digit' }),
@@ -94,7 +94,7 @@ export async function GET(_request: NextRequest) {
         _count: true,
       }),
       db.disbursement.aggregate({
-        where: { status: { in: ['approved', 'processing', 'completed'] } },
+        where: { status: { in: ['approved', 'processing', 'disbursed'] } },
         _sum: { amount: true },
         _count: true,
       }),
@@ -127,15 +127,15 @@ export async function GET(_request: NextRequest) {
       success: true,
       data: {
         summary: {
-          totalIncome: totalIncome._sum.amount || 0,
-          totalExpenditure: totalExpenditure._sum.amount || 0,
-          netBalance: (totalIncome._sum.amount || 0) - (totalExpenditure._sum.amount || 0),
+          totalIncome: Number(totalIncome._sum.amount || 0),
+          totalExpenditure: Number(totalExpenditure._sum.amount || 0),
+          netBalance: Number(totalIncome._sum.amount || 0) - Number(totalExpenditure._sum.amount || 0),
           totalDonations: totalIncome._count,
           totalDisbursements: totalExpenditure._count,
         },
         incomeByFundType: incomeByFundType.map((item) => ({
           fundType: item.fundType,
-          amount: item._sum.amount || 0,
+          amount: Number(item._sum.amount || 0),
           count: item._count,
         })),
         expenditureByProgramme: expenditureByProgrammeArray,

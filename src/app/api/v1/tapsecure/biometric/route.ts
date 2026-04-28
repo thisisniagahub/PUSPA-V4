@@ -127,7 +127,7 @@ async function handleBiometricVerify(
         deviceFingerprint: validated.deviceFingerprint || null,
         ipAddress: validated.ipAddress || null,
         userAgent: validated.userAgent || null,
-        status: 'blocked',
+        status: 'failed',
         details: JSON.stringify({
           message: 'Terlalu banyak percubaan gagal. Sila cuba lagi dalam 5 minit.',
           recentFailures,

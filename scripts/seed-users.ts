@@ -23,7 +23,7 @@ async function hashPassword(password: string): Promise<string> {
   return `scrypt$${salt}$${derivedKey.toString('hex')}`
 }
 
-const ACCOUNTS = [
+const ACCOUNTS: { name: string; email: string; password: string; role: 'staff' | 'admin' | 'developer'; phone: string }[] = [
   {
     name: 'Kakitangan PUSPA',
     email: 'staff@puspa.org.my',

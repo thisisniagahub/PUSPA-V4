@@ -7,7 +7,7 @@ import { z } from 'zod';
 const disbursementCreateSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
   purpose: z.string().min(1, 'Purpose is required'),
-  status: z.enum(['PENDING', 'APPROVED', 'PROCESSING', 'DISBURSED', 'CANCELLED', 'FAILED']).optional().default('PENDING'),
+  status: z.enum(['pending', 'approved', 'processing', 'disbursed', 'cancelled', 'failed']).optional().default('pending'),
   recipientName: z.string().min(1, 'Recipient name is required'),
   recipientIC: z.string().optional(),
   recipientBank: z.string().optional(),
@@ -98,10 +98,21 @@ export async function POST(request: NextRequest) {
       create: (disbursementNumber) =>
         db.disbursement.create({
           data: {
-            ...validated,
             disbursementNumber,
+            amount: validated.amount,
+            purpose: validated.purpose,
+            status: validated.status,
+            recipientName: validated.recipientName,
+            recipientIC: validated.recipientIC || null,
+            recipientBank: validated.recipientBank || null,
+            recipientAcc: validated.recipientAcc || null,
             scheduledDate: validated.scheduledDate ? new Date(validated.scheduledDate) : null,
             processedDate: validated.processedDate ? new Date(validated.processedDate) : null,
+            receiptUrl: validated.receiptUrl || null,
+            notes: validated.notes || null,
+            caseId: validated.caseId || null,
+            programmeId: validated.programmeId || null,
+            memberId: validated.memberId || null,
           },
           include: {
             case: true,

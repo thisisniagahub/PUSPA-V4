@@ -45,7 +45,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       db.volunteerDeployment.count({
         where: {
           volunteerId: id,
-          status: { in: ['assigned', 'confirmed'] },
+          status: { in: ['assigned', 'active'] },
         },
       }),
       db.volunteerHourLog.count({
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       db.volunteerDeployment.findFirst({
         where: {
           volunteerId: id,
-          status: { in: ['assigned', 'confirmed'] },
+          status: { in: ['assigned', 'active'] },
         },
         orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
         select: {

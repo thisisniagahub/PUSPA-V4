@@ -32,11 +32,11 @@ export async function GET(request: Request) {
       return {
         month,
         bulan: month,
-        zakat: monthDonations.filter((x) => x.fundType === 'zakat').reduce((sum, x) => sum + x.amount, 0),
-        sadaqah: monthDonations.filter((x) => x.fundType === 'sadaqah').reduce((sum, x) => sum + x.amount, 0),
-        waqf: monthDonations.filter((x) => x.fundType === 'waqf').reduce((sum, x) => sum + x.amount, 0),
-        infaq: monthDonations.filter((x) => x.fundType === 'infaq').reduce((sum, x) => sum + x.amount, 0),
-        general: monthDonations.filter((x) => x.fundType === 'donation_general').reduce((sum, x) => sum + x.amount, 0),
+        zakat: monthDonations.filter((x) => x.fundType === 'zakat').reduce((sum, x) => sum + Number(x.amount), 0),
+        sadaqah: monthDonations.filter((x) => x.fundType === 'sadaqah').reduce((sum, x) => sum + Number(x.amount), 0),
+        waqf: monthDonations.filter((x) => x.fundType === 'waqf').reduce((sum, x) => sum + Number(x.amount), 0),
+        infaq: monthDonations.filter((x) => x.fundType === 'infaq').reduce((sum, x) => sum + Number(x.amount), 0),
+        general: monthDonations.filter((x) => x.fundType === 'donation_general').reduce((sum, x) => sum + Number(x.amount), 0),
       }
     })
 

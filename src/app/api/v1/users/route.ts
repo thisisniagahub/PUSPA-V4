@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { hashPassword, verifyPassword } from '@/lib/password'
+import { UserRole } from '@prisma/client'
 
 // GET /api/v1/users — List all users
 export async function GET(req: NextRequest) {
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest) {
         name,
         email,
         password: hashedPassword,
-        role: role || 'staff',
+        role: ((role || 'staff') as UserRole),
         phone: phone || null,
       },
       select: {

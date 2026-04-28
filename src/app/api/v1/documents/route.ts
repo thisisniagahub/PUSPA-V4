@@ -6,12 +6,12 @@ import { z } from 'zod';
 // ─── Validation Schemas ──────────────────────────────────────────────────────
 
 const VALID_CATEGORIES = [
-  'PENDAFTARAN',
-  'TADBIR_URUS',
-  'KEWANGAN',
-  'PEMATUHAN',
-  'OPERASI',
-  'PROGRAM',
+  'pendaftaran',
+  'tadbir_urus',
+  'kewangan',
+  'pematuhan',
+  'operasi',
+  'program',
 ] as const;
 
 const VALID_STATUSES = ['active', 'archived', 'deleted'] as const;

@@ -6,7 +6,7 @@ import { z } from 'zod';
 const boardMemberCreateSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   title: z.string().optional(),
-  role: z.enum(['CHAIRMAN', 'VICE_CHAIRMAN', 'SECRETARY', 'TREASURER', 'COMMITTEE_MEMBER', 'ADVISOR', 'TRUSTEE', 'OTHER']).optional(),
+  role: z.enum(['chairman', 'vice_chairman', 'secretary', 'deputy_secretary', 'treasurer', 'committee_member', 'adviser', 'trustee', 'other']).optional(),
   appointmentDate: z.string().optional(),
   endDate: z.string().optional(),
   phone: z.string().optional(),
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     const boardMember = await db.boardMember.create({
       data: {
         ...validated,
-        role: validated.role || 'OTHER',
+        role: validated.role || 'other',
         email: validated.email || null,
         appointmentDate: validated.appointmentDate ? new Date(validated.appointmentDate) : null,
         endDate: validated.endDate ? new Date(validated.endDate) : null,

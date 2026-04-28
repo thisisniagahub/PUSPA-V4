@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       db.member.count({ where: { status: 'active' } }),
       db.donation.aggregate({ _sum: { amount: true } }),
       db.disbursement.aggregate({ _sum: { amount: true } }),
-      db.case.count({ where: { status: { in: ['open', 'pending', 'in_progress'] } } }),
+      db.case.count({ where: { status: { in: ['draft', 'submitted', 'verifying'] } } }),
       db.programme.count({ where: { status: 'active' } }),
     ])
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     const monthlyData: Record<string, number> = {}
     monthlyDonations.forEach((d) => {
       const month = d.createdAt.toISOString().slice(0, 7) // YYYY-MM
-      monthlyData[month] = (monthlyData[month] || 0) + (d._sum.amount || 0)
+      monthlyData[month] = (monthlyData[month] || 0) + Number(d._sum.amount || 0)
     })
 
     return NextResponse.json({
@@ -49,8 +49,8 @@ export async function GET(request: NextRequest) {
         overview: {
           totalMembers,
           activeMembers,
-          totalDonations: totalDonations._sum.amount || 0,
-          totalDisbursements: totalDisbursements._sum.amount || 0,
+          totalDonations: Number(totalDonations._sum.amount || 0),
+          totalDisbursements: Number(totalDisbursements._sum.amount || 0),
           pendingCases,
           activeProgrammes,
         },
