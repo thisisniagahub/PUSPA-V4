@@ -50,5 +50,23 @@ test
 prompt
 
 server.log
-# Skills directory
+# Scratch & Backup
+*.backup
+*.bak
+*.new
+*.tmp
+*.temp
+/agent-ctx/
 /skills/
+/db/*.db-journal
+
+# local preview/test artifacts
+/prisma/db/
+/videos/
+/login-*.png
+/login-final-state.png
+
+# local diagnostic scripts with demo credentials
+/scripts/browser-login.ts
+/scripts/test-login.ts
+/scripts/update-role.ts

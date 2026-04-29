@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthorizationError, requireRole } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import type { FundType } from '@prisma/client';
+type FundType = string;
 
 const querySchema = z.object({
   period: z.enum(['monthly', 'quarterly', 'yearly']).optional().default('yearly'),
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     // Build disbursement where clause — 'completed' is not a valid DisbursementStatus, use 'disbursed'
     const disbursementWhere = {
-      status: { in: ['approved', 'processing', 'disbursed'] as import('@prisma/client').DisbursementStatus[] },
+      status: { in: ['approved', 'processing', 'disbursed'] as string[] },
       processedDate: { gte: start, lte: end },
     };
 
@@ -171,7 +171,7 @@ export async function GET(request: NextRequest) {
           }),
           db.disbursement.aggregate({
             where: {
-              status: { in: ['approved', 'processing', 'disbursed'] as import('@prisma/client').DisbursementStatus[] },
+              status: { in: ['approved', 'processing', 'disbursed'] as string[] },
               processedDate: { gte: ms, lte: me },
             },
             _sum: { amount: true },
@@ -200,7 +200,7 @@ export async function GET(request: NextRequest) {
           }),
           db.disbursement.aggregate({
             where: {
-              status: { in: ['approved', 'processing', 'disbursed'] as import('@prisma/client').DisbursementStatus[] },
+              status: { in: ['approved', 'processing', 'disbursed'] as string[] },
               processedDate: { gte: qs, lte: qe },
             },
             _sum: { amount: true },

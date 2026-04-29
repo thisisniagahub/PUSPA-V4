@@ -163,7 +163,7 @@ PUSPA V4 is the **fourth-generation** NGO management platform that integrates **
 - 38 tools for full database & operation access
 - Self-improving skills system with usage tracking & success rates
 - Persistent memory with 5 categories (preference, fact, procedure, relationship, context)
-- 3 AI provider support (Z-AI SDK, OpenRouter, Ollama) with auto-fallback
+- OpenClaw-first provider support (OpenClaw, OpenAI-compatible, OpenRouter, Ollama, Mock) with fail-closed provider selection
 - Real-time SSE streaming for chat responses
 - Agent execution trace visualization (planning → tool_call → success/error)
 - Bilingual responses (Bahasa Melayu & English)
@@ -210,7 +210,7 @@ PUSPA V4 is the **fourth-generation** NGO management platform that integrates **
 | **Language** | TypeScript | 5 |
 | **Database** | SQLite (dev) / PostgreSQL (prod) | — |
 | **ORM** | Prisma | 6 |
-| **Authentication** | NextAuth v4 (JWT, Credentials) | 4 |
+| **Authentication** | Supabase Auth primary + Prisma user sync; legacy/custom endpoints retained where needed | — |
 | **State Management** | Zustand (persist middleware) | 5 |
 | **UI Components** | shadcn/ui (Radix primitives, New York style) | — |
 | **Icon Library** | Lucide React | — |
@@ -220,8 +220,8 @@ PUSPA V4 is the **fourth-generation** NGO management platform that integrates **
 | **Data Fetching** | @tanstack/react-query + native fetch | 5 |
 | **Animations** | Framer Motion | 12 |
 | **3D/WebGL** | OGL (aurora shader) | — |
-| **AI SDK** | z-ai-web-dev-sdk (free tier) | — |
-| **AI Providers** | Z-AI SDK, OpenRouter (200+ models), Ollama (local) | — |
+| **AI SDK** | OpenClaw / OpenRouter-compatible provider abstraction | — |
+| **AI Providers** | OpenClaw/PuspaCareBot, OpenAI-compatible, OpenRouter, Ollama, Mock | — |
 | **Forms** | react-hook-form + Zod | 7 / 4 |
 | **Markdown** | react-markdown + react-syntax-highlighter | — |
 | **Drag & Drop** | @dnd-kit/core + @dnd-kit/sortable | — |
@@ -267,7 +267,7 @@ PUSPA V4 is the **fourth-generation** NGO management platform that integrates **
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────────┐│
 │  │                    Security Layer                           ││
-│  │  NextAuth JWT • HMAC Session Tokens • Bot API Keys          ││
+│  │  Supabase Sessions • HMAC Tokens • Bot API Keys             ││
 │  │  Rate Limiting • Audit Trail • eKYC • TapSecure            ││
 │  │  Scrypt Password Hashing • Path Traversal Protection        ││
 │  └─────────────────────────────────────────────────────────────┘│
@@ -305,7 +305,7 @@ src/
 │   │   └── activities.ts
 │   └── api/                          # API routes (80 endpoints)
 │       ├── route.ts                  # Health check endpoint
-│       ├── auth/[...nextauth]/       # NextAuth handler
+│       ├── auth/                      # Legacy/custom auth handlers where retained
 │       └── v1/                       # REST API v1
 │           ├── auth/                 # Authentication (login, logout, me)
 │           ├── dashboard/            # Dashboard & analytics
@@ -359,7 +359,7 @@ src/
 │   │   └── ErrorBoundary.tsx         # Plugin error isolation
 │   ├── ui/                           # 52 shadcn/ui components (Radix-based)
 │   ├── Aurora.tsx                    # WebGL aurora background (OGL shader)
-│   ├── auth-provider.tsx             # NextAuth SessionProvider wrapper
+│   ├── auth-provider.tsx             # App auth context/provider wrapper
 │   ├── command-palette.tsx           # ⌘K command palette
 │   ├── notification-bell.tsx         # Notification dropdown with unread count
 │   ├── theme-provider.tsx            # next-themes wrapper
@@ -402,9 +402,9 @@ src/
 │   └── settings/                     # User settings
 │
 ├── lib/                              # Utilities & business logic
-│   ├── auth.ts                       # NextAuth configuration
+│   ├── auth.ts                       # Server auth/session + role helpers
 │   ├── auth-shared.ts                # Shared auth utils (normalizeUserRole, getAuthSecret)
-│   ├── puspa-auth.ts                 # Custom HMAC session tokens
+│   ├── supabase/                     # Supabase client/auth utilities
 │   ├── bot-auth.ts                   # Bot API key system (psbot_* prefix)
 │   ├── bot-middleware.ts             # Bot auth middleware (Bearer token)
 │   ├── db.ts                         # Prisma client singleton (multi-URL resolution)
@@ -577,7 +577,7 @@ User Input
   → Hermes Store (Zustand)
   → POST /api/v1/hermes/chat
     → Build System Prompt (context + memory + skills + module descriptions)
-    → Call LLM Provider (Z-AI / OpenRouter / Ollama)
+    → Call LLM Provider (OpenClaw / OpenRouter / Ollama)
     → Parse Tool Calls (<<TOOL:name>>{}<</TOOL>> or native function calling)
     → Execute Tool Chain (up to 5 steps)
       → Each step: parse → execute → format result → feed back to LLM
@@ -593,11 +593,11 @@ User Input
 
 | Provider | Type | Cost | Description |
 |---|---|---|---|
-| **Z-AI SDK** | Cloud | Free | Default provider, no configuration needed |
+| **OpenClaw** | Local gateway | Self-hosted | Default provider for Hermes Agent |
 | **OpenRouter** | Cloud | Free + Paid | 200+ models, native function calling support |
 | **Ollama** | Local | Free | Privacy-first, local inference, custom base URL |
 
-Provider switching is per-user via HermesProviderConfig in the database. The system automatically detects the best calling method (SSE streaming for OpenRouter/Ollama, SDK for Z-AI).
+Provider switching is per-user via HermesProviderConfig in the database. The system uses OpenClaw by default and streams through compatible provider adapters for OpenRouter/Ollama when configured.
 
 ### Tool Registry (38 Tools)
 
@@ -966,10 +966,10 @@ Service account endpoints using `psbot_*` API key authentication:
 DATABASE_URL=file:./db/custom.db
 
 # Authentication
-NEXTAUTH_SECRET=change-this-to-a-secure-random-string
+NEXTAUTH_SECRET=[REDACTED]
 NEXTAUTH_URL=http://localhost:3000
 
-# AI Providers (optional — Z-AI works out of the box)
+# AI Providers (optional — OpenClaw is the default local gateway)
 # OPENROUTER_API_KEY=sk-or-...
 
 # PostgreSQL (optional — for production)
@@ -1219,3 +1219,18 @@ This project is proprietary software. Distribution, modification, or use without
 Built with ❤️ for the asnaf community
 
 </div>
+
+---
+
+---
+
+## Current Alignment Note (2026-04-30)
+
+This document has been aligned with the current PUSPA-V4 workspace at `/mnt/g/PUSPA-V4`:
+
+- Stack: Next.js 16 / React 19 / TypeScript / Prisma 6 / Bun / Tailwind 4 / shadcn-Radix.
+- Local dev command in `package.json` remains `bun run dev` on port `3000`; active preview work may run with `./node_modules/.bin/next dev -p 3001` when port 3000 is occupied.
+- Auth: Supabase Auth is the primary app flow via `/api/v1/auth/supabase/*`, synced to Prisma users. Legacy/custom auth endpoints may remain for compatibility, but new protected API work should use server-side helpers from `@/lib/auth`.
+- Route protection: `src/middleware.ts` is the active guard in this workspace. Next.js warns the middleware convention is deprecated in favor of `proxy`, so future migration should preserve the same fail-closed behavior.
+- PUSPA AI/Hermes: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `HERMES_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
+- Validation baseline after the latest alignment: `bun x tsc --noEmit --pretty false` passed and `bun run build` passed.

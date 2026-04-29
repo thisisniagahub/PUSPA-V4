@@ -16,10 +16,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        provider: config?.provider || 'zai',
+        provider: config?.provider || 'openclaw',
         model: config?.model || 'default',
         hasApiKey: !!config?.apiKey,
-        apiKeyPrefix: config?.apiKey ? config.apiKey.slice(0, 8) + '...' : null,
+        apiKeyPrefix: null,
         baseUrl: config?.baseUrl || null,
         availableProviders: Object.values(PROVIDERS),
       },
@@ -54,40 +54,18 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Validate API key requirement
-    if (provider === 'openrouter' && !apiKey) {
-      const existing = await db.hermesProviderConfig.findUnique({ where: { userId } })
-      if (!existing?.apiKey) {
-        return NextResponse.json(
-          { success: false, error: 'OpenRouter memerlukan API key' },
-          { status: 400 },
-        )
-      }
-    }
-
-    // Validate base URL requirement
-    if (provider === 'ollama' && !baseUrl) {
-      const existing = await db.hermesProviderConfig.findUnique({ where: { userId } })
-      if (!existing?.baseUrl) {
-        return NextResponse.json(
-          { success: false, error: 'Ollama memerlukan base URL' },
-          { status: 400 },
-        )
-      }
-    }
-
     // Upsert config
     const config = await db.hermesProviderConfig.upsert({
       where: { userId },
       create: {
         userId,
-        provider,
+        provider: provider as any,
         model: model || PROVIDERS[provider].defaultModel,
         apiKey: apiKey || null,
         baseUrl: baseUrl || null,
       },
       update: {
-        provider,
+        provider: provider as any,
         model: model || PROVIDERS[provider].defaultModel,
         ...(apiKey !== undefined ? { apiKey } : {}),
         ...(baseUrl !== undefined ? { baseUrl } : {}),

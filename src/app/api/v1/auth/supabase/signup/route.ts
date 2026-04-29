@@ -1,18 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { signUpWithSupabase } from '@/lib/supabase/auth'
 import { requireRole } from '@/lib/auth'
-import type { AppRole } from '@/lib/auth-shared'
+import { AppRole, canAssignRole } from '@/lib/roles'
 
 export async function POST(request: NextRequest) {
   try {
     // Only admins can create new users
-    await requireRole(request, ['admin', 'developer'])
+    const session = await requireRole(request, ['admin', 'developer'])
 
     const body = await request.json().catch(() => ({}))
     const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : ''
     const password = typeof body?.password === 'string' ? body.password : ''
     const name = typeof body?.name === 'string' ? body.name : ''
     const role = typeof body?.role === 'string' ? body.role as AppRole : 'staff'
+
+    if (!canAssignRole(session.user.role, role)) {
+      return NextResponse.json(
+        { success: false, error: 'Anda tidak mempunyai kebenaran untuk menetapkan peranan ini' },
+        { status: 403 },
+      )
+    }
 
     if (!email || !password || !name) {
       return NextResponse.json(

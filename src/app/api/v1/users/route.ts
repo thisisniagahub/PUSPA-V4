@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { hashPassword, verifyPassword } from '@/lib/password'
-import { UserRole } from '@prisma/client'
+type UserRole = string
+import { requireRole, AuthorizationError } from '@/lib/auth'
+import { AppRole, canAssignRole } from '@/lib/roles'
+
+const ADMIN_ROLES: AppRole[] = ['admin', 'developer']
 
 // GET /api/v1/users — List all users
 export async function GET(req: NextRequest) {
   try {
+    await requireRole(req, ADMIN_ROLES)
     const { searchParams } = new URL(req.url)
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '50')
@@ -50,6 +55,9 @@ export async function GET(req: NextRequest) {
       totalPages: Math.ceil(total / pageSize),
     })
   } catch (error: any) {
+    if (error instanceof AuthorizationError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: error.status })
+    }
     return NextResponse.json({ success: false, error: error?.message || 'Gagal memuatkan pengguna' }, { status: 500 })
   }
 }
@@ -57,11 +65,17 @@ export async function GET(req: NextRequest) {
 // POST /api/v1/users — Create new user
 export async function POST(req: NextRequest) {
   try {
+    const session = await requireRole(req, ADMIN_ROLES)
     const body = await req.json()
     const { name, email, password, role, phone } = body
 
     if (!name || !email || !password) {
       return NextResponse.json({ success: false, error: 'Nama, emel dan kata laluan diperlukan' }, { status: 400 })
+    }
+
+    const targetRole = (role || 'staff') as AppRole
+    if (!canAssignRole(session.user.role, targetRole)) {
+      return NextResponse.json({ success: false, error: 'Anda tidak mempunyai kebenaran untuk menetapkan peranan ini' }, { status: 403 })
     }
 
     // Check for duplicate email
@@ -77,7 +91,7 @@ export async function POST(req: NextRequest) {
         name,
         email,
         password: hashedPassword,
-        role: ((role || 'staff') as UserRole),
+        role: targetRole as UserRole,
         phone: phone || null,
       },
       select: {
@@ -93,6 +107,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: user }, { status: 201 })
   } catch (error: any) {
+    if (error instanceof AuthorizationError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: error.status })
+    }
     return NextResponse.json({ success: false, error: error?.message || 'Gagal mencipta pengguna' }, { status: 500 })
   }
 }
@@ -100,11 +117,16 @@ export async function POST(req: NextRequest) {
 // PUT /api/v1/users — Update user
 export async function PUT(req: NextRequest) {
   try {
+    const session = await requireRole(req, ADMIN_ROLES)
     const body = await req.json()
     const { id, name, email, role, phone, isActive, currentPassword, newPassword } = body
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'ID pengguna diperlukan' }, { status: 400 })
+    }
+
+    if (role && !canAssignRole(session.user.role, role as AppRole)) {
+      return NextResponse.json({ success: false, error: 'Anda tidak mempunyai kebenaran untuk menetapkan peranan ini' }, { status: 403 })
     }
 
     const existing = await db.user.findUnique({ where: { id } })
@@ -146,6 +168,9 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: updated })
   } catch (error: any) {
+    if (error instanceof AuthorizationError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: error.status })
+    }
     return NextResponse.json({ success: false, error: error?.message || 'Gagal mengemaskini pengguna' }, { status: 500 })
   }
 }
@@ -153,6 +178,7 @@ export async function PUT(req: NextRequest) {
 // DELETE /api/v1/users — Deactivate user
 export async function DELETE(req: NextRequest) {
   try {
+    await requireRole(req, ADMIN_ROLES)
     const { searchParams } = new URL(req.url)
     const id = searchParams.get('id')
 
@@ -174,6 +200,9 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: updated })
   } catch (error: any) {
+    if (error instanceof AuthorizationError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: error.status })
+    }
     return NextResponse.json({ success: false, error: error?.message || 'Gagal memadam pengguna' }, { status: 500 })
   }
 }

@@ -47,7 +47,7 @@ export function HermesDashboard() {
 
   const handleSend = useCallback(async (text: string) => {
     if (status === 'thinking' || status === 'streaming') return
-    if (providerState.provider === 'zai') {
+    if (providerState.provider === 'openclaw') {
       await sendMessage(text)
     } else {
       await sendMessageStream(text)
@@ -269,7 +269,7 @@ export function HermesDashboard() {
                   <Badge variant="outline" className="gap-1.5 text-xs border-black/5 dark:border-white/10">
                     <span>{providerInfo.icon}</span>
                     <span>{providerInfo.name}</span>
-                    {providerState.provider !== 'zai' && (
+                    {providerState.provider !== 'openclaw' && (
                       <span className="text-zinc-400">• {providerState.model.split('/').pop()}</span>
                     )}
                   </Badge>
@@ -330,7 +330,7 @@ export function HermesDashboard() {
                 onToggleSettings={() => setShowSettings(!showSettings)}
                 status={status}
                 providerInfo={providerInfo}
-                modelLabel={providerState.provider !== 'zai' ? providerState.model.split('/').pop()?.slice(0, 20) : undefined}
+                modelLabel={providerState.provider !== 'openclaw' ? providerState.model.split('/').pop()?.slice(0, 20) : undefined}
                 toolsUsed={toolsUsed}
                 messageCount={messages.length}
               />
@@ -532,7 +532,7 @@ export function HermesDashboard() {
           onToggleSettings={() => setShowSettings(!showSettings)}
           status={status}
           providerInfo={providerInfo}
-          modelLabel={providerState.provider !== 'zai' ? providerState.model.split('/').pop()?.slice(0, 20) : undefined}
+          modelLabel={providerState.provider !== 'openclaw' ? providerState.model.split('/').pop()?.slice(0, 20) : undefined}
           toolsUsed={toolsUsed}
           messageCount={messages.length}
         />

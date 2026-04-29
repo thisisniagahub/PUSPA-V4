@@ -13,6 +13,8 @@ import { useAppStore } from '@/stores/app-store';
 import { useHermesStore } from '@/stores/hermes-store';
 import { cn } from '@/lib/utils';
 
+import { useRouter } from 'next/navigation';
+
 // Dynamic imports for heavy components
 const AppSidebar = dynamic(() => import('@/components/sidebar/app-sidebar').then(m => ({ default: m.AppSidebar })), { ssr: false });
 const CommandPalette = dynamic(() => import('@/components/command-palette').then(m => ({ default: m.CommandPalette })), { ssr: false });
@@ -25,6 +27,7 @@ const HermesDashboard = dynamic(() => import('@/components/hermes/hermes-dashboa
 import { viewLabels } from '@/types';
 
 export default function Shell() {
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { currentView, sidebarCollapsed, toggleSidebar, setCommandPaletteOpen, setUserRole: setAppUserRole } = useAppStore();
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -45,6 +48,26 @@ export default function Shell() {
     requestAnimationFrame(() => setMounted(true));
   }, []);
 
+  // Redirect anonymous users
+  useEffect(() => {
+    if (!authLoading && mounted && !user) {
+      router.replace('/login');
+    }
+  }, [authLoading, mounted, user, router]);
+
+  // Global command palette shortcut: Ctrl/Cmd+K.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setCommandPaletteOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [setCommandPaletteOpen]);
+
   // Sync current view and user role to Hermes
   useEffect(() => {
     setCurrentView(currentView);
@@ -57,7 +80,7 @@ export default function Shell() {
     }
   }, [user?.role, setHermesUserRole, setAppUserRole]);
 
-  if (authLoading || !mounted) {
+  if (authLoading || !mounted || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4 text-center">
@@ -102,7 +125,7 @@ export default function Shell() {
         <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-xl transition-all duration-300 border-border">
           <div className="flex items-center justify-between h-14 px-4 sm:px-6">
             <div className="flex items-center gap-2.5 min-w-0">
-              <Button variant="ghost" size="icon" className="lg:hidden shrink-0" onClick={toggleSidebar} aria-label="Toggle menu">
+              <Button type="button" variant="ghost" size="icon" className="lg:hidden shrink-0" onClick={toggleSidebar} aria-label="Toggle menu">
                 <Menu className="h-5 w-5" />
               </Button>
               
@@ -133,6 +156,7 @@ export default function Shell() {
             <div className="flex items-center gap-1.5 shrink-0">
               {/* Command Palette Trigger */}
               <Button 
+                type="button"
                 variant="outline" 
                 size="sm" 
                 className="hidden sm:flex gap-2 text-xs h-8 px-3 text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground" 
@@ -145,6 +169,7 @@ export default function Shell() {
 
               {/* Theme Toggle with Contra Colors */}
               <Button
+                type="button"
                 variant="ghost"
                 size="icon"
                 className="relative h-8 w-8 shrink-0 border border-transparent hover:border-border hover:bg-accent"
@@ -222,7 +247,7 @@ export default function Shell() {
             </p>
             <div className="flex items-center gap-4">
               <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Sistem Stabil v3.2.0-prod
               </span>
             </div>

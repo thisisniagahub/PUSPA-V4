@@ -125,8 +125,8 @@ export const useHermesStore = create<HermesState>()(
       showSettings: false,
       showHistory: false,
       providerState: {
-        provider: 'zai' as ProviderId,
-        model: 'default',
+        provider: 'openclaw' as ProviderId,
+        model: 'openclaw/main',
         hasApiKey: false,
         apiKeyPrefix: null,
         baseUrl: null,
@@ -374,7 +374,7 @@ export const useHermesStore = create<HermesState>()(
               }
             }
           } else {
-            // Non-streaming response (Z-AI fallback)
+            // Non-streaming response fallback for compatible providers
             updateStep(planStepId, { status: 'completed', detail: 'Permintaan dianalisis' })
 
             const json = await response.json()

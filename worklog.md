@@ -90,7 +90,7 @@ Agent: Prisma Schema Agent
 Task: Create complete PostgreSQL Prisma schema for PUSPA NGO (Supabase)
 
 Work Log:
-- Read existing SQLite schema at /home/z/my-project/prisma/schema.prisma (835 lines)
+- Read existing SQLite schema at /mnt/g/PUSPA-V4/prisma/schema.prisma (835 lines)
 - Changed datasource from SQLite to PostgreSQL with directUrl for Supabase
 - Created 35 Prisma enums replacing all String-typed status/category/role fields
 - Fixed 14 missing relations (Donation→Case, Donation→Donor, CaseNote→User, CaseDocument→User, Disbursement→User, EKYCVerification→User, DonorCommunication→User, Capture→User, HermesConversation→User, HermesSkill→User, HermesProviderConfig→User, VolunteerDeployment→Activity, VolunteerHourLog→VolunteerDeployment, TaxReceipt→Donation)
@@ -101,7 +101,7 @@ Work Log:
 - Converted 9 Float money fields to Decimal @db.Decimal(12,2): monthlyIncome, income, budget, totalSpent, amount (Case/Donation/Disbursement/TaxReceipt), totalDonated
 - Changed all @default(cuid()) to @default(uuid()) across all 35 models
 - Added supabaseId String? @unique to User model for Supabase Auth integration
-- Wrote complete schema (1193 lines) to /home/z/my-project/prisma/schema.prisma
+- Wrote complete schema (1193 lines) to /mnt/g/PUSPA-V4/prisma/schema.prisma
 
 Stage Summary:
 - Complete PostgreSQL migration schema ready for Supabase
@@ -123,8 +123,8 @@ Work Log:
 - Created /src/lib/supabase/server.ts — Server-side Supabase client with createClient() (async, uses cookies()) and createAdminClient() (sync, service role key, bypasses RLS)
 - Created /src/lib/supabase/client.ts — Browser-side Supabase client using createBrowserClient() from @supabase/ssr
 - Created /src/lib/supabase/middleware.ts — Standalone updateSession() helper for refreshing Supabase auth sessions in request pipeline
-- Discovered Next.js 16 uses proxy.ts instead of middleware.ts — creating both causes crash ("Both middleware file and proxy file detected")
-- Deleted /src/middleware.ts to avoid conflict with existing /src/proxy.ts
+- Discovered Current PUSPA-V4 workspace uses `src/middleware.ts`; Next.js warns this convention is deprecated and should later migrate to `proxy` carefully ("Both middleware file and proxy file detected")
+- Active route guard is now /src/middleware.ts; old proxy-related notes are historical
 - Integrated Supabase session refresh directly into /src/proxy.ts:
   - Added createServerClient from @supabase/ssr at top of proxy function
   - Added supabase.auth.getUser() call for session validation
@@ -182,3 +182,35 @@ Stage Summary:
 - Dual auth maintained: NextAuth + puspa-auth continue working as fallback
 - Supabase Auth acts as primary auth method going forward
 - User sync: Supabase Auth users are automatically linked to Prisma User records via supabaseId field
+
+---
+
+---
+Task ID: 2026-04-30-docs-server-alignment
+Agent: Hermes Agent
+Task: Run local PUSPA-V4 preview and align Markdown documentation with current project state
+
+Work Log:
+- Verified repo root `/mnt/g/PUSPA-V4`, branch `main`, and existing dirty working tree.
+- Started local preview with `./node_modules/.bin/next dev -p 3001` for port-conflict-safe development.
+- Aligned docs to current Supabase Auth + Prisma user sync model.
+- Documented OpenClaw/PUSPA AI env aliases: `HERMES_OPENAI_*` and `OPENCLAW_*`, with model `openclaw/puspacare`.
+- Marked stale NextAuth/Z.AI/proxy-only assumptions as historical where applicable.
+- Recorded current validation baseline: TypeScript and production build pass after latest fixes.
+
+Stage Summary:
+- Local server workflow and project docs now describe the active PUSPA-V4 architecture more accurately.
+- Secrets remain redacted; no API keys were written to docs.
+
+---
+
+## Current Alignment Note (2026-04-30)
+
+This document has been aligned with the current PUSPA-V4 workspace at `/mnt/g/PUSPA-V4`:
+
+- Stack: Next.js 16 / React 19 / TypeScript / Prisma 6 / Bun / Tailwind 4 / shadcn-Radix.
+- Local dev command in `package.json` remains `bun run dev` on port `3000`; active preview work may run with `./node_modules/.bin/next dev -p 3001` when port 3000 is occupied.
+- Auth: Supabase Auth is the primary app flow via `/api/v1/auth/supabase/*`, synced to Prisma users. Legacy/custom auth endpoints may remain for compatibility, but new protected API work should use server-side helpers from `@/lib/auth`.
+- Route protection: `src/middleware.ts` is the active guard in this workspace. Next.js warns the middleware convention is deprecated in favor of `proxy`, so future migration should preserve the same fail-closed behavior.
+- PUSPA AI/Hermes: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `HERMES_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
+- Validation baseline after the latest alignment: `bun x tsc --noEmit --pretty false` passed and `bun run build` passed.

@@ -18,6 +18,7 @@ const VIEW_ROLE_REQUIREMENTS: Partial<Record<ViewId, UserRole>> = {
   'openclaw-agents': 'developer',
   'openclaw-models': 'developer',
   'openclaw-automation': 'developer',
+  'openclaw-graph': 'developer',
 }
 
 export function canAccessView(view: ViewId, role: UserRole) {

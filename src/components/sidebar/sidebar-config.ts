@@ -29,7 +29,10 @@ import {
   Warehouse,
   GraduationCap,
   Settings,
+  GitGraph,
 } from 'lucide-react'
+import { canAccessView } from '@/lib/access-control'
+import { MODULE_REGISTRY, VIEW_LABELS as MODULE_VIEW_LABELS } from '@/lib/module-registry'
 import type { UserRole } from '@/stores/app-store'
 import type { SidebarNavGroup } from './sidebar-types'
 
@@ -111,8 +114,9 @@ export const SIDEBAR_GROUPS: SidebarNavGroup[] = [
       { id: 'openclaw-integrations', label: 'Gateway & Channel', icon: LinkIcon, roles: ['developer'] },
       { id: 'openclaw-terminal', label: 'Console Operator', icon: Terminal, roles: ['developer'] },
       { id: 'openclaw-agents', label: 'Ejen AI', icon: Bot, roles: ['developer'] },
-      { id: 'openclaw-models', label: 'Enjin Model', icon: Cpu, roles: ['developer'] },
-      { id: 'openclaw-automation', label: 'Automasi', icon: Clock, roles: ['developer'] },
+      { id: 'openclaw-models', label: MODULE_REGISTRY['openclaw-models'].label, icon: Cpu, roles: ['developer'] },
+      { id: 'openclaw-automation', label: MODULE_REGISTRY['openclaw-automation'].label, icon: Clock, roles: ['developer'] },
+      { id: 'openclaw-graph', label: MODULE_REGISTRY['openclaw-graph'].label, icon: GitGraph, roles: ['developer'] },
     ],
   },
   {
@@ -127,15 +131,11 @@ export const SIDEBAR_GROUPS: SidebarNavGroup[] = [
 
 export function getVisibleGroups(role: UserRole): SidebarNavGroup[] {
   return SIDEBAR_GROUPS
-    .filter((group) => group.roles.includes(role))
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => item.roles.includes(role)),
+      items: group.items.filter((item) => canAccessView(item.id, role)),
     }))
     .filter((group) => group.items.length > 0)
 }
 
-export const VIEW_LABELS = SIDEBAR_GROUPS.flatMap((group) => group.items).reduce(
-  (labels, item) => ({ ...labels, [item.id]: item.label }),
-  {} as Record<string, string>,
-)
+export const VIEW_LABELS = MODULE_VIEW_LABELS

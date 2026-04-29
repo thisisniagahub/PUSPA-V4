@@ -39,12 +39,28 @@ const moduleLoaders: Record<ViewId, React.ComponentType> = {
   'settings': dynamic(() => import('@/modules/settings/page'), { ssr: false }),
 };
 
+import { useAuth } from '@/components/auth-provider';
+import { canAccessView } from '@/lib/access-control';
+
 interface ViewRendererProps {
   view: ViewId;
 }
 
 export function ViewRenderer({ view }: ViewRendererProps) {
+  const { user } = useAuth();
   const Component = moduleLoaders[view];
+  const role = (user?.role || 'staff') as any;
+
+  if (!canAccessView(view, role)) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center space-y-2">
+          <p className="text-lg font-semibold text-destructive">Akses Dinafikan</p>
+          <p className="text-muted-foreground">Anda tidak mempunyai kebenaran untuk mengakses modul ini ({view}).</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!Component) {
     return (

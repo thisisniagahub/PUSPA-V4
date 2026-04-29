@@ -746,8 +746,8 @@ model HermesConversation {
   userId      String
   title       String            @default("Sesi Baru")
   viewContext String            @default("dashboard")
-  provider    String            @default("zai")
-  model       String            @default("default")
+  provider    String            @default("openclaw")
+  model       String            @default("openclaw/main")
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   messages    HermesMessage[]
@@ -822,8 +822,8 @@ model HermesMemory {
 model HermesProviderConfig {
   id          String    @id @default(cuid())
   userId      String    @unique
-  provider    String    @default("zai") // zai | openrouter | ollama
-  model       String    @default("default")
+  provider    String    @default("openclaw") // openclaw | openrouter | ollama
+  model       String    @default("openclaw/main")
   apiKey      String?   // Encrypted API key for OpenRouter etc.
   baseUrl     String?   // Custom base URL for Ollama etc.
   isActive    Boolean   @default(true)

@@ -1,3 +1,3 @@
 #!/bin/bash
-cd /home/z/my-project
-exec node node_modules/.bin/next dev -p 3000 >> /home/z/my-project/dev.log 2>&1
+cd "$(dirname "$0")"
+exec npx next dev -p 3000 >> ./dev.log 2>&1

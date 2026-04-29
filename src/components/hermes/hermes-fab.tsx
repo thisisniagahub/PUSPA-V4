@@ -91,7 +91,7 @@ export function HermesFab() {
       )}
 
       {/* Provider indicator */}
-      {!isOpen && providerState.provider !== 'zai' && (
+      {!isOpen && providerState.provider !== 'openclaw' && (
         <span className="absolute -bottom-1 -left-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-background border text-[9px] font-bold shadow-sm">
           {providerInfo.icon}
         </span>

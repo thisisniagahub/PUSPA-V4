@@ -22,8 +22,32 @@ const PUBLIC_API_PATHS = new Set([
   '/api/v1/auth/supabase/seed',
 ])
 
+function hasSupabasePublicEnv() {
+  return Boolean(supabaseUrl && supabaseKey)
+}
+
 export default async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+
+  // If Supabase public env is not configured (local/headless build smoke tests),
+  // fail closed for protected API/pages instead of throwing from @supabase/ssr.
+  if (!hasSupabasePublicEnv()) {
+    if (PUBLIC_API_PATHS.has(pathname) || pathname.startsWith('/api/v1/bot/')) {
+      return NextResponse.next({ request })
+    }
+
+    if (pathname.startsWith('/api/')) {
+      return buildUnauthorizedApiResponse()
+    }
+
+    if (pathname.match(/\.(ico|png|jpg|jpeg|svg|css|js|woff2?)$/) || pathname === '/login') {
+      return NextResponse.next({ request })
+    }
+
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('callbackUrl', `${pathname}${request.nextUrl.search}`)
+    return NextResponse.redirect(loginUrl)
+  }
 
   // --- Supabase Auth Session Refresh ---
   // Refresh the Supabase auth session on every request so the user

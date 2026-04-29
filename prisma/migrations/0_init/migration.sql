@@ -116,7 +116,7 @@ CREATE TYPE "HermesMemoryCategory" AS ENUM ('preference', 'fact', 'procedure', '
 CREATE TYPE "HermesMemorySource" AS ENUM ('conversation', 'manual', 'skill');
 
 -- CreateEnum
-CREATE TYPE "HermesProvider" AS ENUM ('zai', 'openrouter', 'ollama');
+CREATE TYPE "HermesProvider" AS ENUM ('openclaw', 'openrouter', 'ollama');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -866,8 +866,8 @@ CREATE TABLE "HermesConversation" (
     "userId" TEXT NOT NULL,
     "title" TEXT NOT NULL DEFAULT 'Sesi Baru',
     "viewContext" TEXT NOT NULL DEFAULT 'dashboard',
-    "provider" "HermesProvider" NOT NULL DEFAULT 'zai',
-    "model" TEXT NOT NULL DEFAULT 'default',
+    "provider" "HermesProvider" NOT NULL DEFAULT 'openclaw',
+    "model" TEXT NOT NULL DEFAULT 'openclaw/main',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -934,8 +934,8 @@ CREATE TABLE "HermesMemory" (
 CREATE TABLE "HermesProviderConfig" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "provider" "HermesProvider" NOT NULL DEFAULT 'zai',
-    "model" TEXT NOT NULL DEFAULT 'default',
+    "provider" "HermesProvider" NOT NULL DEFAULT 'openclaw',
+    "model" TEXT NOT NULL DEFAULT 'openclaw/main',
     "apiKey" TEXT,
     "baseUrl" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,

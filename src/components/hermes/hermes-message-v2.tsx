@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Copy, Check, Wrench, Clock, ArrowRight, ExternalLink } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
 import { cn } from '@/lib/utils'
 import type { HermesChatMessage } from '@/stores/hermes-store'
 import { PROVIDERS } from '@/lib/hermes/provider-types'
@@ -10,28 +11,6 @@ import { PROVIDERS } from '@/lib/hermes/provider-types'
 interface HermesMessageV2Props {
   message: HermesChatMessage
   isLast?: boolean
-}
-
-function renderContent(content: string): string {
-  let html = content
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre class="bg-zinc-100 dark:bg-zinc-800 rounded-xl p-3 my-2 overflow-x-auto text-xs font-mono border border-black/5"><code>$2</code></pre>')
-    .replace(/`(.*?)`/g, '<code class="bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md text-xs font-mono border border-black/5">$1</code>')
-    .replace(/^### (.*$)/gm, '<h4 class="font-bold text-sm mt-3 mb-1 text-zinc-900">$1</h4>')
-    .replace(/^## (.*$)/gm, '<h3 class="font-bold text-base mt-3 mb-1 text-zinc-900">$1</h3>')
-    .replace(/^# (.*$)/gm, '<h2 class="font-bold text-lg mt-3 mb-1 text-zinc-900">$1</h2>')
-    .replace(/^[•●] (.*$)/gm, '<li class="ml-4 list-disc text-zinc-700">$1</li>')
-    .replace(/^- (.*$)/gm, '<li class="ml-4 list-disc text-zinc-700">$1</li>')
-    .replace(/^\d+\. (.*$)/gm, '<li class="ml-4 list-decimal text-zinc-700">$1</li>')
-    .replace(/\n\n/g, '</p><p class="mt-2">')
-    .replace(/\n/g, '<br/>')
-
-  if (!html.startsWith('<')) {
-    html = `<p>${html}</p>`
-  }
-
-  return html
 }
 
 export function HermesMessageV2({ message, isLast }: HermesMessageV2Props) {
@@ -52,11 +31,6 @@ export function HermesMessageV2({ message, isLast }: HermesMessageV2Props) {
   })
 
   const providerInfo = message.provider ? PROVIDERS[message.provider] : null
-
-  const renderedContent = useMemo(() => {
-    if (isUser) return message.content
-    return renderContent(message.content)
-  }, [message.content, isUser])
 
   return (
     <motion.div
@@ -102,9 +76,12 @@ export function HermesMessageV2({ message, isLast }: HermesMessageV2Props) {
             'whitespace-pre-wrap break-words hermes-content-v2',
             isUser ? '' : '[&_strong]:font-semibold [&_code]:text-violet-600 dark:[&_code]:text-violet-400 [&_pre]:text-zinc-800 dark:[&_pre]:text-zinc-200 [&_h2]:text-zinc-900 [&_h3]:text-zinc-900 [&_h4]:text-zinc-900 [&_li]:text-zinc-700 dark:[&_li]:text-zinc-300',
           )}
-          dangerouslySetInnerHTML={isUser ? undefined : { __html: renderedContent }}
         >
-          {isUser ? message.content : undefined}
+          {isUser ? (
+            message.content
+          ) : (
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          )}
         </div>
 
         {/* Streaming cursor */}

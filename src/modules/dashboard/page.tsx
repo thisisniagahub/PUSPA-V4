@@ -153,6 +153,33 @@ interface DashboardStats {
   trendCompliance: number
 }
 
+interface MonthlyDonationItem {
+  bulan: string
+  zakat: number
+  sadaqah: number
+  waqf?: number
+  infaq?: number
+}
+
+interface MemberCategoryItem {
+  status: string
+  count: number
+}
+
+interface MemberChartItem {
+  name: string
+  value: number
+  color: string
+}
+
+interface ActivityItem {
+  id: string
+  title: string
+  description: string
+  createdAt: string
+  type: string
+}
+
 const FUND_COLORS: Record<string, string> = {
   zakat: '#ecb2ff',
   sadaqah: '#00fbfb',
@@ -166,6 +193,22 @@ const ACTIVITY_BADGE_STYLES: Record<string, string> = {
   donation: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
   member: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
   programme: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+}
+
+interface DashboardApiResponse {
+  totalMembers?: number
+  activeProgrammes?: number
+  totalDonations?: number
+  activeVolunteers?: number
+  complianceScore?: number
+  trendMembers?: number
+  trendProgrammes?: number
+  trendDonations?: number
+  trendVolunteers?: number
+  trendCompliance?: number
+  monthlyDonationTrend?: MonthlyDonationItem[]
+  memberCategoryBreakdown?: MemberCategoryItem[]
+  recentActivities?: ActivityItem[]
 }
 
 // ---------------------------------------------------------------------------
@@ -264,17 +307,17 @@ export default function DashboardPage() {
     jumlahAhliAsnaf: 0, programAktif: 0, jumlahDonasi: 0, sukarelawanAktif: 0, skorCompliance: 0,
     trendAhli: 0, trendProgram: 0, trendDonasi: 0, trendSukarelawan: 0, trendCompliance: 0
   })
-  const [monthlyData, setMonthlyData] = useState<any[]>([])
-  const [memberData, setMemberData] = useState<any[]>([])
-  const [activities, setActivities] = useState<any[]>([])
+  const [monthlyData, setMonthlyData] = useState<MonthlyDonationItem[]>([])
+  const [memberData, setMemberData] = useState<MemberChartItem[]>([])
+  const [activities, setActivities] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
   const setView = useAppStore((s) => s.setView)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await api.get<any>('/dashboard');
-        
+        const res = await api.get<DashboardApiResponse>('/dashboard');
+
         if (res) {
           setStats({
             jumlahAhliAsnaf: res.totalMembers ?? 0,
@@ -314,6 +357,7 @@ export default function DashboardPage() {
             id: act.id,
             title: act.title,
             description: act.description,
+            createdAt: act.createdAt,
             timestamp: new Date(act.createdAt).toLocaleString('ms-MY', {
               day: 'numeric',
               month: 'short',

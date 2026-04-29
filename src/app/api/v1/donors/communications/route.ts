@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         content: validated.content || null,
         status: validated.status,
         sentAt: validated.status === 'sent' ? new Date() : null,
-        sentById: validated.status === 'sent' ? session.user.id : null,
+        sentBy: validated.status === 'sent' ? session.user.id : null,
       },
       include: {
         donor: { select: { id: true, name: true, donorNumber: true } },

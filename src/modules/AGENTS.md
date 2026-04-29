@@ -16,14 +16,14 @@ src/modules/
 | Task | Location | Notes |
 |------|----------|-------|
 | Add a feature screen | `src/modules/<feature>/page.tsx` | Default export is the screen entry |
-| Make a module reachable | `../types/index.ts`, `../app/page.tsx`, `../components/app-sidebar.tsx` | Folder alone is not enough |
-| Add role gating | `../components/app-sidebar.tsx` | Groups and items carry role lists |
+| Make a module reachable | `../types/index.ts`, `../components/view-renderer.tsx`, `../components/sidebar/sidebar-config.ts`, optional module `config.ts(x)` | Folder alone is not enough |
+| Add role gating | `../lib/access-control.ts`, `../components/sidebar/sidebar-config.ts`, server API guards | Sidebar visibility is not authorization |
 | Change OpenClaw developer views | `openclaw/*` | Pairs with `/api/v1/openclaw/*` |
 | Change ops conductor | `ops-conductor/page.tsx` | Pairs with `/api/v1/ops/*` |
 | Change product guidance/docs | `docs/page.tsx` | Large in-repo guide surface |
 
 ## CONVENTIONS
-- Module IDs must stay aligned across folder name, `ViewId`, shell switch cases, and sidebar items.
+- Module IDs must stay aligned across folder name, `ViewId`, `ViewRenderer`, sidebar items, command palette, and module config files.
 - A module screen usually exports one default component from `page.tsx`.
 - Many modules are intentionally large container files; only extract shared logic when it will be reused outside the module.
 - Shared state, auth, API clients, and domain helpers belong in `src/stores`, `src/lib`, or `src/components`, not duplicated inside multiple modules.
@@ -36,3 +36,18 @@ src/modules/
 - Do not move shared primitive styling into modules; use `src/components/ui` or `src/components`.
 - Do not change a module ID in one place only.
 - Do not turn every module into a separate route segment unless the product explicitly needs a real URL boundary.
+
+---
+
+---
+
+## Current Alignment Note (2026-04-30)
+
+This document has been aligned with the current PUSPA-V4 workspace at `/mnt/g/PUSPA-V4`:
+
+- Stack: Next.js 16 / React 19 / TypeScript / Prisma 6 / Bun / Tailwind 4 / shadcn-Radix.
+- Local dev command in `package.json` remains `bun run dev` on port `3000`; active preview work may run with `./node_modules/.bin/next dev -p 3001` when port 3000 is occupied.
+- Auth: Supabase Auth is the primary app flow via `/api/v1/auth/supabase/*`, synced to Prisma users. Legacy/custom auth endpoints may remain for compatibility, but new protected API work should use server-side helpers from `@/lib/auth`.
+- Route protection: `src/middleware.ts` is the active guard in this workspace. Next.js warns the middleware convention is deprecated in favor of `proxy`, so future migration should preserve the same fail-closed behavior.
+- PUSPA AI/Hermes: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `HERMES_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
+- Validation baseline after the latest alignment: `bun x tsc --noEmit --pretty false` passed and `bun run build` passed.

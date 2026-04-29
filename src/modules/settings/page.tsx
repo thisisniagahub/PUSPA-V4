@@ -356,7 +356,7 @@ export default function SettingsPage() {
                       {getInitials(profileName || 'U')}
                     </AvatarFallback>
                   </Avatar>
-                  <button className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button type="button" aria-label="Tukar gambar profil" className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                     <Camera className="h-6 w-6 text-white" />
                   </button>
                 </div>

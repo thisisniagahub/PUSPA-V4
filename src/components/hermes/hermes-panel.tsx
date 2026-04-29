@@ -54,7 +54,7 @@ export function HermesPanel() {
     if (!text || status === 'thinking' || status === 'streaming') return
 
     setInput('')
-    if (providerState.provider === 'zai') {
+    if (providerState.provider === 'openclaw') {
       await sendMessage(text)
     } else {
       await sendMessageStream(text)
@@ -139,7 +139,7 @@ export function HermesPanel() {
             <Badge variant="outline" className="gap-1.5 text-xs">
               <span>{providerInfo.icon}</span>
               <span>{providerInfo.name}</span>
-              {providerState.provider !== 'zai' && (
+              {providerState.provider !== 'openclaw' && (
                 <span className="text-muted-foreground">• {providerState.model.split('/').pop()}</span>
               )}
             </Badge>
@@ -241,7 +241,7 @@ export function HermesPanel() {
               <span>{providerInfo.icon}</span>
               {providerInfo.name}
             </Badge>
-            {providerState.provider !== 'zai' && (
+            {providerState.provider !== 'openclaw' && (
               <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">
                 {providerState.model.split('/').pop()?.slice(0, 20)}
               </Badge>

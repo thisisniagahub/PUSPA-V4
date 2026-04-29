@@ -113,7 +113,7 @@ export function HermesSettings() {
             >
               <span className="text-lg">{provider.icon}</span>
               <span className="text-[10px] font-medium leading-tight">{provider.name}</span>
-              {provider.id !== 'zai' && (
+              {provider.id !== 'openclaw' && (
                 <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3 bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">
                   {provider.id === 'openrouter' ? 'Free tier' : 'Local'}
                 </Badge>

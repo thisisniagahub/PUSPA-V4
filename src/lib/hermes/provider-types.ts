@@ -1,7 +1,6 @@
 // Hermes Agent — Shared Types (safe for client-side import)
-// IMPORTANT: This file must NOT import z-ai-web-dev-sdk or any Node.js modules
 
-export type ProviderId = 'zai' | 'openrouter' | 'ollama'
+export type ProviderId = 'openclaw' | 'openrouter' | 'ollama' | 'openai' | 'mock'
 
 export interface ProviderInfo {
   id: ProviderId
@@ -16,17 +15,31 @@ export interface ProviderInfo {
 }
 
 export const PROVIDERS: Record<ProviderId, ProviderInfo> = {
-  zai: {
-    id: 'zai',
-    name: 'Z-AI SDK',
-    description: 'Built-in AI provider — percuma, tiada konfigurasi diperlukan',
-    requiresApiKey: false,
-    requiresBaseUrl: false,
-    defaultModel: 'default',
+  openclaw: {
+    id: 'openclaw',
+    name: 'OpenClaw Gateway',
+    description: 'Local AI Gateway for PuspaCare',
+    requiresApiKey: true,
+    requiresBaseUrl: true,
+    defaultBaseUrl: 'http://127.0.0.1:18789/v1',
+    defaultModel: 'openclaw/main',
     models: [
-      { id: 'default', name: 'Z-AI Default', isFree: true },
+      { id: 'openclaw/main', name: 'OpenClaw Main', isFree: true }
     ],
-    icon: '⚡',
+    icon: '🦞'
+  },
+  openai: {
+    id: 'openai',
+    name: 'OpenAI',
+    description: 'OpenAI API',
+    requiresApiKey: true,
+    requiresBaseUrl: false,
+    defaultModel: 'gpt-4o-mini',
+    models: [
+      { id: 'gpt-4o', name: 'GPT-4o' },
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini' }
+    ],
+    icon: '🤖'
   },
   openrouter: {
     id: 'openrouter',
@@ -68,4 +81,14 @@ export const PROVIDERS: Record<ProviderId, ProviderInfo> = {
     ],
     icon: '🦙',
   },
+  mock: {
+    id: 'mock',
+    name: 'Mock Provider',
+    description: 'For testing only',
+    requiresApiKey: false,
+    requiresBaseUrl: false,
+    defaultModel: 'mock',
+    models: [{ id: 'mock', name: 'Mock' }],
+    icon: '🧪'
+  }
 }

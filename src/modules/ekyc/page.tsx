@@ -227,17 +227,17 @@ function FileUpload({ label, desc, val, onSet, hint, scopeId }: { label: string;
       {val ? (
         <div className="space-y-2">
           <div className="rounded-xl overflow-hidden border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20"><img src={val} alt={label} className="w-full max-h-64 object-contain mx-auto" /></div>
-          <div className="flex items-center gap-2"><Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100"><CheckCircle2 className="w-3 h-3 mr-1" /> Diterima</Badge><Button variant="ghost" size="sm" className="text-muted-foreground hover:text-red-600" disabled={uploading} onClick={() => onSet(null)}><X className="w-3 h-3 mr-1" /> Alih Keluar</Button></div>
+          <div className="flex items-center gap-2"><Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100"><CheckCircle2 className="w-3 h-3 mr-1" /> Diterima</Badge><Button type="button" variant="ghost" size="sm" className="text-muted-foreground hover:text-red-600" disabled={uploading} onClick={() => onSet(null)}><X className="w-3 h-3 mr-1" /> Alih Keluar</Button></div>
         </div>
       ) : (
-        <div onClick={() => { if (!uploading) ref.current?.click(); }} className={`cursor-pointer rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/40 hover:border-purple-300 hover:bg-purple-50/50 dark:hover:bg-purple-950/10 transition-all ${uploading ? 'pointer-events-none opacity-70' : ''}`}>
-          <div className="flex flex-col items-center justify-center py-12 px-6">
-            <div className="flex items-center justify-center w-14 h-14 rounded-2xl mb-3 bg-gray-100 dark:bg-gray-800">{uploading ? <Loader2 className="w-7 h-7 animate-spin text-purple-500" /> : <ImageIcon className="w-7 h-7 text-gray-400" />}</div>
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{uploading ? 'Memuat naik gambar...' : 'Klik untuk memilih gambar'}</p>
-            <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WEBP — Maks 10MB</p>
-          </div>
-          <input ref={ref} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) pick(f); }} />
-        </div>
+        <label className={`block cursor-pointer rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/40 hover:border-purple-300 hover:bg-purple-50/50 dark:hover:bg-purple-950/10 transition-all focus-within:ring-2 focus-within:ring-purple-500 focus-within:ring-offset-2 ${uploading ? 'pointer-events-none opacity-70' : ''}`}>
+          <span className="flex flex-col items-center justify-center py-12 px-6">
+            <span className="flex items-center justify-center w-14 h-14 rounded-2xl mb-3 bg-gray-100 dark:bg-gray-800">{uploading ? <Loader2 className="w-7 h-7 animate-spin text-purple-500" /> : <ImageIcon className="w-7 h-7 text-gray-400" />}</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{uploading ? 'Memuat naik gambar...' : 'Klik atau tekan Enter untuk memilih gambar'}</span>
+            <span className="text-xs text-muted-foreground mt-1">JPG, PNG, WEBP — Maks 10MB</span>
+          </span>
+          <input ref={ref} type="file" accept="image/*" capture="environment" className="sr-only" aria-label={label} disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) pick(f); }} />
+        </label>
       )}
       <div className="flex items-start gap-2 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3"><Info className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" /><p className="text-xs text-amber-700 dark:text-amber-300">{hint}</p></div>
     </div>

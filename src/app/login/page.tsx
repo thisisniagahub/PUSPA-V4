@@ -50,10 +50,25 @@ function LoginCard({ loading }: { loading: boolean }) {
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, loading: authLoading, signIn } = useAuth()
+  const { user, loading: authLoadingRaw, signIn } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAuthTimeout, setIsAuthTimeout] = useState(false)
+
+  // Safety timeout for auth loading
+  useEffect(() => {
+    if (authLoadingRaw) {
+      const timer = setTimeout(() => {
+        setIsAuthTimeout(true)
+      }, 5000)
+      return () => clearTimeout(timer)
+    } else {
+      setIsAuthTimeout(false)
+    }
+  }, [authLoadingRaw])
+
+  const authLoading = authLoadingRaw && !isAuthTimeout
 
   const callbackUrl = useMemo(() => {
     const value = searchParams.get('callbackUrl')

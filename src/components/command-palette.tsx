@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useState } from 'react'
 import Image from 'next/image'
 import { useAuth } from '@/components/auth-provider'
 import { useAppStore } from '@/stores/app-store'
 import { canAccessView } from '@/lib/access-control'
 import { normalizeUserRole } from '@/lib/auth-shared'
+import { COMMAND_PALETTE_ITEMS, getVisibleCommandItems } from '@/lib/module-registry'
 import { SIDEBAR_GROUPS } from '@/components/sidebar/sidebar-config'
 import {
   CommandDialog,
@@ -16,47 +17,6 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import type { ViewId } from '@/types'
-
-const KEYWORDS: Partial<Record<ViewId, string[]>> = {
-  dashboard: ['home', 'utama', 'papan pemuka'],
-  members: ['ahli', 'asnaf', 'member', 'penerima'],
-  cases: ['kes', 'case', 'permohonan', 'application', 'bantuan'],
-  programmes: ['program', 'aktiviti', 'projek', 'inkubasi'],
-  asnafpreneur: ['asnafpreneur', 'ai saas', 'enterprise', 'startup', 'program digital', 'keusahawanan ai'],
-  'kelas-ai': ['kelas ai', 'vibe coding', 'kurikulum', 'sponsor', 'asnaf digital'],
-  donations: ['donasi', 'sumbangan', 'derma', 'zakat'],
-  disbursements: ['pembayaran', 'disbursement', 'bayar'],
-  'gudang-barangan': ['gudang', 'barangan', 'pre-loved', 'inventori', 'stok', 'jualan', 'agihan barang'],
-  compliance: ['compliance', 'pematuhan', 'audit'],
-  admin: ['admin', 'tetapan', 'settings', 'profil'],
-  reports: ['laporan', 'report', 'kewangan', 'financial'],
-  activities: ['aktiviti', 'activity', 'kanban', 'operasi'],
-  ai: ['ai', 'kecerdasan buatan', 'chatbot'],
-  volunteers: ['sukarelawan', 'volunteer', 'mentor'],
-  donors: ['penderma', 'donor', 'crm'],
-  documents: ['dokumen', 'document', 'fail', 'file'],
-  'agihan-bulan': ['agihan', 'bulan', 'makan ruji', 'staple food', 'distribusi'],
-  'sedekah-jumaat': ['sedekah', 'jumaat', 'rumah kebajikan', 'mahad tahfiz', 'makanan tengahari'],
-  ekyc: ['ekyc', 'identiti', 'verification'],
-  tapsecure: ['tapsecure', 'fingerprint', 'biometrik'],
-  docs: ['panduan', 'docs', 'help', 'bantuan sistem'],
-  'openclaw-mcp': ['mcp', 'server', 'ai ops', 'dalaman'],
-  'openclaw-plugins': ['plugin', 'sambungan', 'ai ops', 'dalaman'],
-  'openclaw-integrations': ['integrasi', 'integration', 'gateway', 'channel', 'ai ops'],
-  'openclaw-terminal': ['terminal', 'console', 'operator', 'ai ops'],
-  'openclaw-agents': ['agent', 'ejen', 'ai', 'automasi'],
-  'openclaw-models': ['model', 'llm', 'engine', 'ai ops'],
-  'openclaw-automation': ['automasi', 'automation', 'cron', 'ai ops'],
-  'ops-conductor': ['conductor', 'ops', 'operasi', 'chat', 'task', 'work', 'reminder', 'trace'],
-}
-
-const VIEW_ITEMS = SIDEBAR_GROUPS.flatMap((group) =>
-  group.items.map((item) => ({
-    id: item.id,
-    label: item.label,
-    keywords: KEYWORDS[item.id] ?? [],
-  })),
-)
 
 const SECTIONS = SIDEBAR_GROUPS.map((group) => ({
   heading: group.subGroup ? `${group.title} · ${group.subGroup}` : group.title,
@@ -69,6 +29,8 @@ export function CommandPalette() {
   const [query, setQuery] = useState('')
   const effectiveRole = normalizeUserRole(user?.role)
 
+  const visibleItems = useMemo(() => getVisibleCommandItems(effectiveRole), [effectiveRole])
+
   const handleSelect = useCallback(
     (viewId: ViewId) => {
       if (!canAccessView(viewId, effectiveRole)) return
@@ -78,12 +40,12 @@ export function CommandPalette() {
     [effectiveRole, setView, setCommandPaletteOpen],
   )
 
-  // Filter items based on search query
   const filteredSections = useMemo(() => {
+    const visibleIds = new Set(visibleItems.map((item) => item.id))
     const visibleSections = SECTIONS
       .map((section) => ({
         ...section,
-        ids: section.ids.filter((id) => canAccessView(id, effectiveRole)),
+        ids: section.ids.filter((id) => visibleIds.has(id)),
       }))
       .filter((section) => section.ids.length > 0)
 
@@ -92,7 +54,7 @@ export function CommandPalette() {
     const q = query.toLowerCase().trim()
     const matchingIds = new Set<ViewId>()
 
-    VIEW_ITEMS.forEach((item) => {
+    COMMAND_PALETTE_ITEMS.forEach((item) => {
       const haystack = `${item.label} ${item.keywords.join(' ')} ${item.id}`.toLowerCase()
       if (haystack.includes(q)) matchingIds.add(item.id)
     })
@@ -103,7 +65,7 @@ export function CommandPalette() {
         ids: section.ids.filter((id) => matchingIds.has(id)),
       }))
       .filter((section) => section.ids.length > 0)
-  }, [effectiveRole, query])
+  }, [visibleItems, query])
 
   return (
     <CommandDialog open={commandPaletteOpen} onOpenChange={setCommandPaletteOpen}>
@@ -127,7 +89,7 @@ export function CommandPalette() {
         {filteredSections.map((section) => (
           <CommandGroup key={section.heading} heading={section.heading}>
             {section.ids.map((id) => {
-              const item = VIEW_ITEMS.find((v) => v.id === id)
+              const item = visibleItems.find((v) => v.id === id)
               if (!item) return null
               return (
                 <CommandItem

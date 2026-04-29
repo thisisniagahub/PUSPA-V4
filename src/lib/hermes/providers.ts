@@ -1,11 +1,8 @@
 // ============================================================
 // Hermes Agent — Multi-Provider Transport System
-// Inspired by NousResearch Hermes Agent provider architecture
-// Supports: z-ai-web-dev-sdk (default/free), OpenRouter, Ollama
-// Enhanced with native function calling & retry logic
 // ============================================================
 
-export type ProviderId = 'zai' | 'openrouter' | 'ollama'
+export type ProviderId = 'openclaw' | 'openrouter' | 'ollama' | 'openai' | 'mock'
 export { PROVIDERS } from './provider-types'
 export type { ProviderInfo } from './provider-types'
 import { PROVIDERS } from './provider-types'
@@ -51,36 +48,86 @@ export interface StreamChunk {
 }
 
 // ============================================================
-// Z-AI Provider (default, free)
+// OpenClaw / OpenAI Compatible Provider
 // ============================================================
-async function callZAI(
+async function callOpenAICompatible(
   messages: LLMMessage[],
-  _model?: string,
-  _apiKey?: string,
+  model: string,
+  baseUrl: string,
+  apiKey: string,
+  tools?: LLMToolDefinition[],
+  providerId: ProviderId = 'openai'
 ): Promise<LLMResponse> {
   const start = Date.now()
-  const ZAI = (await import('z-ai-web-dev-sdk')).default
-  const zai = await ZAI.create()
+  const url = `${baseUrl.replace(/\/$/, '')}/chat/completions`
 
-  const completion = await zai.chat.completions.create({
-    messages: messages.map(m => ({
-      role: m.role === 'system' ? ('assistant' as const) : (m.role as 'user' | 'assistant'),
-      content: m.content,
-    })),
-    thinking: { type: 'disabled' },
+  const body: Record<string, unknown> = {
+    model,
+    messages: messages.map(m => ({ role: m.role, content: m.content })),
+    temperature: 0.7,
+    max_tokens: 4096,
+  }
+
+  if (tools && tools.length > 0) {
+    body.tools = tools
+    body.tool_choice = 'auto'
+  }
+
+  const response = await fetchWithRetry(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
   })
 
-  const content = completion.choices[0]?.message?.content || ''
+  if (!response.ok) {
+    const errText = await response.text()
+    throw new Error(`${providerId} error (${response.status}): ${errText}`)
+  }
+
+  const data = await response.json()
+  const choice = data.choices?.[0]
+  let content = choice?.message?.content || ''
+
+  // Some OpenClaw upstream lanes can return a JSON error string inside a
+  // successful OpenAI-compatible response. Do not leak that raw infrastructure
+  // error into the PUSPA AI UI; surface a clean operational fallback instead.
+  if (providerId === 'openclaw' && /deactivated_workspace/i.test(content)) {
+    content = 'PUSPA AI sedang online, tetapi workspace upstream OpenClaw untuk mesej ini belum stabil. Cuba mesej ringkas dalam English dahulu sementara laluan Malay workspace diselaraskan.'
+  }
+
+  const toolCalls: LLMToolCall[] = []
+  if (choice?.message?.tool_calls) {
+    for (const tc of choice.message.tool_calls) {
+      try {
+        const args = typeof tc.function.arguments === 'string'
+          ? JSON.parse(tc.function.arguments)
+          : tc.function.arguments
+        toolCalls.push({ name: tc.function.name, arguments: args })
+      } catch {
+        // Skip malformed
+      }
+    }
+  }
+
   return {
     content,
-    provider: 'zai',
-    model: 'zai-default',
+    toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+    provider: providerId,
+    model: data.model || model,
+    usage: data.usage ? {
+      promptTokens: data.usage.prompt_tokens || 0,
+      completionTokens: data.usage.completion_tokens || 0,
+      totalTokens: data.usage.total_tokens || 0,
+    } : undefined,
     latencyMs: Date.now() - start,
   }
 }
 
 // ============================================================
-// OpenRouter Provider (with native function calling support)
+// OpenRouter Provider
 // ============================================================
 async function callOpenRouter(
   messages: LLMMessage[],
@@ -98,7 +145,6 @@ async function callOpenRouter(
     max_tokens: 4096,
   }
 
-  // Add native function calling tools if provided
   if (tools && tools.length > 0) {
     body.tools = tools
     body.tool_choice = 'auto'
@@ -124,7 +170,6 @@ async function callOpenRouter(
   const choice = data.choices?.[0]
   const content = choice?.message?.content || ''
 
-  // Parse native tool calls if present
   const toolCalls: LLMToolCall[] = []
   if (choice?.message?.tool_calls) {
     for (const tc of choice.message.tool_calls) {
@@ -134,7 +179,7 @@ async function callOpenRouter(
           : tc.function.arguments
         toolCalls.push({ name: tc.function.name, arguments: args })
       } catch {
-        // Skip malformed tool calls
+        // Skip malformed
       }
     }
   }
@@ -154,7 +199,7 @@ async function callOpenRouter(
 }
 
 // ============================================================
-// Ollama Provider (Local)
+// Ollama Provider
 // ============================================================
 async function callOllama(
   messages: LLMMessage[],
@@ -197,7 +242,22 @@ async function callOllama(
 }
 
 // ============================================================
-// Fetch with Retry (exponential backoff, max 2 retries)
+// Mock Provider
+// ============================================================
+async function callMock(
+  messages: LLMMessage[],
+): Promise<LLMResponse> {
+  const start = Date.now()
+  return {
+    content: "This is a mock response.",
+    provider: 'mock',
+    model: 'mock',
+    latencyMs: Date.now() - start,
+  }
+}
+
+// ============================================================
+// Fetch with Retry
 // ============================================================
 async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 2): Promise<Response> {
   let lastError: Error | null = null
@@ -229,7 +289,6 @@ async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 2)
 // Convert Hermes tools to OpenAI function calling format
 // ============================================================
 export async function convertToOpenAITools(): Promise<LLMToolDefinition[]> {
-  // Import lazily to avoid circular deps
   const { hermesTools } = await import('./advanced-tools')
   return hermesTools.map(tool => ({
     type: 'function' as const,
@@ -271,27 +330,36 @@ export async function callLLM(params: {
   const { provider, messages, model, apiKey, baseUrl, useFunctionCalling } = params
 
   switch (provider) {
-    case 'zai':
-      return callZAI(messages, model)
+    case 'openclaw': {
+      if (!apiKey || !baseUrl) throw new Error('OpenClaw memerlukan API key dan Base URL')
+      const tools = useFunctionCalling ? await convertToOpenAITools() : undefined
+      return callOpenAICompatible(messages, model || PROVIDERS.openclaw.defaultModel, baseUrl, apiKey, tools, 'openclaw')
+    }
+
+    case 'openai': {
+      if (!apiKey) throw new Error('OpenAI memerlukan API key')
+      const tools = useFunctionCalling ? await convertToOpenAITools() : undefined
+      return callOpenAICompatible(messages, model || PROVIDERS.openai.defaultModel, baseUrl || 'https://api.openai.com/v1', apiKey, tools, 'openai')
+    }
 
     case 'openrouter': {
-      if (!apiKey) throw new Error('OpenRouter memerlukan API key. Dapatkan di openrouter.ai/keys')
+      if (!apiKey) throw new Error('OpenRouter memerlukan API key')
       const tools = useFunctionCalling ? await convertToOpenAITools() : undefined
       return callOpenRouter(messages, model || PROVIDERS.openrouter.defaultModel, apiKey, tools)
     }
 
     case 'ollama':
-      if (!baseUrl) throw new Error('Ollama memerlukan base URL (contoh: http://localhost:11434/v1)')
+      if (!baseUrl) throw new Error('Ollama memerlukan base URL')
       return callOllama(messages, model || PROVIDERS.ollama.defaultModel, baseUrl)
+
+    case 'mock':
+      return callMock(messages)
 
     default:
       throw new Error(`Provider tidak diketahui: ${provider}`)
   }
 }
 
-// ============================================================
-// Streaming Provider Call (OpenRouter & Ollama support SSE)
-// ============================================================
 export async function streamLLM(params: {
   provider: ProviderId
   messages: LLMMessage[]
@@ -300,141 +368,59 @@ export async function streamLLM(params: {
   baseUrl?: string
   onChunk: (chunk: StreamChunk) => void
 }): Promise<void> {
-  const { provider, messages, model, apiKey, baseUrl, onChunk } = params
-
-  // Z-AI SDK doesn't support streaming natively, fallback to non-streaming
-  if (provider === 'zai') {
-    const result = await callZAI(messages, model)
-    onChunk({ type: 'content', content: result.content })
-    onChunk({ type: 'done', usage: result.usage })
-    return
-  }
-
-  const start = Date.now()
-
-  let url: string
-  let headers: Record<string, string>
-
-  if (provider === 'openrouter') {
-    if (!apiKey) throw new Error('OpenRouter memerlukan API key')
-    url = 'https://openrouter.ai/api/v1/chat/completions'
-    headers = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://puspacare.app',
-      'X-Title': 'PuspaCare PUSPA AI Assistant',
+  // Simplified streaming stub that just calls callLLM
+  const res = await callLLM({ ...params, useFunctionCalling: false })
+  params.onChunk({ type: 'content', content: res.content })
+  if (res.toolCalls) {
+    for (const tc of res.toolCalls) {
+      params.onChunk({ type: 'tool_call', toolCall: tc })
     }
-  } else {
-    if (!baseUrl) throw new Error('Ollama memerlukan base URL')
-    url = `${baseUrl.replace(/\/$/, '')}/chat/completions`
-    headers = { 'Content-Type': 'application/json' }
   }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      model: model || PROVIDERS[provider].defaultModel,
-      messages: messages.map(m => ({ role: m.role, content: m.content })),
-      temperature: 0.7,
-      max_tokens: 4096,
-      stream: true,
-    }),
-  })
-
-  if (!response.ok) {
-    const errText = await response.text()
-    throw new Error(`${provider} error (${response.status}): ${errText}`)
-  }
-
-  const reader = response.body?.getReader()
-  if (!reader) throw new Error('No response stream')
-
-  const decoder = new TextDecoder()
-  let buffer = ''
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() || ''
-
-      for (const line of lines) {
-        const trimmed = line.trim()
-        if (!trimmed || !trimmed.startsWith('data: ')) continue
-        const data = trimmed.slice(6)
-        if (data === '[DONE]') {
-          onChunk({ type: 'done' })
-          return
-        }
-
-        try {
-          const parsed = JSON.parse(data)
-          const delta = parsed.choices?.[0]?.delta
-          if (delta?.content) {
-            onChunk({ type: 'content', content: delta.content })
-          }
-          // Handle streaming tool calls from OpenRouter
-          if (delta?.tool_calls) {
-            for (const tc of delta.tool_calls) {
-              if (tc.function?.name) {
-                try {
-                  const args = typeof tc.function.arguments === 'string'
-                    ? JSON.parse(tc.function.arguments)
-                    : tc.function.arguments || {}
-                  onChunk({
-                    type: 'tool_call',
-                    toolCall: { name: tc.function.name, arguments: args },
-                  })
-                } catch {
-                  // Skip malformed
-                }
-              }
-            }
-          }
-          if (parsed.usage) {
-            onChunk({
-              type: 'done',
-              usage: {
-                promptTokens: parsed.usage.prompt_tokens || 0,
-                completionTokens: parsed.usage.completion_tokens || 0,
-                totalTokens: parsed.usage.total_tokens || 0,
-              },
-            })
-          }
-        } catch {
-          // Skip malformed chunks
-        }
-      }
-    }
-  } finally {
-    reader.releaseLock()
-  }
-
-  onChunk({ type: 'done' })
 }
 
-// Get provider config for a user from DB
+// ============================================================
+// Get provider config for a user from DB or Env
+// ============================================================
 export async function getProviderConfig(userId: string): Promise<{
   provider: ProviderId
   model: string
   apiKey?: string
   baseUrl?: string
 }> {
-  const { db } = await import('@/lib/db')
-  const config = await db.hermesProviderConfig.findUnique({ where: { userId } })
+  try {
+    const { db } = await import('@/lib/db')
+    const config = await db.hermesProviderConfig.findUnique({ where: { userId } })
+    if (config) {
+      const provider = config.provider as ProviderId
+      // Env OpenClaw values are the operational source of truth for local preview
+      // and VPS routing; use them to avoid stale per-user DB config pointing at
+      // a deactivated upstream workspace.
+      if (provider === 'openclaw') {
+        return {
+          provider,
+          model: process.env.HERMES_MODEL || config.model || 'openclaw/puspacare',
+          apiKey: process.env.HERMES_OPENAI_API_KEY || config.apiKey || undefined,
+          baseUrl: process.env.HERMES_OPENAI_BASE_URL || config.baseUrl || undefined,
+        }
+      }
 
-  if (!config) {
-    return { provider: 'zai', model: 'default' }
+      return {
+        provider,
+        model: config.model,
+        apiKey: config.apiKey || undefined,
+        baseUrl: config.baseUrl || undefined,
+      }
+    }
+  } catch (e) {
+    // Graceful fallback if DB fails
   }
 
+  // Fallback to env
+  const defaultProvider = (process.env.HERMES_PROVIDER as ProviderId) || 'openclaw'
   return {
-    provider: config.provider as ProviderId,
-    model: config.model,
-    apiKey: config.apiKey || undefined,
-    baseUrl: config.baseUrl || undefined,
+    provider: defaultProvider,
+    model: process.env.HERMES_MODEL || 'openclaw/main',
+    apiKey: process.env.HERMES_OPENAI_API_KEY || undefined,
+    baseUrl: process.env.HERMES_OPENAI_BASE_URL || undefined
   }
 }

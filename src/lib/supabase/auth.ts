@@ -33,8 +33,20 @@ export async function signInWithSupabase(email: string, password: string): Promi
     return { success: false, error: 'Pengguna tidak dijumpai' }
   }
 
-  // Sync Supabase user with our User table
-  const syncedUser = await syncSupabaseUser(data.user.id, data.user.email || email)
+  // Sync Supabase user with our User table. In local/preview environments the
+  // Supabase database may not have the Prisma "User" table migrated yet; fall
+  // back to auth metadata so the preview remains usable.
+  const syncedUser = await syncSupabaseUser(data.user.id, data.user.email || email).catch(() => ({
+    id: data.user.id,
+    email: data.user.email || email,
+    name: typeof data.user.user_metadata?.name === 'string'
+      ? data.user.user_metadata.name
+      : (data.user.email || email).split('@')[0],
+    role: normalizeUserRole(
+      typeof data.user.user_metadata?.role === 'string' ? data.user.user_metadata.role : 'staff',
+    ),
+    supabaseId: data.user.id,
+  }))
 
   return {
     success: true,
@@ -164,12 +176,27 @@ export async function getSupabaseAuthUser(): Promise<SupabaseAuthResult['user'] 
   // Use admin client to bypass RLS for user lookup
   const adminClient = createAdminClient()
 
-  // Find the corresponding User record
-  const { data: users } = await adminClient
+  // Find the corresponding User record. If the table has not been migrated in
+  // Supabase yet, fall back to auth metadata for local preview/test access.
+  const { data: users, error: usersError } = await adminClient
     .from('User')
     .select('*')
     .or(`supabaseId.eq.${supabaseUser.id},email.eq.${supabaseUser.email}`)
     .limit(1)
+
+  if (usersError) {
+    return {
+      id: supabaseUser.id,
+      email: supabaseUser.email || '',
+      name: typeof supabaseUser.user_metadata?.name === 'string'
+        ? supabaseUser.user_metadata.name
+        : (supabaseUser.email || '').split('@')[0],
+      role: normalizeUserRole(
+        typeof supabaseUser.user_metadata?.role === 'string' ? supabaseUser.user_metadata.role : 'staff',
+      ),
+      supabaseId: supabaseUser.id,
+    }
+  }
 
   const user = users?.[0]
 

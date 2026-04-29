@@ -34,40 +34,7 @@ export type ViewId =
   | 'gudang-barangan'
   | 'settings'
 
-export const viewLabels: Record<ViewId, string> = {
-  'dashboard': 'Dashboard',
-  'members': 'Ahli Asnaf',
-  'cases': 'Kes Bantuan',
-  'programmes': 'Program Inkubasi',
-  'donations': 'Donasi',
-  'disbursements': 'Pembayaran',
-  'compliance': 'Pematuhan',
-  'admin': 'Pentadbiran',
-  'reports': 'Laporan Kewangan',
-  'activities': 'Aktiviti',
-  'ai': 'Alat AI',
-  'volunteers': 'Sukarelawan',
-  'donors': 'Penderma',
-  'documents': 'Dokumen',
-  'openclaw-mcp': 'Pelayan MCP',
-  'openclaw-plugins': 'Plugin',
-  'openclaw-integrations': 'Sambungan',
-  'openclaw-terminal': 'Konsol Operator',
-  'openclaw-agents': 'Ejen AI',
-  'openclaw-models': 'Enjin Model',
-  'openclaw-automation': 'Automasi',
-  'openclaw-graph': 'Graf Visual',
-  'ekyc': 'eKYC',
-  'tapsecure': 'TapSecure',
-  'agihan-bulan': 'Agihan Bulan',
-  'sedekah-jumaat': 'Sedekah Jumaat',
-  'docs': 'Dokumentasi',
-  'ops-conductor': 'Ops Conductor',
-  'asnafpreneur': 'Asnafpreneur',
-  'kelas-ai': 'Kelas AI',
-  'gudang-barangan': 'Gudang Barangan',
-  'settings': 'Tetapan',
-}
+export { VIEW_LABELS as viewLabels } from '@/lib/module-registry'
 
 export interface NavItem {
   id: ViewId
