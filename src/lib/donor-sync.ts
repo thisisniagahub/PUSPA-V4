@@ -218,16 +218,18 @@ export async function backfillDonorsFromDonations(client: DbClient) {
     },
   })
 
-  const donorIds = new Set<string>()
+  const donors = await Promise.all(
+    donations.map((donation) => findOrCreateDonorForDonation(client, donation))
+  )
 
-  for (const donation of donations) {
-    const donor = await findOrCreateDonorForDonation(client, donation)
+  const donorIds = new Set<string>()
+  for (const donor of donors) {
     if (donor) {
       donorIds.add(donor.id)
     }
   }
 
-  for (const donorId of donorIds) {
-    await syncDonorTotals(client, donorId)
-  }
+  await Promise.all(
+    Array.from(donorIds).map((donorId) => syncDonorTotals(client, donorId))
+  )
 }
