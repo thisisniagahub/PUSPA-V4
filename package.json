@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "prisma generate && next build",
+    "build": "bash scripts/prepare-vercel-build.sh",
     "postinstall": "prisma generate",
     "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
     "lint": "eslint .",
@@ -13,7 +13,7 @@
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
     "db:seed": "npx tsx prisma/seed.ts",
-    "vercel-build": "prisma generate && next build"
+    "vercel-build": "bash scripts/prepare-vercel-build.sh"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
