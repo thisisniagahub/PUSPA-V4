@@ -17,7 +17,7 @@ is_postgres_url() {
 }
 
 POSTGRES_CANDIDATE=""
-for candidate in "${DATABASE_URL:-}" "${POSTGRES_PRISMA_URL:-}" "${POSTGRES_URL:-}" "${POSTGRES_URL_NON_POOLING:-}" "${SUPABASE_DB_URL:-}"; do
+for candidate in "${POSTGRES_PRISMA_URL:-}" "${POSTGRES_URL_NON_POOLING:-}" "${SUPABASE_DB_URL:-}" "${POSTGRES_URL:-}" "${DATABASE_URL:-}"; do
   if is_postgres_url "$candidate" && ! is_placeholder "$candidate"; then
     POSTGRES_CANDIDATE="$candidate"
     break

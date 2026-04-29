@@ -5,15 +5,20 @@ function isUsableDatabaseUrl(value: string | undefined) {
 }
 
 function resolveDatabaseUrl() {
-  if (isUsableDatabaseUrl(process.env.DATABASE_URL)) {
-    return process.env.DATABASE_URL
-  }
-
-  return [
+  const preferredPostgresUrl = [
     process.env.POSTGRES_PRISMA_URL,
+    process.env.POSTGRES_URL_NON_POOLING,
     process.env.SUPABASE_DB_URL,
     process.env.POSTGRES_URL,
   ].find(isUsableDatabaseUrl)
+
+  if (preferredPostgresUrl) {
+    return preferredPostgresUrl
+  }
+
+  if (isUsableDatabaseUrl(process.env.DATABASE_URL)) {
+    return process.env.DATABASE_URL
+  }
 }
 
 const databaseUrl = resolveDatabaseUrl()
