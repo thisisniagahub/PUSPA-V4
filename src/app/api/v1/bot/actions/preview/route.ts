@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getRequestIp, writeAuditLog } from '@/lib/audit'
-import { botActionPreviewSchema, buildBotActionPreview } from '@/lib/bot-actions'
+import { botActionPreviewSchema, createBotActionApproval } from '@/lib/bot-actions'
 import { requireBotAuth, botAuthErrorResponse } from '@/lib/bot-middleware'
 
 export async function POST(request: NextRequest) {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const parsed = botActionPreviewSchema.parse(body)
-    const preview = buildBotActionPreview(parsed)
+    const preview = await createBotActionApproval(parsed, bot)
 
     await writeAuditLog({
       action: 'bot_action_preview',

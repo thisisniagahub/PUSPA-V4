@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getRequestIp, writeAuditLog } from '@/lib/audit'
-import { botActionExecuteSchema } from '@/lib/bot-actions'
+import { botActionExecuteSchema, safelyExecuteApprovedBotAction } from '@/lib/bot-actions'
 import { requireBotAuth, botAuthErrorResponse } from '@/lib/bot-middleware'
 
 export async function POST(request: NextRequest) {
@@ -16,9 +16,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const parsed = botActionExecuteSchema.parse(body)
+    const execution = await safelyExecuteApprovedBotAction(parsed, bot)
 
     await writeAuditLog({
-      action: 'bot_action_execute_blocked',
+      action: execution.ok ? 'bot_action_execute_completed' : 'bot_action_execute_rejected',
       entity: 'BotAction',
       entityId: parsed.approvedActionId,
       ipAddress: getRequestIp(request),
@@ -26,24 +27,12 @@ export async function POST(request: NextRequest) {
         botId: bot.id,
         botName: bot.name,
         actionType: parsed.actionType,
-        reason: 'approval_storage_not_implemented',
+        resultStatus: execution.body.data?.status,
+        mutationStatus: execution.ok ? execution.body.data?.mutationStatus : undefined,
       },
     })
 
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Bot action execution is not enabled yet',
-        data: {
-          approvedActionId: parsed.approvedActionId,
-          actionType: parsed.actionType,
-          status: 'blocked',
-          reason: 'Persistent approval storage is required before execution can mutate data.',
-          requiredFlow: 'preview -> Bo/admin approval -> persisted approval record -> execute',
-        },
-      },
-      { status: 501 },
-    )
+    return NextResponse.json(execution.body, { status: execution.statusCode })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

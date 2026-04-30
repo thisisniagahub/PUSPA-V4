@@ -14,7 +14,7 @@ This file serves as the foundational mandate for all AI agent interactions withi
 - **State Management:** Zustand (with persistence) handles global app state, sidebar, views, and AI session state.
 - **ORM:** Prisma 6 with multi-DB URL resolution (SQLite for dev, PostgreSQL for prod).
 - **Styling:** Tailwind CSS 4 with a Zinc/Emerald/Black design system.
-- **AI Engine (PUSPA AI/OpenClaw):** OpenClaw-first assistant using model `openclaw/puspacare`, with a 38-tool registry, persistent memory, and a self-improving skills system. Z.AI is intentionally unsupported.
+- **AI Engine (PUSPA AI/OpenClaw):** OpenClaw-first assistant using model `openclaw/puspacare` integrated via OpenClaw Gateway. Optimized for multi-channel NGO operations with a modern UI shell. Z.AI is intentionally unsupported.
 
 ---
 
@@ -23,7 +23,7 @@ This file serves as the foundational mandate for all AI agent interactions withi
 ### Development
 - **Prerequisites:** Node.js ≥ 18, Bun ≥ 1.0.
 - **Install:** `bun install`
-- **Environment:** `cp .env.example .env` (Ensure `DATABASE_URL` is set).
+- **Environment:** `cp .env.example .env` (Ensure `DATABASE_URL`, `OPENCLAW_GATEWAY_URL`, and `OPENCLAW_GATEWAY_TOKEN` are set).
 - **Database Setup:** `bun run db:push` then `bun run db:seed`.
 - **Run:** `bun run dev` (port `3000`) or `./node_modules/.bin/next dev -p 3001` for the current local preview when port 3000 is occupied.
 
@@ -50,13 +50,13 @@ This file serves as the foundational mandate for all AI agent interactions withi
 - Module pages are lazily loaded. Ensure they export a default component.
 
 ### OpenClaw AI Integration
-- All database-altering operations should have a corresponding tool in `src/lib/openclaw-agent/advanced-tools.ts`.
-- Tools must implement permission checks (`read`, `write`, `admin`).
-- When adding features, consider if a OpenClaw Tool is needed for AI automation.
+- **Gateway First:** Integration is managed via the OpenClaw Gateway at `operator.gangniaga.my`.
+- **UI Layer:** Chat interface and execution traces are managed in `src/components/openclaw-agent`.
+- **State:** AI session and provider configuration are stored in `src/stores/openclaw-store.ts`.
+- **Tooling:** All future database tools must be registered through the OpenClaw Gateway or the specific API handlers in `src/app/api/v1/openclaw`.
 
 ### Database Operations
 - **Prisma Client:** Always import `db` from `@/lib/db`.
-- **Sequential IDs:** Use `generateNumber` from `@/lib/openclaw/id-generator` for business IDs (e.g., `PUSPA-XXXX`, `KES-XXXX`).
 - **Audit Logs:** Use `writeAuditLog` from `@/lib/audit.ts` for all sensitive write operations.
 
 ---
@@ -65,7 +65,8 @@ This file serves as the foundational mandate for all AI agent interactions withi
 
 - `src/app/api/v1`: REST API endpoints (80+ routes).
 - `src/modules`: Feature modules (lazy-loaded SPA "pages").
-- `src/lib/openclaw-agent`: AI Assistant engine, tools, memory, and skills.
+- `src/lib/openclaw-agent`: AI Assistant provider types and quick actions.
+- `src/components/openclaw-agent`: React components for the AI interface.
 - `src/stores`: Zustand global state management.
 - `src/components/ui`: Shared shadcn/ui components.
 - `prisma/`: Database schemas (SQLite and PostgreSQL variants).
@@ -77,7 +78,7 @@ This file serves as the foundational mandate for all AI agent interactions withi
 1. **Context Awareness:** When working on a module, check `src/modules/AGENTS.md`, `src/components/sidebar/sidebar-config.ts`, `src/components/view-renderer.tsx`, and any relevant module config file.
 2. **Safety:** Never expose `psbot_*` keys or session secrets.
 3. **Bilingual Support:** UI labels should prefer Bahasa Melayu with English fallbacks. AI responses should detect user language.
-4. **Tool Integrity:** Ensure any new database models are reflected in `query_stats` and search tools in `advanced-tools.ts`.
+4. **Tool Integrity:** Ensure any new database models are reflected in the corresponding API routes used by the OpenClaw Gateway.
 
 ---
 
