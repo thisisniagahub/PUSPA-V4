@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { maskEmail, maskPhone, incomeBand, parsePagination } from '@/lib/bot-api-utils'
 import { requireBotAuth, botAuthErrorResponse } from '@/lib/bot-middleware'
 
 export async function GET(request: NextRequest) {
@@ -13,16 +14,13 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const search = searchParams.get('search')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
-    const offset = parseInt(searchParams.get('offset') || '0')
+    const { limit, offset } = parsePagination(searchParams)
 
     const where: any = {}
     if (status) where.status = status
     if (search) {
       where.OR = [
         { name: { contains: search } },
-        { ic: { contains: search } },
-        { phone: { contains: search } },
         { memberNumber: { contains: search } },
       ]
     }
@@ -51,7 +49,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        members,
+        members: members.map((member) => ({
+          id: member.id,
+          memberNumber: member.memberNumber,
+          name: member.name,
+          status: member.status,
+          contact: {
+            phoneMasked: maskPhone(member.phone),
+            emailMasked: maskEmail(member.email),
+          },
+          householdSize: member.householdSize,
+          incomeBand: incomeBand(member.monthlyIncome == null ? null : Number(member.monthlyIncome)),
+          createdAt: member.createdAt,
+        })),
         pagination: {
           total,
           limit,
@@ -60,7 +70,7 @@ export async function GET(request: NextRequest) {
         },
       },
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('[BOT_MEMBERS]', error)
     return NextResponse.json(
       { success: false, error: 'Failed to fetch members' },

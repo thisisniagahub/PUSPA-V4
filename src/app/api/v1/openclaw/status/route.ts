@@ -4,6 +4,14 @@ import { DEFAULT_OPENCLAW_BRIDGE_URL, getOpenClawBridgeHeaders } from '@/lib/ope
 
 const DEFAULT_GATEWAY_URL = 'https://operator.gangniaga.my'
 
+function sanitizeBridgeError(error: unknown) {
+  if (typeof error !== 'string') return 'Bridge unavailable'
+  return error
+    .replace(/Bearer\s+\S+/gi, 'Bearer [REDACTED]')
+    .replace(/(token|secret|key|password)=([^\s&]+)/gi, '$1=[REDACTED]')
+    .slice(0, 240)
+}
+
 export async function GET(request: Request) {
   const bridgeBaseUrl = (process.env.OPENCLAW_BRIDGE_URL || DEFAULT_OPENCLAW_BRIDGE_URL).replace(/\/$/, '')
 
@@ -29,7 +37,7 @@ export async function GET(request: Request) {
           status: 'bridge-error',
           latencyMs: 0,
           checkedAt: new Date().toISOString(),
-          error: payload?.error || `Bridge returned HTTP ${response.status}`,
+          error: sanitizeBridgeError(payload?.error || `Bridge returned HTTP ${response.status}`),
         },
       })
     }
@@ -44,7 +52,7 @@ export async function GET(request: Request) {
         status: gateway.status || 'reachable',
         latencyMs: gateway.latencyMs || 0,
         checkedAt: payload.data.generatedAt || new Date().toISOString(),
-        error: gateway.error,
+        error: sanitizeBridgeError(gateway.error),
       },
     })
   } catch (error) {
@@ -64,7 +72,7 @@ export async function GET(request: Request) {
         status: 'offline',
         latencyMs: 0,
         checkedAt: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown bridge error',
+        error: sanitizeBridgeError(error instanceof Error ? error.message : 'Unknown bridge error'),
       },
     })
   }

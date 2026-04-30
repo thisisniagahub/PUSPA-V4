@@ -66,9 +66,9 @@ export async function createBotApiKey({
 }
 
 export async function verifyBotApiKey(rawKey: string) {
-  // if (!rawKey.startsWith('psbot_')) {
-  //   return null
-  // }
+  if (!rawKey.startsWith('psbot_')) {
+    return null
+  }
 
   const keyHash = createHash('sha256').update(rawKey).digest('hex')
 
@@ -88,11 +88,14 @@ export async function verifyBotApiKey(rawKey: string) {
     return { valid: false, reason: 'expired', bot: null }
   }
 
-  // Update lastUsedAt
-  await db.botApiKey.update({
-    where: { id: botKey.id },
-    data: { lastUsedAt: new Date() },
-  })
+  // Update lastUsedAt at most every 5 minutes to avoid write amplification from health polling.
+  const shouldUpdateLastUsed = !botKey.lastUsedAt || Date.now() - botKey.lastUsedAt.getTime() > 5 * 60 * 1000
+  if (shouldUpdateLastUsed) {
+    await db.botApiKey.update({
+      where: { id: botKey.id },
+      data: { lastUsedAt: new Date() },
+    })
+  }
 
   // Parse permissions if it's a string, otherwise assume it's already an object
   let permissions: BotPermissions = {}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { maskEmail, maskPhone, parsePagination } from '@/lib/bot-api-utils'
 import { requireBotAuth, botAuthErrorResponse } from '@/lib/bot-middleware'
 
 export async function GET(request: NextRequest) {
@@ -13,8 +14,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const donorName = searchParams.get('donor')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
-    const offset = parseInt(searchParams.get('offset') || '0')
+    const { limit, offset } = parsePagination(searchParams)
 
     const where: any = {}
     if (status) where.status = status
@@ -45,7 +45,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        donations,
+        donations: donations.map((donation) => ({
+          id: donation.id,
+          donationNumber: donation.donationNumber,
+          donorName: donation.donorName,
+          donorContact: {
+            emailMasked: maskEmail(donation.donorEmail),
+            phoneMasked: maskPhone(donation.donorPhone),
+          },
+          amount: donation.amount,
+          method: donation.method,
+          status: donation.status,
+          createdAt: donation.createdAt,
+        })),
         summary: {
           totalCount: total,
           totalAmount: sum._sum.amount || 0,
@@ -58,7 +70,7 @@ export async function GET(request: NextRequest) {
         },
       },
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('[BOT_DONATIONS]', error)
     return NextResponse.json(
       { success: false, error: 'Failed to fetch donations' },

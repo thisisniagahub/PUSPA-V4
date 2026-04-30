@@ -58,14 +58,16 @@ function LoginContent() {
 
   // Safety timeout for auth loading
   useEffect(() => {
-    if (authLoadingRaw) {
-      const timer = setTimeout(() => {
-        setIsAuthTimeout(true)
-      }, 5000)
-      return () => clearTimeout(timer)
-    } else {
-      setIsAuthTimeout(false)
+    if (!authLoadingRaw) {
+      const reset = setTimeout(() => setIsAuthTimeout(false), 0)
+      return () => clearTimeout(reset)
     }
+
+    const timer = setTimeout(() => {
+      setIsAuthTimeout(true)
+    }, 5000)
+
+    return () => clearTimeout(timer)
   }, [authLoadingRaw])
 
   const authLoading = authLoadingRaw && !isAuthTimeout
@@ -73,7 +75,7 @@ function LoginContent() {
   const callbackUrl = useMemo(() => {
     const value = searchParams.get('callbackUrl')
 
-    if (value && value.startsWith('/')) {
+    if (value && value.startsWith('/') && !value.startsWith('//')) {
       return value
     }
 
@@ -82,9 +84,40 @@ function LoginContent() {
 
   useEffect(() => {
     if (user && !authLoading) {
-      router.replace(callbackUrl)
+      window.location.replace(callbackUrl)
+      return
     }
-  }, [callbackUrl, router, user, authLoading])
+
+    if (authLoading) {
+      return
+    }
+
+    let cancelled = false
+
+    async function redirectExistingSession() {
+      try {
+        const response = await fetch('/api/v1/auth/supabase/me', {
+          credentials: 'include',
+          cache: 'no-store',
+        })
+
+        if (!cancelled && response.ok) {
+          const data = await response.json()
+          if (data.success && data.data?.user) {
+            window.location.replace(callbackUrl)
+          }
+        }
+      } catch {
+        // Stay on login page when there is no valid session or the check fails.
+      }
+    }
+
+    void redirectExistingSession()
+
+    return () => {
+      cancelled = true
+    }
+  }, [callbackUrl, user, authLoading])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()

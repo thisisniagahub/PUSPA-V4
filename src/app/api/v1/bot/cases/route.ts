@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { parsePagination } from '@/lib/bot-api-utils'
 import { requireBotAuth, botAuthErrorResponse } from '@/lib/bot-middleware'
+
+function summarizeText(value?: string | null) {
+  if (!value) return null
+  return value.length > 180 ? `${value.slice(0, 177)}...` : value
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,8 +19,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const priority = searchParams.get('priority')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
-    const offset = parseInt(searchParams.get('offset') || '0')
+    const { limit, offset } = parsePagination(searchParams)
 
     const where: any = {}
     if (status) where.status = status
@@ -28,7 +33,7 @@ export async function GET(request: NextRequest) {
         skip: offset,
         include: {
           member: {
-            select: { id: true, name: true, memberNumber: true, phone: true },
+            select: { id: true, name: true, memberNumber: true },
           },
           assignee: {
             select: { id: true, name: true },
@@ -41,17 +46,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        cases: cases.map((c) => ({
-          id: c.id,
-          title: c.title,
-          description: c.description,
-          status: c.status,
-          priority: c.priority,
-          category: c.category,
-          member: c.member,
-          assignee: c.assignee,
-          createdAt: c.createdAt,
-          updatedAt: c.updatedAt,
+        cases: cases.map((caseItem) => ({
+          id: caseItem.id,
+          title: caseItem.title,
+          summary: summarizeText(caseItem.description),
+          status: caseItem.status,
+          priority: caseItem.priority,
+          category: caseItem.category,
+          member: caseItem.member,
+          assignee: caseItem.assignee,
+          createdAt: caseItem.createdAt,
+          updatedAt: caseItem.updatedAt,
         })),
         pagination: {
           total,
@@ -61,7 +66,7 @@ export async function GET(request: NextRequest) {
         },
       },
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('[BOT_CASES]', error)
     return NextResponse.json(
       { success: false, error: 'Failed to fetch cases' },

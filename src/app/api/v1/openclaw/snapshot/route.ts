@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server'
 import { AuthorizationError, requireRole } from '@/lib/auth'
 import { DEFAULT_OPENCLAW_BRIDGE_URL, getOpenClawBridgeHeaders, type OpenClawSnapshot } from '@/lib/openclaw'
 
+function sanitizeBridgeError(error: unknown) {
+  if (typeof error !== 'string') return 'Failed to reach OpenClaw bridge'
+  return error
+    .replace(/Bearer\s+\S+/gi, 'Bearer [REDACTED]')
+    .replace(/(token|secret|key|password)=([^\s&]+)/gi, '$1=[REDACTED]')
+    .slice(0, 240)
+}
+
 export async function GET(request: Request) {
   const baseUrl = (process.env.OPENCLAW_BRIDGE_URL || DEFAULT_OPENCLAW_BRIDGE_URL).replace(/\/$/, '')
 
@@ -18,7 +26,7 @@ export async function GET(request: Request) {
     if (!response.ok || !payload?.ok || !payload?.data) {
       return NextResponse.json({
         success: false,
-        error: payload?.error || `Bridge returned HTTP ${response.status}`,
+        error: sanitizeBridgeError(payload?.error || `Bridge returned HTTP ${response.status}`),
       }, { status: 502 })
     }
 
@@ -35,7 +43,7 @@ export async function GET(request: Request) {
     }
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to reach OpenClaw bridge',
+      error: sanitizeBridgeError(error instanceof Error ? error.message : 'Failed to reach OpenClaw bridge'),
     }, { status: 502 })
   }
 }

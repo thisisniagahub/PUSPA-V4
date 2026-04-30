@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { maskIc, maskPhone, parsePagination } from '@/lib/bot-api-utils'
 import { requireBotAuth, botAuthErrorResponse } from '@/lib/bot-middleware'
 
 export async function GET(request: NextRequest) {
@@ -12,8 +13,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
-    const offset = parseInt(searchParams.get('offset') || '0')
+    const { limit, offset } = parsePagination(searchParams)
 
     const where: any = {}
     if (status) where.status = status
@@ -43,19 +43,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        verifications: verifications.map((v) => ({
-          id: v.id,
-          status: v.status,
-          // Removed idType
-          idNumber: v.member.ic,
-          idImageFront: v.icFrontUrl,
-          idImageBack: v.icBackUrl,
-          selfieImage: v.selfieUrl,
-          verifiedAt: v.verifiedAt,
-          // removed rejectedAt
-          rejectionReason: v.rejectionReason,
-          member: v.member,
-          createdAt: v.createdAt,
+        verifications: verifications.map((verification) => ({
+          id: verification.id,
+          status: verification.status,
+          idNumberMasked: maskIc(verification.member.ic),
+          documentStatus: {
+            hasIdImageFront: Boolean(verification.icFrontUrl),
+            hasIdImageBack: Boolean(verification.icBackUrl),
+            hasSelfieImage: Boolean(verification.selfieUrl),
+          },
+          verifiedAt: verification.verifiedAt,
+          rejectionReason: verification.rejectionReason,
+          member: {
+            id: verification.member.id,
+            name: verification.member.name,
+            memberNumber: verification.member.memberNumber,
+            icMasked: maskIc(verification.member.ic),
+            phoneMasked: maskPhone(verification.member.phone),
+          },
+          createdAt: verification.createdAt,
         })),
         summary: {
           total,
@@ -69,7 +75,7 @@ export async function GET(request: NextRequest) {
         },
       },
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('[BOT_EKYC]', error)
     return NextResponse.json(
       { success: false, error: 'Failed to fetch eKYC verifications' },

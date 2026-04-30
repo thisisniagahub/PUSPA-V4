@@ -1,59 +1,66 @@
-import { NextResponse } from 'next/server'
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { getRequestIp, writeAuditLog } from '@/lib/audit'
+import { maskIc } from '@/lib/bot-api-utils'
 import { requireBotAuth, botAuthErrorResponse } from '@/lib/bot-middleware'
 
+const ecossRpaSchema = z.object({
+  icNumber: z.string().min(4).max(24),
+  memberName: z.string().max(160).optional(),
+  actionType: z.string().min(1).max(80),
+  details: z.record(z.string(), z.unknown()).optional().default({}),
+})
+
 export async function POST(req: NextRequest) {
+  let bot
+
   try {
-    await requireBotAuth(req, 'ops')
+    bot = await requireBotAuth(req, 'ops')
   } catch (error) {
     return botAuthErrorResponse(error)
   }
 
   try {
-    const { icNumber, memberName, actionType, details } = await req.json()
+    const parsed = ecossRpaSchema.parse(await req.json())
 
-    if (!icNumber || !actionType) {
+    await writeAuditLog({
+      action: 'bot.ecoss_rpa.blocked',
+      entity: 'ExternalRpa',
+      ipAddress: getRequestIp(req),
+      details: {
+        botId: bot.id,
+        botName: bot.name,
+        actionType: parsed.actionType,
+        icMasked: maskIc(parsed.icNumber),
+        reason: 'approval_required',
+      },
+    })
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'eCOSS RPA execution requires Bo/admin approval and is currently disabled',
+        data: {
+          status: 'blocked',
+          icMasked: maskIc(parsed.icNumber),
+          actionType: parsed.actionType,
+          requiredFlow: 'preview -> Bo/admin approval -> execute with audit log',
+        },
+      },
+      { status: 501 },
+    )
+  } catch (error) {
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'icNumber and actionType are required' },
-        { status: 400 }
+        { success: false, error: 'Validation failed', details: error.issues },
+        { status: 400 },
       )
     }
 
-    // SIMULATION OF RPA HEADLESS BROWSER EXECUTION
-    console.log('[OpenClaw RPA Bot] Booting headless browser...')
-    console.log(`[OpenClaw RPA Bot] Navigating to eCoss / eKasih secure portal...`)
-    
-    // Simulate network delay for logging in and filling forms
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    console.log(`[OpenClaw RPA Bot] Searching for IC: ${icNumber} (${memberName || 'Unknown'})`)
-    
-    await new Promise(resolve => setTimeout(resolve, 800))
-
-    console.log(`[OpenClaw RPA Bot] Updating record with action: ${actionType}`)
-    console.log(`[OpenClaw RPA Bot] Details inserted: ${JSON.stringify(details)}`)
-
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    console.log('[OpenClaw RPA Bot] Form submitted successfully. Browser closed.')
-
-    return NextResponse.json({
-      success: true,
-      message: 'Zero-Friction Sync completed via RPA',
-      rpa_logs: [
-        'Browser launched',
-        'Authenticated with Government Portal',
-        `Located Profile: ${icNumber}`,
-        'Injected Disbursement Records',
-        'Saved & Session Terminated'
-      ],
-      timestamp: new Date().toISOString()
-    })
-  } catch (error: any) {
-    console.error('[OpenClaw RPA Error]', error)
+    console.error('[BOT_ECOSS_RPA]', error)
     return NextResponse.json(
-      { success: false, error: error.message || 'RPA Execution Failed' },
-      { status: 500 }
+      { success: false, error: 'Failed to process eCOSS RPA request' },
+      { status: 500 },
     )
   }
 }

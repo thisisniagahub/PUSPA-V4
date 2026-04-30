@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { AppRole } from '@/lib/auth-shared'
 import type { User } from '@supabase/supabase-js'
@@ -39,31 +39,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const fetchUser = useCallback(async () => {
     try {
-      const { data: { user: sbUser } } = await supabase.auth.getUser()
+      const res = await fetch('/api/v1/auth/supabase/me', {
+        credentials: 'include',
+        cache: 'no-store',
+      })
 
-      if (sbUser) {
-        setSupabaseUser(sbUser)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success && data.data?.user) {
+          setUser(data.data.user)
+          setLoading(false)
 
-        // Fetch the full user profile from our /me endpoint
-        const res = await fetch('/api/v1/auth/supabase/me')
-        if (res.ok) {
-          const data = await res.json()
-          if (data.success && data.data?.user) {
-            setUser(data.data.user)
-          } else {
-            setUser(null)
-          }
-        } else {
-          setUser(null)
+          void supabase.auth.getUser().then(({ data: { user: sbUser } }) => {
+            setSupabaseUser(sbUser ?? null)
+          }).catch(() => {
+            setSupabaseUser(null)
+          })
+          return
         }
-      } else {
-        setSupabaseUser(null)
-        setUser(null)
       }
+
+      setSupabaseUser(null)
+      setUser(null)
     } catch {
       setSupabaseUser(null)
       setUser(null)
