@@ -10,7 +10,7 @@ import { useTheme } from 'next-themes';
 
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/stores/app-store';
-import { useHermesStore } from '@/stores/hermes-store';
+import { useOpenClawStore } from '@/stores/openclaw-store';
 import { cn } from '@/lib/utils';
 
 import { useRouter } from 'next/navigation';
@@ -21,8 +21,8 @@ const CommandPalette = dynamic(() => import('@/components/command-palette').then
 const NotificationBell = dynamic(() => import('@/components/notification-bell').then(m => ({ default: m.NotificationBell })), { ssr: false });
 const Aurora = dynamic(() => import('@/components/Aurora'), { ssr: false });
 const ViewRenderer = dynamic(() => import('@/components/view-renderer').then(m => ({ default: m.ViewRenderer })), { ssr: false });
-const HermesFab = dynamic(() => import('@/components/hermes/hermes-fab').then(m => ({ default: m.HermesFab })), { ssr: false });
-const HermesDashboard = dynamic(() => import('@/components/hermes/hermes-dashboard').then(m => ({ default: m.HermesDashboard })), { ssr: false });
+const OpenClawFab = dynamic(() => import('@/components/openclaw-agent/openclaw-fab').then(m => ({ default: m.OpenClawFab })), { ssr: false });
+const OpenClawDashboard = dynamic(() => import('@/components/openclaw-agent/openclaw-dashboard').then(m => ({ default: m.OpenClawDashboard })), { ssr: false });
 
 import { viewLabels } from '@/types';
 
@@ -31,13 +31,13 @@ export default function Shell() {
   const { user, loading: authLoading } = useAuth();
   const { currentView, sidebarCollapsed, toggleSidebar, setCommandPaletteOpen, setUserRole: setAppUserRole } = useAppStore();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const { setCurrentView, setUserRole: setHermesUserRole, loadProviderConfig } = useHermesStore();
+  const { setCurrentView, setUserRole: setOpenClawUserRole, loadProviderConfig } = useOpenClawStore();
 
   // Constants
   const desktopSidebarWidth = sidebarCollapsed ? 80 : 280;
   const isDark = resolvedTheme === 'dark';
 
-  // Sync Hermes state
+  // Sync OpenClaw state
   useEffect(() => {
     loadProviderConfig();
   }, []);
@@ -68,17 +68,17 @@ export default function Shell() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [setCommandPaletteOpen]);
 
-  // Sync current view and user role to Hermes
+  // Sync current view and user role to OpenClaw
   useEffect(() => {
     setCurrentView(currentView);
   }, [currentView, setCurrentView]);
 
   useEffect(() => {
     if (user?.role) {
-      setHermesUserRole(user.role as any);
+      setOpenClawUserRole(user.role as any);
       setAppUserRole(user.role as any);
     }
-  }, [user?.role, setHermesUserRole, setAppUserRole]);
+  }, [user?.role, setOpenClawUserRole, setAppUserRole]);
 
   if (authLoading || !mounted || !user) {
     return (
@@ -256,8 +256,8 @@ export default function Shell() {
       </div>
 
       <CommandPalette />
-      <HermesFab />
-      <HermesDashboard />
+      <OpenClawFab />
+      <OpenClawDashboard />
     </div>
   );
 }

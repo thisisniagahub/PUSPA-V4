@@ -2,9 +2,9 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { ViewId } from '@/types'
 import type { AppRole } from '@/lib/auth-shared'
-import type { ProviderId } from '@/lib/hermes/provider-types'
+import type { ProviderId } from '@/lib/openclaw-agent/provider-types'
 
-export type HermesStatus = 'idle' | 'thinking' | 'streaming' | 'error'
+export type OpenClawStatus = 'idle' | 'thinking' | 'streaming' | 'error'
 
 // ============================================================
 // Execution Trace Types (Retail Agent Dashboard)
@@ -24,7 +24,7 @@ export interface AgentStep {
   result?: string
 }
 
-export interface HermesChatMessage {
+export interface OpenClawAgentMessage {
   id: string
   role: 'user' | 'assistant'
   content: string
@@ -47,7 +47,7 @@ export interface HermesChatMessage {
   steps?: AgentStep[]
 }
 
-export interface HermesClientAction {
+export interface OpenClawClientAction {
   type: 'navigate' | 'create' | 'update' | 'delete' | 'export'
   viewId?: ViewId
   module?: string
@@ -56,7 +56,7 @@ export interface HermesClientAction {
   message?: string
 }
 
-export interface HermesProviderState {
+export interface OpenClawProviderState {
   provider: ProviderId
   model: string
   hasApiKey: boolean
@@ -65,19 +65,19 @@ export interface HermesProviderState {
   isConfigured: boolean
 }
 
-export type HermesViewMode = 'panel' | 'fullscreen'
+export type OpenClawViewMode = 'panel' | 'fullscreen'
 
-export interface HermesState {
+export interface OpenClawState {
   isOpen: boolean
-  viewMode: HermesViewMode
-  status: HermesStatus
-  messages: HermesChatMessage[]
+  viewMode: OpenClawViewMode
+  status: OpenClawStatus
+  messages: OpenClawAgentMessage[]
   currentView: ViewId
   userRole: AppRole
   locale: 'ms' | 'en'
-  pendingActions: HermesClientAction[]
+  pendingActions: OpenClawClientAction[]
   showSettings: boolean
-  providerState: HermesProviderState
+  providerState: OpenClawProviderState
   conversationId: string | null
   showHistory: boolean
   // Execution trace
@@ -85,20 +85,20 @@ export interface HermesState {
 
   setOpen: (open: boolean) => void
   toggleOpen: () => void
-  setViewMode: (mode: HermesViewMode) => void
-  setStatus: (status: HermesStatus) => void
-  addMessage: (msg: Omit<HermesChatMessage, 'id' | 'timestamp'>) => void
+  setViewMode: (mode: OpenClawViewMode) => void
+  setStatus: (status: OpenClawStatus) => void
+  addMessage: (msg: Omit<OpenClawAgentMessage, 'id' | 'timestamp'>) => void
   updateLastMessage: (content: string) => void
-  finalizeLastMessage: (meta?: { provider?: ProviderId; model?: string; latencyMs?: number; clientAction?: HermesChatMessage['clientAction'] }) => void
+  finalizeLastMessage: (meta?: { provider?: ProviderId; model?: string; latencyMs?: number; clientAction?: OpenClawAgentMessage['clientAction'] }) => void
   clearMessages: () => void
   setCurrentView: (view: ViewId) => void
   setUserRole: (role: AppRole) => void
   setLocale: (locale: 'ms' | 'en') => void
-  addPendingAction: (action: HermesClientAction) => void
-  consumePendingAction: () => HermesClientAction | undefined
+  addPendingAction: (action: OpenClawClientAction) => void
+  consumePendingAction: () => OpenClawClientAction | undefined
   setShowSettings: (show: boolean) => void
   setShowHistory: (show: boolean) => void
-  setProviderState: (state: Partial<HermesProviderState>) => void
+  setProviderState: (state: Partial<OpenClawProviderState>) => void
   sendMessage: (text: string) => Promise<void>
   sendMessageStream: (text: string) => Promise<void>
   loadProviderConfig: () => Promise<void>
@@ -111,12 +111,12 @@ export interface HermesState {
 
 let stepCounter = 0
 
-export const useHermesStore = create<HermesState>()(
+export const useOpenClawStore = create<OpenClawState>()(
   persist(
     (set, get) => ({
       isOpen: false,
-      viewMode: 'panel' as HermesViewMode,
-      status: 'idle' as HermesStatus,
+      viewMode: 'panel' as OpenClawViewMode,
+      status: 'idle' as OpenClawStatus,
       messages: [],
       currentView: 'dashboard',
       userRole: 'staff',
@@ -223,7 +223,7 @@ export const useHermesStore = create<HermesState>()(
         const planStepId = addStep({ type: 'planning', label: 'Merancang', detail: 'Menganalisis permintaan anda...', status: 'running' })
 
         try {
-          const response = await fetch('/api/v1/hermes/chat', {
+          const response = await fetch('/api/v1/openclaw/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -300,7 +300,7 @@ export const useHermesStore = create<HermesState>()(
         addMessage({ role: 'assistant', content: '', isStreaming: true })
 
         try {
-          const response = await fetch('/api/v1/hermes/chat', {
+          const response = await fetch('/api/v1/openclaw/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -414,7 +414,7 @@ export const useHermesStore = create<HermesState>()(
 
       loadProviderConfig: async () => {
         try {
-          const res = await fetch('/api/v1/hermes/config')
+          const res = await fetch('/api/v1/openclaw/config')
           const json = await res.json()
           if (json.success) {
             const { setProviderState } = get()

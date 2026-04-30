@@ -2,11 +2,11 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { Flower2 } from 'lucide-react'
-import { useHermesStore } from '@/stores/hermes-store'
-import { PROVIDERS } from '@/lib/hermes/provider-types'
+import { useOpenClawStore } from '@/stores/openclaw-store'
+import { PROVIDERS } from '@/lib/openclaw-agent/provider-types'
 
-export function HermesFab() {
-  const { isOpen, toggleOpen, messages, providerState, viewMode, setViewMode } = useHermesStore()
+export function OpenClawFab() {
+  const { isOpen, toggleOpen, messages, providerState, viewMode, setViewMode } = useOpenClawStore()
 
   const unseenCount = isOpen
     ? 0

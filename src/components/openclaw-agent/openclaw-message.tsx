@@ -5,14 +5,14 @@ import { motion } from 'framer-motion'
 import { Copy, Check, Bot, User, Wrench, Clock } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { cn } from '@/lib/utils'
-import type { HermesChatMessage } from '@/stores/hermes-store'
-import { PROVIDERS } from '@/lib/hermes/provider-types'
+import type { OpenClawAgentMessage } from '@/stores/openclaw-store'
+import { PROVIDERS } from '@/lib/openclaw-agent/provider-types'
 
-interface HermesMessageProps {
-  message: HermesChatMessage
+interface OpenClawMessageProps {
+  message: OpenClawAgentMessage
 }
 
-export function HermesMessage({ message }: HermesMessageProps) {
+export function OpenClawMessage({ message }: OpenClawMessageProps) {
   const isUser = message.role === 'user'
   const [copied, setCopied] = useState(false)
 
@@ -77,7 +77,7 @@ export function HermesMessage({ message }: HermesMessageProps) {
         {/* Content */}
         <div
           className={cn(
-            'whitespace-pre-wrap break-words hermes-content',
+            'whitespace-pre-wrap break-words openclaw-content',
             isUser ? '' : '[&_strong]:font-semibold [&_code]:text-violet-600 dark:[&_code]:text-violet-400 [&_pre]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_h4]:text-foreground',
           )}
         >

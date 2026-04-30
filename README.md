@@ -33,8 +33,8 @@ _Cerdas. Mesra. Sentiasa di sisi anda._
 - [User Roles & Access Control](#-user-roles--access-control)
   - [Role Hierarchy](#role-hierarchy)
   - [Module Access Matrix](#module-access-matrix)
-  - [Hermes AI Tool Permissions](#hermes-ai-tool-permissions)
-- [Hermes — AI Assistant](#-hermes--ai-assistant)
+  - [OpenClaw AI Tool Permissions](#openclaw-ai-tool-permissions)
+- [OpenClaw — AI Assistant](#-openclaw--ai-assistant)
   - [Architecture & Workflow](#architecture--workflow)
   - [Multi-Provider LLM Support](#multi-provider-llm-support)
   - [Tool Registry (38 Tools)](#tool-registry-38-tools)
@@ -47,7 +47,7 @@ _Cerdas. Mesra. Sentiasa di sisi anda._
   - [Authentication](#authentication)
   - [Core CRUD](#core-crud)
   - [Compliance & Identity](#compliance--identity)
-  - [Hermes AI](#hermes-ai)
+  - [OpenClaw AI](#openclaw-ai)
   - [Ops Conductor](#ops-conductor)
   - [Bot API](#bot-api)
   - [Integrations](#integrations)
@@ -158,7 +158,7 @@ PUSPA V4 is the **fourth-generation** NGO management platform that integrates **
 - Security settings per user (session timeout, bound-device-only mode)
 - Comprehensive security event logging
 
-### 🤖 Hermes — Self-Improving AI Assistant
+### 🤖 OpenClaw — Self-Improving AI Assistant
 - Autonomous AI assistant that learns from every interaction
 - 38 tools for full database & operation access
 - Self-improving skills system with usage tracking & success rates
@@ -243,19 +243,19 @@ PUSPA V4 is the **fourth-generation** NGO management platform that integrates **
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────────┐  ┌───────────────────┐ │
 │  │   Frontend   │  │   API Routes     │  │   AI Engine       │ │
-│  │  (React 19)  │  │  (80 endpoints)  │  │  (Hermes Agent)   │ │
+│  │  (React 19)  │  │  (80 endpoints)  │  │  (OpenClaw Agent)   │ │
 │  │              │  │                  │  │                   │ │
 │  │ • Sidebar    │  │ • /api/v1/auth   │  │ • Multi-provider  │ │
 │  │ • Modules    │  │ • /api/v1/member │  │   LLM transport   │ │
-│  │ • Hermes UI  │  │ • /api/v1/cases  │  │ • 38 tools        │ │
-│  │ • Dashboard  │  │ • /api/v1/hermes │  │ • Skills system   │ │
+│  │ • OpenClaw UI  │  │ • /api/v1/cases  │  │ • 38 tools        │ │
+│  │ • Dashboard  │  │ • /api/v1/openclaw │  │ • Skills system   │ │
 │  │ • ⌘K Palette │  │ • /api/v1/ops    │  │ • Memory system   │ │
 │  │ • Aurora BG  │  │ • /api/v1/bot    │  │ • SSE streaming   │ │
 │  └──────────────┘  └──────────────────┘  └───────────────────┘ │
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────────┐│
 │  │                    Zustand Stores                           ││
-│  │  app-store (view, sidebar, role)  •  hermes-store (AI)     ││
+│  │  app-store (view, sidebar, role)  •  openclaw-store (AI)     ││
 │  │  ops-store (conductor)           •  (persist middleware)    ││
 │  └─────────────────────────────────────────────────────────────┘│
 │                                                                 │
@@ -287,7 +287,7 @@ User clicks nav item
 Unlike traditional Next.js file-based routing, PUSPA V4 uses a **single root page** (`/`) with a Zustand-driven `ViewRenderer` that dynamically imports module pages. This provides:
 - Instant navigation without page reloads
 - Persistent state across module switches
-- Seamless Hermes AI context tracking
+- Seamless OpenClaw AI context tracking
 
 ---
 
@@ -297,7 +297,7 @@ Unlike traditional Next.js file-based routing, PUSPA V4 uses a **single root pag
 src/
 ├── app/                              # Next.js App Router
 │   ├── layout.tsx                    # Root layout (AuthProvider + ThemeProvider)
-│   ├── page.tsx                      # Main SPA shell (sidebar, header, Hermes FAB)
+│   ├── page.tsx                      # Main SPA shell (sidebar, header, OpenClaw FAB)
 │   ├── globals.css                   # Global styles + Tailwind + theme variables
 │   ├── login/page.tsx                # Login page
 │   ├── asnafpreneur/                 # Standalone public page route
@@ -324,7 +324,7 @@ src/
 │           ├── reports/              # Financial reports
 │           ├── audit/                # Audit log
 │           ├── notifications/        # Notifications
-│           ├── hermes/               # AI chat, config, conversations, skills
+│           ├── openclaw/               # AI chat, config, conversations, skills
 │           ├── ai/                   # AI analytics
 │           ├── ops/                  # Ops Conductor (dashboard, work-items, automations, bulk)
 │           ├── bot/                  # Bot API (dashboard, donations, ekyc, members, keys, cases)
@@ -345,14 +345,14 @@ src/
 │   │   ├── sidebar-brand.tsx         # Logo & brand name
 │   │   ├── sidebar-nav.tsx           # Navigation group renderer
 │   │   └── sidebar-footer.tsx        # User info & logout
-│   ├── hermes/                       # AI assistant UI
-│   │   ├── hermes-fab.tsx            # Floating action button (bottom-right)
-│   │   ├── hermes-panel.tsx          # Panel mode (440×640px slide-in)
-│   │   ├── hermes-dashboard.tsx      # Full-screen mode + execution trace
-│   │   ├── hermes-message-v2.tsx     # Chat message bubbles (v2)
-│   │   ├── hermes-chat-header.tsx    # Chat header with provider info
-│   │   ├── hermes-chat-input.tsx     # Chat input with quick actions
-│   │   ├── hermes-settings.tsx       # AI provider/model configuration
+│   ├── openclaw/                       # AI assistant UI
+│   │   ├── openclaw-fab.tsx            # Floating action button (bottom-right)
+│   │   ├── openclaw-panel.tsx          # Panel mode (440×640px slide-in)
+│   │   ├── openclaw-dashboard.tsx      # Full-screen mode + execution trace
+│   │   ├── openclaw-message-v2.tsx     # Chat message bubbles (v2)
+│   │   ├── openclaw-chat-header.tsx    # Chat header with provider info
+│   │   ├── openclaw-chat-input.tsx     # Chat input with quick actions
+│   │   ├── openclaw-settings.tsx       # AI provider/model configuration
 │   │   └── execution-trace.tsx       # Agent step visualization
 │   ├── plugins/                      # Plugin system
 │   │   ├── PluginSlot.tsx            # Plugin component renderer by slot name
@@ -423,8 +423,8 @@ src/
 │   ├── api.ts                        # Type-safe API client helper
 │   ├── utils.ts                      # cn() (clsx + tailwind-merge)
 │   ├── types.ts                      # Shared type definitions
-│   └── hermes/                       # Hermes AI engine
-│       ├── types.ts                  # Core types (HermesToolDefinition, ROLE_PERMISSIONS)
+│   └── openclaw/                       # OpenClaw AI engine
+│       ├── types.ts                  # Core types (OpenClawToolDefinition, ROLE_PERMISSIONS)
 │       ├── provider-types.ts         # Provider definitions & model catalogs
 │       ├── providers.ts              # Multi-provider LLM transport (callLLM, streamLLM)
 │       ├── prompt.ts                 # System prompt builder (context-aware)
@@ -438,7 +438,7 @@ src/
 │
 ├── stores/                           # Zustand state management
 │   ├── app-store.ts                  # Global app state (view, sidebar, role, onboarding)
-│   ├── hermes-store.ts               # AI assistant state (messages, provider, steps)
+│   ├── openclaw-store.ts               # AI assistant state (messages, provider, steps)
 │   └── ops-store.ts                  # Ops conductor state (work items, automations)
 │
 ├── types/                            # TypeScript definitions
@@ -549,7 +549,7 @@ Role ordering: `staff (1) < admin (2) < developer (3)` — higher roles inherit 
 | Ops Conductor, AI Tools | ❌ | ❌ | ✅ |
 | OpenClaw Suite (8 sub-modules) | ❌ | ❌ | ✅ |
 
-### Hermes AI Tool Permissions
+### OpenClaw AI Tool Permissions
 
 | Tool Category | Staff | Admin | Developer |
 |---|:---:|:---:|:---:|
@@ -566,16 +566,16 @@ Role ordering: `staff (1) < admin (2) < developer (3)` — higher roles inherit 
 
 ---
 
-## 🤖 Hermes — AI Assistant
+## 🤖 OpenClaw — AI Assistant
 
-Hermes is an autonomous AI assistant inspired by the **NousResearch Hermes Agent** architecture. It learns from every interaction and improves over time.
+OpenClaw is an autonomous AI assistant inspired by the **NousResearch OpenClaw Agent** architecture. It learns from every interaction and improves over time.
 
 ### Architecture & Workflow
 
 ```
 User Input
-  → Hermes Store (Zustand)
-  → POST /api/v1/hermes/chat
+  → OpenClaw Store (Zustand)
+  → POST /api/v1/openclaw/chat
     → Build System Prompt (context + memory + skills + module descriptions)
     → Call LLM Provider (OpenClaw / OpenRouter / Ollama)
     → Parse Tool Calls (<<TOOL:name>>{}<</TOOL>> or native function calling)
@@ -585,7 +585,7 @@ User Input
     → Extract & Save Memory (non-blocking, background)
     → Save Conversation to DB (non-blocking)
     → Return Response (with optional SSE streaming)
-  → Hermes Store updates (messages, steps, status)
+  → OpenClaw Store updates (messages, steps, status)
   → UI renders response + execution trace
 ```
 
@@ -593,11 +593,11 @@ User Input
 
 | Provider | Type | Cost | Description |
 |---|---|---|---|
-| **OpenClaw** | Local gateway | Self-hosted | Default provider for Hermes Agent |
+| **OpenClaw** | Local gateway | Self-hosted | Default provider for OpenClaw Agent |
 | **OpenRouter** | Cloud | Free + Paid | 200+ models, native function calling support |
 | **Ollama** | Local | Free | Privacy-first, local inference, custom base URL |
 
-Provider switching is per-user via HermesProviderConfig in the database. The system uses OpenClaw by default and streams through compatible provider adapters for OpenRouter/Ollama when configured.
+Provider switching is per-user via OpenClaw server env config in the database. The system uses OpenClaw by default and streams through compatible provider adapters for OpenRouter/Ollama when configured.
 
 ### Tool Registry (38 Tools)
 
@@ -658,7 +658,7 @@ Skills are **SKILL.md-formatted** instructions that are automatically injected i
 
 ### Persistent Memory System
 
-Hermes maintains 5 categories of persistent memory per user:
+OpenClaw maintains 5 categories of persistent memory per user:
 
 | Category | Description | Example |
 |---|---|---|
@@ -733,11 +733,11 @@ Features:
 #### AI & Operations
 | Model | Purpose | Key Fields |
 |---|---|---|
-| **HermesConversation** | AI conversations | userId, provider, model, viewContext |
-| **HermesMessage** | AI messages | role, content, toolCalls (JSON), tokensUsed, latencyMs |
-| **HermesSkill** | Self-learned skills | name, instructions, triggerPatterns, usageCount, successRate |
-| **HermesMemory** | Persistent memory | category (5 types), key, value, confidence |
-| **HermesProviderConfig** | Per-user AI config | provider (zai/openrouter/ollama), model, apiKey, baseUrl |
+| **OpenClawConversationLegacy** | AI conversations | userId, provider, model, viewContext |
+| **OpenClawMessageLegacy** | AI messages | role, content, toolCalls (JSON), tokensUsed, latencyMs |
+| **OpenClawSkillLegacy** | Self-learned skills | name, instructions, triggerPatterns, usageCount, successRate |
+| **OpenClawMemoryLegacy** | Persistent memory | category (5 types), key, value, confidence |
+| **OpenClaw server env config** | Per-user AI config | provider (zai/openrouter/ollama), model, apiKey, baseUrl |
 | **WorkItem** | Ops work items | intent, status, priority, currentStep, blockerReason |
 | **ExecutionEvent** | Execution traces | type, toolName, latencyMs, status |
 | **Artifact** | Work outputs | type, title, pathOrRef |
@@ -836,14 +836,14 @@ The Vercel build script automatically switches schemas when `DATABASE_PROVIDER=p
 | `/api/v1/tapsecure/settings` | Security settings |
 | `/api/v1/tapsecure/logs` | Security event logs |
 
-### Hermes AI
+### OpenClaw AI
 
 | Route | Method | Description |
 |---|---|---|
-| `/api/v1/hermes/chat` | POST | AI chat (SSE streaming supported) |
-| `/api/v1/hermes/config` | GET/PUT | Provider configuration |
-| `/api/v1/hermes/conversations` | GET | Chat history |
-| `/api/v1/hermes/skills` | GET/POST | Skill management |
+| `/api/v1/openclaw/chat` | POST | AI chat (SSE streaming supported) |
+| `/api/v1/openclaw/config` | GET/PUT | Provider configuration |
+| `/api/v1/openclaw/conversations` | GET | Chat history |
+| `/api/v1/openclaw/skills` | GET/POST | Skill management |
 
 ### Ops Conductor
 
@@ -1095,7 +1095,7 @@ PUSPA V4 is **bilingual** with **Bahasa Melayu** as the primary language:
 - **Command Palette**: Searches in both Malay and English
 - **Error Messages**: Bilingual error descriptions
 
-Language detection is handled by `src/lib/hermes/lang-detect.ts` for AI responses, and `src/lib/domain.ts` for UI value normalization.
+Language detection is handled by `src/lib/openclaw-agent/lang-detect.ts` for AI responses, and `src/lib/domain.ts` for UI value normalization.
 
 ---
 
@@ -1232,5 +1232,5 @@ This document has been aligned with the current PUSPA-V4 workspace at `/mnt/g/PU
 - Local dev command in `package.json` remains `bun run dev` on port `3000`; active preview work may run with `./node_modules/.bin/next dev -p 3001` when port 3000 is occupied.
 - Auth: Supabase Auth is the primary app flow via `/api/v1/auth/supabase/*`, synced to Prisma users. Legacy/custom auth endpoints may remain for compatibility, but new protected API work should use server-side helpers from `@/lib/auth`.
 - Route protection: `src/middleware.ts` is the active guard in this workspace. Next.js warns the middleware convention is deprecated in favor of `proxy`, so future migration should preserve the same fail-closed behavior.
-- PUSPA AI/Hermes: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `HERMES_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
+- PUSPA AI/OpenClaw: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `OPENCLAW_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
 - Validation baseline after the latest alignment: `bun x tsc --noEmit --pretty false` passed and `bun run build` passed.

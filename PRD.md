@@ -16,7 +16,7 @@ PUSPA V4 is a Next.js 16 based management platform for Pertubuhan Urus Peduli As
 The product is designed around two operating modes:
 
 1. **Human operations console** — staff, admin, and developer users manage real NGO workflows through role-gated modules.
-2. **AI operations layer** — Hermes/PUSPA AI assists users with contextual guidance, database-backed workflows, skills, memory, and OpenClaw-powered LLM responses.
+2. **AI operations layer** — OpenClaw/PUSPA AI assists users with contextual guidance, database-backed workflows, skills, memory, and OpenClaw-powered LLM responses.
 
 The current implementation is a SPA-style Next.js App Router application. Modules are rendered through a single root page with Zustand-driven view state and dynamic module imports via `src/components/view-renderer.tsx`.
 
@@ -33,7 +33,7 @@ Enable PUSPA to operate as a data-driven, AI-assisted NGO where every asnaf memb
 - **Serve asnaf first:** workflows must reduce administrative friction and improve aid delivery speed.
 - **Trustworthy by default:** security, auditability, privacy, and role-based access are core requirements.
 - **Bilingual and practical:** Bahasa Melayu and English support are expected in UI copy and AI responses.
-- **AI as operator support, not black box:** Hermes should explain, trace, and constrain actions.
+- **AI as operator support, not black box:** OpenClaw should explain, trace, and constrain actions.
 - **Local-first development, production-ready design:** SQLite for local development, PostgreSQL for production.
 - **OpenClaw-first AI routing:** PUSPA AI should use OpenClaw-compatible provider settings and must not depend on Z.AI keys.
 
@@ -52,7 +52,7 @@ Enable PUSPA to operate as a data-driven, AI-assisted NGO where every asnaf memb
 7. Manage volunteers, deployment, hours, certificates, and activity participation.
 8. Maintain compliance records for ROSM, LHDN, PDPA, audit trails, and evidence references.
 9. Provide reporting and dashboards for operational, financial, compliance, and programme insights.
-10. Embed Hermes/PUSPA AI as a contextual assistant with tools, memory, skills, and provider abstraction.
+10. Embed OpenClaw/PUSPA AI as a contextual assistant with tools, memory, skills, and provider abstraction.
 11. Provide developer-only OpenClaw operations modules for MCP, plugins, integrations, terminal, agents, models, automation, and graph exploration.
 12. Offer API endpoints for web UI, bot integrations, OpenClaw bridge/status checks, and authenticated business operations.
 
@@ -84,7 +84,7 @@ Enable PUSPA to operate as a data-driven, AI-assisted NGO where every asnaf memb
 ### 4.3 Developer / Operator User
 
 **Primary needs:** AI operations, OpenClaw integrations, system diagnostics, automation, advanced tooling.
-**Typical actions:** manage Hermes/OpenClaw settings, inspect AI tools, run operator modules, validate API behavior, test local preview.
+**Typical actions:** manage OpenClaw/OpenClaw settings, inspect AI tools, run operator modules, validate API behavior, test local preview.
 **Access level:** developer-gated modules including AI and OpenClaw suite.
 
 ### 4.4 External / Bot Client
@@ -445,19 +445,19 @@ Developer-only OpenClaw modules must support operational visibility for:
 
 ---
 
-## 8. Hermes / PUSPA AI Requirements
+## 8. OpenClaw / PUSPA AI Requirements
 
 ### 8.1 Provider Baseline
 
-Hermes/PUSPA AI must use OpenClaw-compatible provider configuration by default.
+OpenClaw/PUSPA AI must use OpenClaw-compatible provider configuration by default.
 
 Required env aliases for local/production parity:
 
 ```env
-HERMES_PROVIDER=openclaw
-HERMES_OPENAI_BASE_URL=https://openclaw-api.fly.dev/v1
-HERMES_OPENAI_API_KEY=[REDACTED]
-HERMES_MODEL=openclaw/puspacare
+OPENCLAW_PROVIDER=openclaw
+OPENCLAW_GATEWAY_URL=https://openclaw-api.fly.dev/v1
+OPENCLAW_GATEWAY_TOKEN=[REDACTED]
+OPENCLAW_AGENT_MODEL=openclaw/puspacare
 OPENCLAW_BASE_URL=https://openclaw-api.fly.dev/v1
 OPENCLAW_API_KEY=[REDACTED]
 OPENCLAW_MODEL=openclaw/puspacare
@@ -475,7 +475,7 @@ OPENCLAW_MODEL=openclaw/puspacare
 Current chat endpoint:
 
 ```text
-POST /api/v1/hermes/chat
+POST /api/v1/openclaw/chat
 ```
 
 Expected payload shape:
@@ -503,7 +503,7 @@ Do not use a single top-level `message` string for this endpoint.
 
 ### 8.5 AI Acceptance Criteria
 
-- Authenticated smoke request to `/api/v1/hermes/chat` returns HTTP 200.
+- Authenticated smoke request to `/api/v1/openclaw/chat` returns HTTP 200.
 - Response includes `provider=openclaw` and `model=openclaw/puspacare` for default OpenClaw setup.
 - A sentinel prompt such as `Reply exactly OK` returns a valid assistant message.
 - Missing provider env produces a clear operational error without leaking secrets.
@@ -527,7 +527,7 @@ Do not use a single top-level `message` string for this endpoint.
 | Login/session | `/api/v1/auth/supabase/*` | Public auth flow with Supabase validation |
 | Bot API | `/api/v1/bot/*` | API key/service account |
 | Web app business APIs | `/api/v1/*` | Browser session / server-side user auth |
-| Hermes | `/api/v1/hermes/*` | Authenticated app session |
+| OpenClaw | `/api/v1/openclaw/*` | Authenticated app session |
 | OpenClaw status/ops | `/api/v1/openclaw/*` | Authenticated, role-aware where required |
 
 ### 9.3 User Management Requirements
@@ -662,13 +662,13 @@ NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=[REDACTED]
 ```
 
-### 14.2 OpenClaw / Hermes `.env`
+### 14.2 OpenClaw / OpenClaw `.env`
 
 ```env
-HERMES_PROVIDER=openclaw
-HERMES_OPENAI_BASE_URL=https://openclaw-api.fly.dev/v1
-HERMES_OPENAI_API_KEY=[REDACTED]
-HERMES_MODEL=openclaw/puspacare
+OPENCLAW_PROVIDER=openclaw
+OPENCLAW_GATEWAY_URL=https://openclaw-api.fly.dev/v1
+OPENCLAW_GATEWAY_TOKEN=[REDACTED]
+OPENCLAW_AGENT_MODEL=openclaw/puspacare
 OPENCLAW_BASE_URL=https://openclaw-api.fly.dev/v1
 OPENCLAW_API_KEY=[REDACTED]
 OPENCLAW_MODEL=openclaw/puspacare
@@ -728,7 +728,7 @@ Expected:
 
 Do not publish real demo passwords in public docs or logs.
 
-### 15.5 Hermes Smoke
+### 15.5 OpenClaw Smoke
 
 Expected authenticated request:
 
@@ -759,7 +759,7 @@ A release/deployment candidate is acceptable when:
 2. Production build passes.
 3. Supabase auth login and protected user check pass.
 4. Dashboard loads after login.
-5. Hermes chat smoke test passes with OpenClaw provider.
+5. OpenClaw chat smoke test passes with OpenClaw provider.
 6. No real secrets are committed.
 7. Role-gated modules remain inaccessible to insufficient roles.
 8. Prisma schema/client are aligned for the selected database provider.
@@ -812,14 +812,14 @@ After major changes, update at minimum:
 
 - TypeScript/build pass rate.
 - Login/API smoke pass rate.
-- Hermes response success rate.
+- OpenClaw response success rate.
 - Role-gate regression count.
 - Number of leaked-secret incidents: target zero.
 - Error rate for protected APIs.
 
 ### AI Metrics
 
-- Hermes successful response latency.
+- OpenClaw successful response latency.
 - Tool-call success/error rate.
 - Provider fallback/error frequency.
 - User satisfaction with AI responses.
@@ -832,7 +832,7 @@ After major changes, update at minimum:
 ### Phase 1 — Stabilized Local Preview
 
 - Keep port 3001 preview workflow stable.
-- Ensure `.env` has both `HERMES_*` and `OPENCLAW_*` aliases.
+- Ensure `.env` has both `OPENCLAW_*` and `OPENCLAW_*` aliases.
 - Keep TypeScript and production build passing.
 - Align docs with current architecture.
 
@@ -840,7 +840,7 @@ After major changes, update at minimum:
 
 - Confirm PostgreSQL schema switch and migrations.
 - Configure deployment secret stores.
-- Run production auth/Hermes/dashboard smoke tests.
+- Run production auth/OpenClaw/dashboard smoke tests.
 - Add CI checks for TypeScript, build, and secret scanning.
 
 ### Phase 3 — Workflow Hardening
@@ -852,7 +852,7 @@ After major changes, update at minimum:
 
 ### Phase 4 — AI Operations Maturity
 
-- Expand Hermes tool governance.
+- Expand OpenClaw tool governance.
 - Improve skill/memory review flows.
 - Add better provider health checks.
 - Improve user-facing AI trace explanations.
@@ -886,11 +886,11 @@ After major changes, update at minimum:
 | Module access control | `src/lib/access-control.ts` |
 | Auth helpers | `src/lib/auth` and Supabase auth utilities |
 | Middleware/session guard | `src/middleware.ts` |
-| Hermes provider layer | `src/lib/hermes/providers.ts` |
-| Hermes chat API | `src/app/api/v1/hermes/chat/route.ts` |
-| Hermes tools | `src/lib/hermes/advanced-tools.ts` |
-| Hermes skills | `src/lib/hermes/skills.ts` |
-| Hermes memory | `src/lib/hermes/memory.ts` |
+| OpenClaw provider layer | `src/lib/openclaw-agent/providers.ts` |
+| OpenClaw chat API | `src/app/api/v1/openclaw/chat/route.ts` |
+| OpenClaw tools | `src/lib/openclaw-agent/advanced-tools.ts` |
+| OpenClaw skills | `src/lib/openclaw-agent/skills.ts` |
+| OpenClaw memory | `src/lib/openclaw-agent/memory.ts` |
 | Prisma SQLite schema | `prisma/schema.prisma` |
 | Prisma PostgreSQL schema | `prisma/schema.postgres.prisma` |
 | Package scripts | `package.json` |

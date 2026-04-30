@@ -3,12 +3,12 @@
 import { Sparkles, RotateCcw, X, Settings, Brain, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useHermesStore } from '@/stores/hermes-store'
+import { useOpenClawStore } from '@/stores/openclaw-store'
 import { viewLabels } from '@/types'
-import { PROVIDERS } from '@/lib/hermes/provider-types'
+import { PROVIDERS } from '@/lib/openclaw-agent/provider-types'
 
-export function HermesChatHeader() {
-  const { currentView, clearMessages, setOpen, messages, showSettings, setShowSettings, providerState } = useHermesStore()
+export function OpenClawChatHeader() {
+  const { currentView, clearMessages, setOpen, messages, showSettings, setShowSettings, providerState } = useOpenClawStore()
 
   const moduleLabel = viewLabels[currentView] || 'Dashboard'
   const providerInfo = PROVIDERS[providerState.provider]

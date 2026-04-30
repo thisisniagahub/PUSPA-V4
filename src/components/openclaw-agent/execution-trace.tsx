@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Brain, Wrench, Loader2, CheckCircle2, AlertTriangle, Zap, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { AgentStep } from '@/stores/hermes-store'
+import type { AgentStep } from '@/stores/openclaw-store'
 
 interface ExecutionTraceProps {
   steps: AgentStep[]

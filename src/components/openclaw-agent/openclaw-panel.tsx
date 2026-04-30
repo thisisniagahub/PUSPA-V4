@@ -7,21 +7,21 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
-import { useHermesStore } from '@/stores/hermes-store'
+import { useOpenClawStore } from '@/stores/openclaw-store'
 import { viewLabels } from '@/types'
-import { HermesMessage } from './hermes-message'
-import { HermesChatHeader } from './hermes-chat-header'
-import { HermesSettings } from './hermes-settings'
-import { getQuickActions } from '@/lib/hermes/quick-actions'
+import { OpenClawMessage } from './openclaw-message'
+import { OpenClawChatHeader } from './openclaw-chat-header'
+import { OpenClawSettings } from './openclaw-settings'
+import { getQuickActions } from '@/lib/openclaw-agent/quick-actions'
 import { cn } from '@/lib/utils'
-import { PROVIDERS } from '@/lib/hermes/provider-types'
+import { PROVIDERS } from '@/lib/openclaw-agent/provider-types'
 
-export function HermesPanel() {
+export function OpenClawPanel() {
   const {
     isOpen, status, messages, currentView, showSettings,
     clearMessages, sendMessage, sendMessageStream,
     providerState, setShowSettings, addPendingAction, consumePendingAction,
-  } = useHermesStore()
+  } = useOpenClawStore()
 
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -86,7 +86,7 @@ export function HermesPanel() {
       style={{ width: '420px', height: '600px', maxHeight: 'calc(100vh - 140px)' }}
     >
       {/* Header */}
-      <HermesChatHeader />
+      <OpenClawChatHeader />
 
       {/* Settings Panel */}
       <AnimatePresence>
@@ -97,7 +97,7 @@ export function HermesPanel() {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden border-b"
           >
-            <HermesSettings />
+            <OpenClawSettings />
           </motion.div>
         )}
       </AnimatePresence>
@@ -163,7 +163,7 @@ export function HermesPanel() {
         ) : (
           <>
             {messages.map((msg) => (
-              <HermesMessage key={msg.id} message={msg} />
+              <OpenClawMessage key={msg.id} message={msg} />
             ))}
 
             {/* Streaming indicator */}

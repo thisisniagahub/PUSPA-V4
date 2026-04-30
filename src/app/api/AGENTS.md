@@ -9,7 +9,7 @@ src/app/api/
 ├── route.ts                 # placeholder root response
 ├── v1/auth/supabase/        # Supabase login/logout/me/signup/seed
 ├── v1/auth/                 # legacy/custom auth compatibility endpoints
-└── v1/                      # domain routes: donors, ops, tapsecure, openclaw, hermes, volunteers, ...
+└── v1/                      # domain routes: donors, ops, tapsecure, openclaw, openclaw, volunteers, ...
 ```
 
 ## WHERE TO LOOK
@@ -33,7 +33,7 @@ src/app/api/
 ## ANTI-PATTERNS
 - Do not put new business handlers in `/api/route.ts`.
 - Do not trust client state for authorization or role decisions.
-- Do not expose raw provider errors, session details, or API keys in auth/Hermes/OpenClaw responses.
+- Do not expose raw provider errors, session details, or API keys in auth/OpenClaw/OpenClaw responses.
 - Do not hardcode bridge or gateway URLs in multiple handlers; use env/default constants.
 - Do not mix unrelated domain groups into a single route file just because the path is adjacent.
 
@@ -49,5 +49,5 @@ This document has been aligned with the current PUSPA-V4 workspace at `/mnt/g/PU
 - Local dev command in `package.json` remains `bun run dev` on port `3000`; active preview work may run with `./node_modules/.bin/next dev -p 3001` when port 3000 is occupied.
 - Auth: Supabase Auth is the primary app flow via `/api/v1/auth/supabase/*`, synced to Prisma users. Legacy/custom auth endpoints may remain for compatibility, but new protected API work should use server-side helpers from `@/lib/auth`.
 - Route protection: `src/middleware.ts` is the active guard in this workspace. Next.js warns the middleware convention is deprecated in favor of `proxy`, so future migration should preserve the same fail-closed behavior.
-- PUSPA AI/Hermes: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `HERMES_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
+- PUSPA AI/OpenClaw: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `OPENCLAW_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
 - Validation baseline after the latest alignment: `bun x tsc --noEmit --pretty false` passed and `bun run build` passed.

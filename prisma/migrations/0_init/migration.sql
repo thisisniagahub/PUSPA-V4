@@ -104,20 +104,10 @@ CREATE TYPE "DocumentStatus" AS ENUM ('active', 'archived', 'deleted');
 CREATE TYPE "RegistrationType" AS ENUM ('pertubuhan', 'syarikat', 'yayasan');
 
 -- CreateEnum
-CREATE TYPE "HermesMessageRole" AS ENUM ('user', 'assistant', 'system');
-
 -- CreateEnum
-CREATE TYPE "HermesSkillSource" AS ENUM ('auto', 'manual', 'imported');
-
 -- CreateEnum
-CREATE TYPE "HermesMemoryCategory" AS ENUM ('preference', 'fact', 'procedure', 'context', 'general');
-
 -- CreateEnum
-CREATE TYPE "HermesMemorySource" AS ENUM ('conversation', 'manual', 'skill');
-
 -- CreateEnum
-CREATE TYPE "HermesProvider" AS ENUM ('openclaw', 'openrouter', 'ollama');
-
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -861,90 +851,10 @@ CREATE TABLE "BotApiKey" (
 );
 
 -- CreateTable
-CREATE TABLE "HermesConversation" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "title" TEXT NOT NULL DEFAULT 'Sesi Baru',
-    "viewContext" TEXT NOT NULL DEFAULT 'dashboard',
-    "provider" "HermesProvider" NOT NULL DEFAULT 'openclaw',
-    "model" TEXT NOT NULL DEFAULT 'openclaw/main',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "HermesConversation_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateTable
-CREATE TABLE "HermesMessage" (
-    "id" TEXT NOT NULL,
-    "conversationId" TEXT NOT NULL,
-    "role" "HermesMessageRole" NOT NULL,
-    "content" TEXT NOT NULL,
-    "toolCalls" TEXT,
-    "toolResults" TEXT,
-    "model" TEXT,
-    "provider" TEXT,
-    "tokensUsed" INTEGER NOT NULL DEFAULT 0,
-    "latencyMs" INTEGER,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "HermesMessage_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateTable
-CREATE TABLE "HermesSkill" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "category" TEXT NOT NULL DEFAULT 'general',
-    "instructions" TEXT NOT NULL,
-    "triggerPatterns" TEXT,
-    "version" INTEGER NOT NULL DEFAULT 1,
-    "usageCount" INTEGER NOT NULL DEFAULT 0,
-    "successRate" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "source" "HermesSkillSource" NOT NULL DEFAULT 'auto',
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "userId" TEXT,
-    "conversationId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "HermesSkill_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateTable
-CREATE TABLE "HermesMemory" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "category" "HermesMemoryCategory" NOT NULL DEFAULT 'general',
-    "key" TEXT NOT NULL,
-    "value" TEXT NOT NULL,
-    "source" "HermesMemorySource" NOT NULL DEFAULT 'conversation',
-    "confidence" DOUBLE PRECISION NOT NULL DEFAULT 1.0,
-    "accessCount" INTEGER NOT NULL DEFAULT 0,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    "lastAccessed" TIMESTAMP(3),
-
-    CONSTRAINT "HermesMemory_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateTable
-CREATE TABLE "HermesProviderConfig" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "provider" "HermesProvider" NOT NULL DEFAULT 'openclaw',
-    "model" TEXT NOT NULL DEFAULT 'openclaw/main',
-    "apiKey" TEXT,
-    "baseUrl" TEXT,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "HermesProviderConfig_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "User_supabaseId_key" ON "User"("supabaseId");
 
@@ -1186,46 +1096,32 @@ CREATE INDEX "BotApiKey_keyPrefix_idx" ON "BotApiKey"("keyPrefix");
 CREATE INDEX "BotApiKey_isActive_idx" ON "BotApiKey"("isActive");
 
 -- CreateIndex
-CREATE INDEX "HermesConversation_userId_idx" ON "HermesConversation"("userId");
 
 -- CreateIndex
-CREATE INDEX "HermesConversation_updatedAt_idx" ON "HermesConversation"("updatedAt");
 
 -- CreateIndex
-CREATE INDEX "HermesMessage_conversationId_idx" ON "HermesMessage"("conversationId");
 
 -- CreateIndex
-CREATE INDEX "HermesMessage_createdAt_idx" ON "HermesMessage"("createdAt");
 
 -- CreateIndex
-CREATE INDEX "HermesSkill_name_idx" ON "HermesSkill"("name");
 
 -- CreateIndex
-CREATE INDEX "HermesSkill_category_idx" ON "HermesSkill"("category");
 
 -- CreateIndex
-CREATE INDEX "HermesSkill_isActive_idx" ON "HermesSkill"("isActive");
 
 -- CreateIndex
-CREATE INDEX "HermesSkill_userId_idx" ON "HermesSkill"("userId");
 
 -- CreateIndex
-CREATE INDEX "HermesMemory_userId_idx" ON "HermesMemory"("userId");
 
 -- CreateIndex
-CREATE INDEX "HermesMemory_category_idx" ON "HermesMemory"("category");
 
 -- CreateIndex
-CREATE INDEX "HermesMemory_isActive_idx" ON "HermesMemory"("isActive");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "HermesMemory_userId_key_key" ON "HermesMemory"("userId", "key");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "HermesProviderConfig_userId_key" ON "HermesProviderConfig"("userId");
 
 -- CreateIndex
-CREATE INDEX "HermesProviderConfig_userId_idx" ON "HermesProviderConfig"("userId");
 
 -- AddForeignKey
 ALTER TABLE "HouseholdMember" ADD CONSTRAINT "HouseholdMember_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1345,17 +1241,12 @@ ALTER TABLE "Artifact" ADD CONSTRAINT "Artifact_workItemId_fkey" FOREIGN KEY ("w
 ALTER TABLE "AutomationJob" ADD CONSTRAINT "AutomationJob_workItemId_fkey" FOREIGN KEY ("workItemId") REFERENCES "WorkItem"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "HermesConversation" ADD CONSTRAINT "HermesConversation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "HermesMessage" ADD CONSTRAINT "HermesMessage_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "HermesConversation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "HermesSkill" ADD CONSTRAINT "HermesSkill_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "HermesConversation"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "HermesSkill" ADD CONSTRAINT "HermesSkill_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "HermesProviderConfig" ADD CONSTRAINT "HermesProviderConfig_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 

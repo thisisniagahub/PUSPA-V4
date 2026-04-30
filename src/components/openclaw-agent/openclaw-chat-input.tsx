@@ -5,22 +5,22 @@ import { Send, Loader2, Settings, RotateCcw, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import type { HermesStatus } from '@/stores/hermes-store'
+import type { OpenClawStatus } from '@/stores/openclaw-store'
 
-interface HermesChatInputProps {
+interface OpenClawChatInputProps {
   onSend: (text: string) => void
   onClear?: () => void
   onToggleSettings?: () => void
   disabled?: boolean
   placeholder?: string
-  status: HermesStatus
+  status: OpenClawStatus
   providerInfo: { icon: string; name: string }
   modelLabel?: string
   toolsUsed?: number
   messageCount?: number
 }
 
-export function HermesChatInput({
+export function OpenClawChatInput({
   onSend,
   onClear,
   onToggleSettings,
@@ -31,7 +31,7 @@ export function HermesChatInput({
   modelLabel,
   toolsUsed = 0,
   messageCount = 0,
-}: HermesChatInputProps) {
+}: OpenClawChatInputProps) {
   const [input, setInput] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const isBusy = status === 'thinking' || status === 'streaming'

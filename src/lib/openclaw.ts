@@ -148,17 +148,26 @@ export function getOpenClawBridgeHeaders(): HeadersInit {
   return headers
 }
 
+export function getOpenClawGatewayUrl() {
+  const rawUrl = process.env.OPENCLAW_GATEWAY_URL || process.env.OPENCLAW_BASE_URL || ''
+  return rawUrl.replace(/\/$/, '').replace(/\/v1$/, '')
+}
+
+export function getOpenClawGatewayToken() {
+  return process.env.OPENCLAW_GATEWAY_TOKEN || process.env.OPENCLAW_GATEWAY_PASSWORD || process.env.OPENCLAW_API_KEY || ''
+}
+
 export function isOpenClawGatewayConfigured() {
-  return Boolean(process.env.OPENCLAW_GATEWAY_URL && process.env.OPENCLAW_GATEWAY_TOKEN)
+  return Boolean(getOpenClawGatewayUrl() && getOpenClawGatewayToken())
 }
 
 export async function createOpenClawChatCompletion(
   messages: OpenClawChatMessage[],
-  options?: { temperature?: number; signal?: AbortSignal }
+  options?: { temperature?: number; signal?: AbortSignal; sessionKey?: string }
 ): Promise<OpenClawChatCompletion> {
-  const gatewayUrl = process.env.OPENCLAW_GATEWAY_URL?.replace(/\/$/, '')
-  const token = process.env.OPENCLAW_GATEWAY_TOKEN
-  const model = process.env.OPENCLAW_AGENT_MODEL || DEFAULT_OPENCLAW_AGENT_MODEL
+  const gatewayUrl = getOpenClawGatewayUrl()
+  const token = getOpenClawGatewayToken()
+  const model = process.env.OPENCLAW_AGENT_MODEL || process.env.OPENCLAW_MODEL || DEFAULT_OPENCLAW_AGENT_MODEL
 
   if (!gatewayUrl || !token) {
     throw new Error('OpenClaw Gateway is not configured')
@@ -171,6 +180,7 @@ export async function createOpenClawChatCompletion(
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
       Accept: 'application/json',
+      ...(options?.sessionKey ? { 'x-openclaw-session-key': options.sessionKey } : {}),
     },
     body: JSON.stringify({
       model,

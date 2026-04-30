@@ -1,12 +1,12 @@
 # PUSPA-V4 Whole Project Implementation Plan
 
-> **For Hermes:** Use `subagent-driven-development` skill to implement this plan task-by-task. Dispatch a fresh subagent per task, then run spec-compliance review and code-quality review before moving to the next task.
+> **For OpenClaw:** Use `subagent-driven-development` skill to implement this plan task-by-task. Dispatch a fresh subagent per task, then run spec-compliance review and code-quality review before moving to the next task.
 
-**Goal:** Stabilize and complete the whole PUSPA-V4/PuspaCare project, fix critical security/build/repo-health issues, and implement Hermes Agent integration properly according to Hermes Agent conventions and PuspaCareBot operating spec.
+**Goal:** Stabilize and complete the whole PUSPA-V4/PuspaCare project, fix critical security/build/repo-health issues, and implement OpenClaw Agent integration properly according to OpenClaw Agent conventions and PuspaCareBot operating spec.
 
-**Architecture:** PUSPA-V4 is a Next.js 16 / React 19 / TypeScript / Prisma / Supabase application with a module-based authenticated shell under `src/app/page.tsx`, API surface under `src/app/api/v1/*`, domain screens under `src/modules/*`, shared helpers under `src/lib/*`, and agent/Hermes surfaces under `src/components/hermes/*`, `src/lib/hermes/*`, and API endpoints. Hermes Agent must be integrated as a safe app feature: authenticated, role-gated, provider-agnostic, auditable, sanitized, and not dependent on Z.AI.
+**Architecture:** PUSPA-V4 is a Next.js 16 / React 19 / TypeScript / Prisma / Supabase application with a module-based authenticated shell under `src/app/page.tsx`, API surface under `src/app/api/v1/*`, domain screens under `src/modules/*`, shared helpers under `src/lib/*`, and agent/OpenClaw surfaces under `src/components/openclaw-agent/*`, `src/lib/openclaw-agent/*`, and API endpoints. OpenClaw Agent must be integrated as a safe app feature: authenticated, role-gated, provider-agnostic, auditable, sanitized, and not dependent on Z.AI.
 
-**Tech Stack:** Next.js App Router, React 19, TypeScript strict, Prisma, Supabase Auth/Storage, Zustand, Tailwind/shadcn/Radix, Bun/npm scripts, Hermes Agent concepts/tools/skills, OpenClaw bridge where applicable.
+**Tech Stack:** Next.js App Router, React 19, TypeScript strict, Prisma, Supabase Auth/Storage, Zustand, Tailwind/shadcn/Radix, Bun/npm scripts, OpenClaw Agent concepts/tools/skills, OpenClaw bridge where applicable.
 
 **Historical Review Baseline (2026-04-28, superseded by 2026-04-30 alignment notes):**
 - Repo root: `/mnt/g/PUSPA-V4`
@@ -17,7 +17,7 @@
 - Current: `bun run build` passes locally.
 - Metrics: ~712 files, ~94,301 code LOC.
 - Working tree: very large churn, ~288 changed files and ~72k insertions/deletions.
-- Primary blockers discovered: unauthenticated users API, role escalation risk, shell renders anonymous users, client-only module gating, Hermes XSS risk, `z-ai-web-dev-sdk` still present, production start mismatch, line-ending churn, tracked backup/scratch files.
+- Primary blockers discovered: unauthenticated users API, role escalation risk, shell renders anonymous users, client-only module gating, OpenClaw XSS risk, `z-ai-web-dev-sdk` still present, production start mismatch, line-ending churn, tracked backup/scratch files.
 
 ---
 
@@ -28,30 +28,30 @@
 3. **Do not edit secrets into the repo.** Use env vars and redacted docs.
 4. **Do not trust client-side role, Zustand state, sidebar visibility, or command palette filtering as authorization.** Server/API and shell render boundaries must enforce role.
 5. **Remove Z.AI fully.** `z-ai-web-dev-sdk` must not remain as dependency or fallback because the owner has no Z.AI API key.
-6. **Hermes Agent integration must be safe by default:** authenticated, role-gated, sanitized markdown, auditable tool calls, provider allowlist, no arbitrary shell exposure to normal users.
+6. **OpenClaw Agent integration must be safe by default:** authenticated, role-gated, sanitized markdown, auditable tool calls, provider allowlist, no arbitrary shell exposure to normal users.
 7. **Validation after meaningful code changes:** run at minimum `bun install`, `bun run lint`, `bun x tsc --noEmit --pretty false`, and `bun run build` once dependency state is repaired.
 8. **Use subagents for implementation:** each task gets an implementer, then a spec reviewer, then a quality reviewer.
 
 ---
 
-## Target Hermes Agent Specification for PUSPA-V4
+## Target OpenClaw Agent Specification for PUSPA-V4
 
-Hermes inside PUSPA-V4 must behave as an app-integrated agent layer, not an unsafe raw chat box.
+OpenClaw inside PUSPA-V4 must behave as an app-integrated agent layer, not an unsafe raw chat box.
 
 ### Identity and Modes
 
-Hermes/PuspaCareBot must understand these mode boundaries:
+OpenClaw/PuspaCareBot must understand these mode boundaries:
 
 - **User/Care Mode:** warm Malay/Manglish support, no internal paths/secrets/logs, collect only needed details.
 - **Admin/Operator Mode:** dashboard/case/donor/disbursement/compliance assistance, evidence-based, role-aware.
 - **Developer Mode:** code/debug/build/deploy/planning tasks only for developer/admin role, with audit logs and explicit confirmation for destructive operations.
 
-### Required Hermes Capabilities
+### Required OpenClaw Capabilities
 
 - Authenticated chat endpoint.
 - Role-gated model/tool access.
 - Provider abstraction without Z.AI dependency.
-- OpenClaw/Hermes provider support through configured URL/env.
+- OpenClaw provider support through configured URL/env.
 - Safe markdown rendering with sanitization.
 - Conversation persistence scoped to authenticated user/role/org where applicable.
 - Tool registry with explicit allowlist per role.
@@ -59,21 +59,21 @@ Hermes/PuspaCareBot must understand these mode boundaries:
 - Graceful fallback when bridge/provider is offline.
 - No exposure of secrets, tokens, env values, server paths, stack traces, or raw tool outputs to unauthorized users.
 
-### Required Hermes Files / Areas
+### Required OpenClaw Files / Areas
 
-- `src/lib/hermes/provider-types.ts`
-- `src/lib/hermes/providers.ts`
-- `src/lib/hermes/tools.ts`
-- `src/lib/hermes/skills.ts`
-- `src/lib/hermes/prompt.ts`
-- `src/lib/hermes/memory.ts`
-- `src/lib/hermes/advanced-tools.ts`
-- `src/app/api/v1/hermes/chat/route.ts`
-- `src/app/api/v1/hermes/config/route.ts`
-- `src/app/api/v1/hermes/conversations/route.ts`
-- `src/app/api/v1/hermes/skills/route.ts`
-- `src/components/hermes/*`
-- `src/stores/hermes-store.ts`
+- `src/lib/openclaw-agent/provider-types.ts`
+- `src/lib/openclaw-agent/providers.ts`
+- `src/lib/openclaw-agent/tools.ts`
+- `src/lib/openclaw-agent/skills.ts`
+- `src/lib/openclaw-agent/prompt.ts`
+- `src/lib/openclaw-agent/memory.ts`
+- `src/lib/openclaw-agent/advanced-tools.ts`
+- `src/app/api/v1/openclaw/chat/route.ts`
+- `src/app/api/v1/openclaw/config/route.ts`
+- `src/app/api/v1/openclaw/conversations/route.ts`
+- `src/app/api/v1/openclaw/skills/route.ts`
+- `src/components/openclaw-agent/*`
+- `src/stores/openclaw-store.ts`
 - `src/modules/ai/page.tsx`
 - `src/modules/openclaw/*`
 - `src/modules/ops-conductor/page.tsx`
@@ -225,9 +225,9 @@ git status --short -- skills | head -20
 **Files:**
 - Modify: `package.json`
 - Modify: `bun.lock`
-- Modify: `src/lib/hermes/providers.ts`
-- Modify: `src/lib/hermes/provider-types.ts`
-- Search/modify any references under `src/lib/hermes/**`, `src/app/api/v1/hermes/**`, docs.
+- Modify: `src/lib/openclaw-agent/providers.ts`
+- Modify: `src/lib/openclaw-agent/provider-types.ts`
+- Search/modify any references under `src/lib/openclaw-agent/**`, `src/app/api/v1/openclaw/**`, docs.
 
 **Steps:**
 1. Search:
@@ -235,7 +235,7 @@ git status --short -- skills | head -20
    grep -R "z-ai\|z_ai\|ZAI\|GLM\|z-ai-web-dev-sdk" -n src package.json bun.lock || true
    ```
 2. Remove `"z-ai-web-dev-sdk"` from `package.json`.
-3. Remove dynamic import/provider fallback from `src/lib/hermes/providers.ts`.
+3. Remove dynamic import/provider fallback from `src/lib/openclaw-agent/providers.ts`.
 4. Remove provider enum/type values if they exist solely for Z.AI.
 5. Regenerate lockfile after dependencies are available:
    ```bash
@@ -244,8 +244,8 @@ git status --short -- skills | head -20
 
 **Acceptance Criteria:**
 - `package.json` has no `z-ai-web-dev-sdk`.
-- `src/lib/hermes/providers.ts` does not import or dynamically import it.
-- Hermes config does not advertise Z.AI as fallback.
+- `src/lib/openclaw-agent/providers.ts` does not import or dynamically import it.
+- OpenClaw config does not advertise Z.AI as fallback.
 - Search returns no active code references.
 
 **Verification:**
@@ -525,15 +525,15 @@ Expected: no production-active defaults.
 
 ---
 
-## Phase 3 — Hermes Agent Proper Implementation
+## Phase 3 — OpenClaw Agent Proper Implementation
 
-### Task 3.1: Define Hermes Provider Contract
+### Task 3.1: Define OpenClaw Provider Contract
 
 **Objective:** Make provider abstraction explicit, typed, and provider-agnostic.
 
 **Files:**
-- Modify: `src/lib/hermes/provider-types.ts`
-- Modify: `src/lib/hermes/providers.ts`
+- Modify: `src/lib/openclaw-agent/provider-types.ts`
+- Modify: `src/lib/openclaw-agent/providers.ts`
 
 **Required Provider Types:**
 - `openclaw` / OpenAI-compatible local gateway.
@@ -544,22 +544,22 @@ Expected: no production-active defaults.
 
 **Required Interface:**
 ```ts
-export interface HermesChatMessage {
+export interface OpenClawChatMessage {
   role: 'system' | 'user' | 'assistant' | 'tool'
   content: string
   name?: string
 }
 
-export interface HermesProviderRequest {
+export interface OpenClawProviderRequest {
   model: string
-  messages: HermesChatMessage[]
+  messages: OpenClawChatMessage[]
   temperature?: number
   maxTokens?: number
-  tools?: HermesToolDefinition[]
+  tools?: OpenClawToolDefinition[]
   signal?: AbortSignal
 }
 
-export interface HermesProviderResponse {
+export interface OpenClawProviderResponse {
   content: string
   model: string
   provider: string
@@ -577,21 +577,21 @@ export interface HermesProviderResponse {
 - Env/config missing results in clear safe error.
 - Provider errors are redacted before returning to UI.
 
-### Task 3.2: Implement OpenClaw/OpenAI-Compatible Hermes Provider
+### Task 3.2: Implement OpenClaw/OpenAI-Compatible OpenClaw Provider
 
-**Objective:** Route Hermes chat through configured OpenAI-compatible endpoint safely.
+**Objective:** Route OpenClaw chat through configured OpenAI-compatible endpoint safely.
 
 **Files:**
-- Modify: `src/lib/hermes/providers.ts`
-- Modify: `src/app/api/v1/hermes/config/route.ts`
+- Modify: `src/lib/openclaw-agent/providers.ts`
+- Modify: `src/app/api/v1/openclaw/config/route.ts`
 - Update env docs if present.
 
 **Required Env:**
 ```env
-HERMES_PROVIDER=openclaw
-HERMES_OPENAI_BASE_URL=http://127.0.0.1:18789/v1
-HERMES_OPENAI_API_KEY=...
-HERMES_MODEL=openclaw/main
+OPENCLAW_PROVIDER=openclaw
+OPENCLAW_GATEWAY_URL=http://127.0.0.1:18789/v1
+OPENCLAW_GATEWAY_TOKEN=...
+OPENCLAW_AGENT_MODEL=openclaw/main
 ```
 
 **Implementation Requirements:**
@@ -602,16 +602,16 @@ HERMES_MODEL=openclaw/main
 - Support graceful offline response for OpenClaw bridge/gateway.
 
 **Verification:**
-- With configured env, `/api/v1/hermes/chat` returns a model response.
+- With configured env, `/api/v1/openclaw/chat` returns a model response.
 - Without env, endpoint returns safe configuration error.
 
-### Task 3.3: Secure Hermes Chat Endpoint
+### Task 3.3: Secure OpenClaw Chat Endpoint
 
-**Objective:** Make `/api/v1/hermes/chat` authenticated, role-gated, validated, and auditable.
+**Objective:** Make `/api/v1/openclaw/chat` authenticated, role-gated, validated, and auditable.
 
 **Files:**
-- Modify: `src/app/api/v1/hermes/chat/route.ts`
-- Modify: `src/lib/hermes/prompt.ts`
+- Modify: `src/app/api/v1/openclaw/chat/route.ts`
+- Modify: `src/lib/openclaw-agent/prompt.ts`
 - Modify: `src/lib/audit.ts` or relevant audit helper.
 
 **Required Behavior:**
@@ -643,18 +643,18 @@ const chatRequestSchema = z.object({
 - Staff cannot request developer mode/tools.
 - Developer can use developer mode.
 
-### Task 3.4: Implement Hermes Tool Allowlist and Permission Boundary
+### Task 3.4: Implement OpenClaw Tool Allowlist and Permission Boundary
 
 **Objective:** Stop unsafe broad tool exposure and dynamic model access.
 
 **Files:**
-- Modify: `src/lib/hermes/tools.ts`
-- Modify: `src/lib/hermes/advanced-tools.ts`
-- Modify: `src/lib/hermes/types.ts`
+- Modify: `src/lib/openclaw-agent/tools.ts`
+- Modify: `src/lib/openclaw-agent/advanced-tools.ts`
+- Modify: `src/lib/openclaw-agent/types.ts`
 
 **Required Tool Policy:**
 ```ts
-const HERMES_TOOL_POLICY = {
+const OPENCLAW_TOOL_POLICY = {
   staff: ['search_knowledge', 'summarize_case_public'],
   admin: ['search_knowledge', 'summarize_case', 'draft_report', 'triage_case'],
   developer: ['search_knowledge', 'summarize_case', 'draft_report', 'triage_case', 'inspect_system_status'],
@@ -671,17 +671,17 @@ const HERMES_TOOL_POLICY = {
 - Search for `(db as any)[model]` and remove or isolate behind typed dispatch.
 - Staff cannot execute admin/developer tools.
 
-### Task 3.5: Split and Type Hermes Advanced Tools
+### Task 3.5: Split and Type OpenClaw Advanced Tools
 
-**Objective:** Replace monolithic unsafe Hermes advanced tool registry.
+**Objective:** Replace monolithic unsafe OpenClaw advanced tool registry.
 
 **Files:**
-- Modify: `src/lib/hermes/advanced-tools.ts`
+- Modify: `src/lib/openclaw-agent/advanced-tools.ts`
 - Optionally create:
-  - `src/lib/hermes/tools/cases.ts`
-  - `src/lib/hermes/tools/donors.ts`
-  - `src/lib/hermes/tools/reports.ts`
-  - `src/lib/hermes/tools/ops.ts`
+  - `src/lib/openclaw-agent/tools/cases.ts`
+  - `src/lib/openclaw-agent/tools/donors.ts`
+  - `src/lib/openclaw-agent/tools/reports.ts`
+  - `src/lib/openclaw-agent/tools/ops.ts`
 
 **Required Changes:**
 - Replace `(db as any)[model]` with typed functions per domain.
@@ -690,16 +690,16 @@ const HERMES_TOOL_POLICY = {
 
 **Verification:**
 ```bash
-grep -R "db as any\|count() + 1\|count+1" -n src/lib/hermes src/lib || true
+grep -R "db as any\|count() + 1\|count+1" -n src/lib/openclaw-agent src/lib || true
 ```
 
-### Task 3.6: Implement Hermes Conversation Persistence Safely
+### Task 3.6: Implement OpenClaw Conversation Persistence Safely
 
 **Objective:** Store conversations scoped to authenticated user and redact sensitive data.
 
 **Files:**
-- Modify: `src/lib/hermes/memory.ts`
-- Modify: `src/app/api/v1/hermes/conversations/route.ts`
+- Modify: `src/lib/openclaw-agent/memory.ts`
+- Modify: `src/app/api/v1/openclaw/conversations/route.ts`
 - Modify Prisma schema only if required.
 
 **Requirements:**
@@ -712,13 +712,13 @@ grep -R "db as any\|count() + 1\|count+1" -n src/lib/hermes src/lib || true
 - User A cannot fetch User B conversation by ID.
 - Conversation list returns only allowed records.
 
-### Task 3.7: Make Hermes Prompt Match PuspaCareBot Spec
+### Task 3.7: Make OpenClaw Prompt Match PuspaCareBot Spec
 
-**Objective:** Ensure Hermes/PuspaCareBot identity and mode behavior follow spec.
+**Objective:** Ensure OpenClaw/PuspaCareBot identity and mode behavior follow spec.
 
 **Files:**
-- Modify: `src/lib/hermes/prompt.ts`
-- Modify: `src/lib/hermes/module-descriptions.ts`
+- Modify: `src/lib/openclaw-agent/prompt.ts`
+- Modify: `src/lib/openclaw-agent/module-descriptions.ts`
 - Optionally create: `docs/PUSPACAREBOT_SPEC.md`
 
 **Prompt Requirements:**
@@ -733,13 +733,13 @@ grep -R "db as any\|count() + 1\|count+1" -n src/lib/hermes src/lib || true
 **Verification:**
 - Prompt unit snapshot or manual endpoint smoke test shows correct identity and boundaries.
 
-### Task 3.8: Sanitize Hermes Message Rendering
+### Task 3.8: Sanitize OpenClaw Message Rendering
 
-**Objective:** Remove XSS risk from Hermes UI.
+**Objective:** Remove XSS risk from OpenClaw UI.
 
 **Files:**
-- Modify: `src/components/hermes/hermes-message.tsx`
-- Modify: `src/components/hermes/hermes-message-v2.tsx`
+- Modify: `src/components/openclaw-agent/openclaw-message.tsx`
+- Modify: `src/components/openclaw-agent/openclaw-message-v2.tsx`
 - Modify: `package.json` if adding sanitizer dependency.
 
 **Preferred Implementation:**
@@ -755,15 +755,15 @@ bun add rehype-sanitize
 
 **Verification:**
 - Test message with `<img src=x onerror=alert(1)>` renders harmless text/no handler.
-- No unsafe `dangerouslySetInnerHTML` remains in Hermes message components.
+- No unsafe `dangerouslySetInnerHTML` remains in OpenClaw message components.
 
-### Task 3.9: Harden Hermes Skills Endpoint
+### Task 3.9: Harden OpenClaw Skills Endpoint
 
 **Objective:** Ensure skills list/config cannot expose server filesystem or secrets.
 
 **Files:**
-- Modify: `src/app/api/v1/hermes/skills/route.ts`
-- Modify: `src/lib/hermes/skills.ts`
+- Modify: `src/app/api/v1/openclaw/skills/route.ts`
+- Modify: `src/lib/openclaw-agent/skills.ts`
 
 **Requirements:**
 - Auth required.
@@ -775,22 +775,22 @@ bun add rehype-sanitize
 - Staff request gets only allowed public/operator skills.
 - Developer request gets expanded list if policy allows.
 
-### Task 3.10: Add Hermes Audit Events
+### Task 3.10: Add OpenClaw Audit Events
 
-**Objective:** Make Hermes actions traceable.
+**Objective:** Make OpenClaw actions traceable.
 
 **Files:**
 - Modify: `src/lib/audit.ts`
-- Modify: `src/app/api/v1/hermes/chat/route.ts`
-- Modify: `src/lib/hermes/tools.ts`
+- Modify: `src/app/api/v1/openclaw/chat/route.ts`
+- Modify: `src/lib/openclaw-agent/tools.ts`
 
 **Audit Events:**
-- `hermes.chat.request`
-- `hermes.chat.response`
-- `hermes.chat.error`
-- `hermes.tool.call`
-- `hermes.tool.denied`
-- `hermes.provider.error`
+- `openclaw.chat.request`
+- `openclaw.chat.response`
+- `openclaw.chat.error`
+- `openclaw.tool.call`
+- `openclaw.tool.denied`
+- `openclaw.provider.error`
 
 **Fields:**
 - userId, role, mode, provider, model, conversationId, toolName, status, durationMs.
@@ -1022,7 +1022,7 @@ Use the same folder convention from Task 6.1.
 **Objective:** Avoid duplicate IDs under concurrent creates.
 
 **Files:**
-- Modify: `src/lib/hermes/advanced-tools.ts`
+- Modify: `src/lib/openclaw-agent/advanced-tools.ts`
 - Search for similar `count()+1` patterns.
 - Possibly modify: `src/lib/sequence.ts`
 
@@ -1077,10 +1077,10 @@ npm run build
 4. Command palette does not show unauthorized modules.
 5. `/api/v1/users` returns 401/403 when unauthenticated.
 6. Admin/developer can use allowed user admin operations.
-7. Hermes chat unauthenticated returns 401.
-8. Hermes chat staff mode works without developer tools.
-9. Hermes developer mode denied for staff, allowed for developer.
-10. Hermes message XSS payload renders harmlessly.
+7. OpenClaw chat unauthenticated returns 401.
+8. OpenClaw chat staff mode works without developer tools.
+9. OpenClaw developer mode denied for staff, allowed for developer.
+10. OpenClaw message XSS payload renders harmlessly.
 
 ### Task 7.4: Final Independent Review
 
@@ -1088,7 +1088,7 @@ npm run build
 
 **Delegate Reviews:**
 - API/auth/security review.
-- Hermes proper-spec review.
+- OpenClaw proper-spec review.
 - UI/accessibility/module wiring review.
 - Codebase health/build/deploy review.
 
@@ -1104,7 +1104,7 @@ Use these exact lanes when executing:
 
 1. **Repo Hygiene Agent**
    - Phase 0 tasks.
-   - Must not touch auth/Hermes logic.
+   - Must not touch auth/OpenClaw logic.
 
 2. **Build/Foundation Agent**
    - Phase 1 tasks.
@@ -1114,9 +1114,9 @@ Use these exact lanes when executing:
    - Phase 2 and Phase 4 tasks.
    - Must produce API auth matrix.
 
-4. **Hermes Integration Agent**
+4. **OpenClaw Integration Agent**
    - Phase 3 tasks.
-   - Must follow Hermes spec in this document and `hermes-agent` skill.
+   - Must follow OpenClaw spec in this document and `openclaw-agent` skill.
 
 5. **UI/UX Agent**
    - Phase 5 tasks.
@@ -1146,10 +1146,10 @@ Project is considered ready only when:
 - [ ] Role escalation through request body is blocked.
 - [ ] ViewRenderer prevents unauthorized module rendering.
 - [ ] Command palette/sidebar/access-control are synchronized.
-- [ ] Hermes chat endpoint is authenticated, role-gated, validated, auditable.
-- [ ] Hermes provider abstraction works without Z.AI and supports configured OpenClaw/OpenAI-compatible endpoint.
-- [ ] Hermes message rendering is sanitized against XSS.
-- [ ] Hermes tools are role allowlisted and audited.
+- [ ] OpenClaw chat endpoint is authenticated, role-gated, validated, auditable.
+- [ ] OpenClaw provider abstraction works without Z.AI and supports configured OpenClaw/OpenAI-compatible endpoint.
+- [ ] OpenClaw message rendering is sanitized against XSS.
+- [ ] OpenClaw tools are role allowlisted and audited.
 - [ ] Upload validation checks real file content where sensitive.
 - [ ] Production start script matches Next output.
 - [ ] Caddy/proxy config has no open query-controlled proxy.
@@ -1166,11 +1166,11 @@ Start with this order for fastest risk reduction:
 1. Phase 0.1, 0.2, 0.3 — snapshot and reduce review noise.
 2. Phase 1.1 — remove Z.AI completely.
 3. Phase 2.1, 2.2, 2.3, 2.4 — close critical auth holes.
-4. Phase 3.3, 3.4, 3.8 — secure Hermes endpoint/tool boundary/XSS.
+4. Phase 3.3, 3.4, 3.8 — secure OpenClaw endpoint/tool boundary/XSS.
 5. Phase 1.2, 7.1, 7.2 — restore dependencies and validation.
 6. Continue with remaining phases.
 
-Do not attempt the large modularization phase before the critical security/Hermes/build foundations are fixed.
+Do not attempt the large modularization phase before the critical security/OpenClaw/build foundations are fixed.
 
 ---
 
@@ -1184,5 +1184,5 @@ This document has been aligned with the current PUSPA-V4 workspace at `/mnt/g/PU
 - Local dev command in `package.json` remains `bun run dev` on port `3000`; active preview work may run with `./node_modules/.bin/next dev -p 3001` when port 3000 is occupied.
 - Auth: Supabase Auth is the primary app flow via `/api/v1/auth/supabase/*`, synced to Prisma users. Legacy/custom auth endpoints may remain for compatibility, but new protected API work should use server-side helpers from `@/lib/auth`.
 - Route protection: `src/middleware.ts` is the active guard in this workspace. Next.js warns the middleware convention is deprecated in favor of `proxy`, so future migration should preserve the same fail-closed behavior.
-- PUSPA AI/Hermes: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `HERMES_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
+- PUSPA AI/OpenClaw: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `OPENCLAW_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
 - Validation baseline after the latest alignment: `bun x tsc --noEmit --pretty false` passed and `bun run build` passed.

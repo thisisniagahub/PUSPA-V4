@@ -5,15 +5,15 @@ import { motion } from 'framer-motion'
 import { Copy, Check, Wrench, Clock, ArrowRight, ExternalLink } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { cn } from '@/lib/utils'
-import type { HermesChatMessage } from '@/stores/hermes-store'
-import { PROVIDERS } from '@/lib/hermes/provider-types'
+import type { OpenClawAgentMessage } from '@/stores/openclaw-store'
+import { PROVIDERS } from '@/lib/openclaw-agent/provider-types'
 
-interface HermesMessageV2Props {
-  message: HermesChatMessage
+interface OpenClawMessageV2Props {
+  message: OpenClawAgentMessage
   isLast?: boolean
 }
 
-export function HermesMessageV2({ message, isLast }: HermesMessageV2Props) {
+export function OpenClawMessageV2({ message, isLast }: OpenClawMessageV2Props) {
   const isUser = message.role === 'user'
   const [copied, setCopied] = useState(false)
 
@@ -73,7 +73,7 @@ export function HermesMessageV2({ message, isLast }: HermesMessageV2Props) {
         {/* Content */}
         <div
           className={cn(
-            'whitespace-pre-wrap break-words hermes-content-v2',
+            'whitespace-pre-wrap break-words openclaw-content-v2',
             isUser ? '' : '[&_strong]:font-semibold [&_code]:text-violet-600 dark:[&_code]:text-violet-400 [&_pre]:text-zinc-800 dark:[&_pre]:text-zinc-200 [&_h2]:text-zinc-900 [&_h3]:text-zinc-900 [&_h4]:text-zinc-900 [&_li]:text-zinc-700 dark:[&_li]:text-zinc-300',
           )}
         >

@@ -14,7 +14,7 @@ This file serves as the foundational mandate for all AI agent interactions withi
 - **State Management:** Zustand (with persistence) handles global app state, sidebar, views, and AI session state.
 - **ORM:** Prisma 6 with multi-DB URL resolution (SQLite for dev, PostgreSQL for prod).
 - **Styling:** Tailwind CSS 4 with a Zinc/Emerald/Black design system.
-- **AI Engine (PUSPA AI/Hermes):** OpenClaw-first assistant using model `openclaw/puspacare`, with a 38-tool registry, persistent memory, and a self-improving skills system. Z.AI is intentionally unsupported.
+- **AI Engine (PUSPA AI/OpenClaw):** OpenClaw-first assistant using model `openclaw/puspacare`, with a 38-tool registry, persistent memory, and a self-improving skills system. Z.AI is intentionally unsupported.
 
 ---
 
@@ -49,14 +49,14 @@ This file serves as the foundational mandate for all AI agent interactions withi
 - Add new views to `viewLabels` in `src/types/index.ts` and `sidebar-config.ts`.
 - Module pages are lazily loaded. Ensure they export a default component.
 
-### Hermes AI Integration
-- All database-altering operations should have a corresponding tool in `src/lib/hermes/advanced-tools.ts`.
+### OpenClaw AI Integration
+- All database-altering operations should have a corresponding tool in `src/lib/openclaw-agent/advanced-tools.ts`.
 - Tools must implement permission checks (`read`, `write`, `admin`).
-- When adding features, consider if a Hermes Tool is needed for AI automation.
+- When adding features, consider if a OpenClaw Tool is needed for AI automation.
 
 ### Database Operations
 - **Prisma Client:** Always import `db` from `@/lib/db`.
-- **Sequential IDs:** Use `generateNumber` from `@/lib/hermes/id-generator` for business IDs (e.g., `PUSPA-XXXX`, `KES-XXXX`).
+- **Sequential IDs:** Use `generateNumber` from `@/lib/openclaw/id-generator` for business IDs (e.g., `PUSPA-XXXX`, `KES-XXXX`).
 - **Audit Logs:** Use `writeAuditLog` from `@/lib/audit.ts` for all sensitive write operations.
 
 ---
@@ -65,7 +65,7 @@ This file serves as the foundational mandate for all AI agent interactions withi
 
 - `src/app/api/v1`: REST API endpoints (80+ routes).
 - `src/modules`: Feature modules (lazy-loaded SPA "pages").
-- `src/lib/hermes`: AI Assistant engine, tools, memory, and skills.
+- `src/lib/openclaw-agent`: AI Assistant engine, tools, memory, and skills.
 - `src/stores`: Zustand global state management.
 - `src/components/ui`: Shared shadcn/ui components.
 - `prisma/`: Database schemas (SQLite and PostgreSQL variants).
@@ -99,5 +99,5 @@ This document has been aligned with the current PUSPA-V4 workspace at `/mnt/g/PU
 - Local dev command in `package.json` remains `bun run dev` on port `3000`; active preview work may run with `./node_modules/.bin/next dev -p 3001` when port 3000 is occupied.
 - Auth: Supabase Auth is the primary app flow via `/api/v1/auth/supabase/*`, synced to Prisma users. Legacy/custom auth endpoints may remain for compatibility, but new protected API work should use server-side helpers from `@/lib/auth`.
 - Route protection: `src/middleware.ts` is the active guard in this workspace. Next.js warns the middleware convention is deprecated in favor of `proxy`, so future migration should preserve the same fail-closed behavior.
-- PUSPA AI/Hermes: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `HERMES_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
+- PUSPA AI/OpenClaw: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `OPENCLAW_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
 - Validation baseline after the latest alignment: `bun x tsc --noEmit --pretty false` passed and `bun run build` passed.

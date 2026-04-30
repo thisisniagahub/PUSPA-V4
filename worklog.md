@@ -1,27 +1,27 @@
 ---
 Task ID: 1
 Agent: Main Agent
-Task: Improve Hermes Agent section in PuspaCare with Retail Agent Dashboard design
+Task: Improve OpenClaw Agent section in PuspaCare with Retail Agent Dashboard design
 
 Work Log:
-- Read existing Hermes components (hermes-panel, hermes-message, hermes-fab, hermes-chat-header, hermes-settings, hermes-store)
-- Read hermes-store.ts, advanced-tools.ts, types.ts, quick-actions.ts
-- Updated hermes-store.ts with new execution trace types (AgentStep, AgentStepStatus, HermesViewMode)
+- Read existing OpenClaw components (openclaw-panel, openclaw-message, openclaw-fab, openclaw-chat-header, openclaw-settings, openclaw-store)
+- Read openclaw-store.ts, advanced-tools.ts, types.ts, quick-actions.ts
+- Updated openclaw-store.ts with new execution trace types (AgentStep, AgentStepStatus, OpenClawViewMode)
 - Added addStep/updateStep/clearSteps/finalizeSteps methods to store
 - Added activeSteps state for real-time execution tracing
 - Added viewMode (panel/fullscreen) for dual-mode display
 - Created execution-trace.tsx - ExecutionTrace component with Framer Motion animations, step status indicators, relative timestamps, tool name badges
-- Created hermes-message-v2.tsx - Redesigned messages with Zinc/Black/Emerald design system (user=black bg, assistant=zinc-50 bg), client action buttons, copy on hover
-- Created hermes-chat-input.tsx - Auto-resize textarea, black send button, provider/model/tools status bar, Stripe/Linear style
-- Created hermes-dashboard.tsx - Full-page dashboard with sidebar nav, execution trace panel (right), chat (left), panel mode (floating), quick actions
-- Updated hermes-fab.tsx - Rounded corners, cleaner design
-- Updated hermes-settings.tsx - Zinc/Black design system, rounded-xl elements, uppercase labels
-- Updated page.tsx - Replaced HermesPanel with HermesDashboard
+- Created openclaw-message-v2.tsx - Redesigned messages with Zinc/Black/Emerald design system (user=black bg, assistant=zinc-50 bg), client action buttons, copy on hover
+- Created openclaw-chat-input.tsx - Auto-resize textarea, black send button, provider/model/tools status bar, Stripe/Linear style
+- Created openclaw-dashboard.tsx - Full-page dashboard with sidebar nav, execution trace panel (right), chat (left), panel mode (floating), quick actions
+- Updated openclaw-fab.tsx - Rounded corners, cleaner design
+- Updated openclaw-settings.tsx - Zinc/Black design system, rounded-xl elements, uppercase labels
+- Updated page.tsx - Replaced OpenClawPanel with OpenClawDashboard
 - Verified all new files compile without TypeScript errors
 - Verified dev server running and page loads (200)
 
 Stage Summary:
-- Hermes Agent completely redesigned with Retail Agent Dashboard style
+- OpenClaw Agent completely redesigned with Retail Agent Dashboard style
 - Two view modes: Panel (floating) and Fullscreen (with sidebar + trace + chat)
 - Execution Trace shows real-time AI processing steps (Planning → Tool Call → Success)
 - Design system: Zinc/Black/Emerald (Stripe/Linear inspired), rounded-3xl, no indigo/blue
@@ -33,25 +33,25 @@ Stage Summary:
 ---
 Task ID: 2
 Agent: Rebrand Agent
-Task: Rebrand HermesFab from "Hermes" to "PUSPA AI Assistant" with purple/violet theme
+Task: Rebrand OpenClawFab from "OpenClaw" to "PUSPA AI Assistant" with purple/violet theme
 
 Work Log:
 - Read worklog.md to understand previous work (Task 1: Retail Agent Dashboard redesign)
-- Read current hermes-fab.tsx to understand existing implementation
-- Rewrote hermes-fab.tsx with the following changes:
+- Read current openclaw-fab.tsx to understand existing implementation
+- Rewrote openclaw-fab.tsx with the following changes:
   1. `rounded-2xl` → `rounded-full` on button and pulse ring (circular FAB)
   2. Background gradient: `#7c3aed → #9333ea → #6d28d9` (violet-600/purple-700) instead of emerald
   3. Pulse ring color: `bg-violet-400/30` instead of `bg-emerald-400/30`
   4. Focus ring: `focus:ring-violet-400` instead of `focus:ring-emerald-400`
   5. Icon: `Flower2` (PUSPA flower logo) instead of `Sparkles`
-  6. aria-label: "Buka PUSPA AI" instead of "Buka Hermes AI"
+  6. aria-label: "Buka PUSPA AI" instead of "Buka OpenClaw AI"
   7. Added green online dot indicator in bottom-right corner when closed (ping animation + solid green circle with white border)
   8. Moved provider indicator to bottom-left to avoid overlap with green online dot
-- Kept same component name `HermesFab` and export (no API changes)
+- Kept same component name `OpenClawFab` and export (no API changes)
 - Kept unread badge, AnimatePresence, and all animation behaviors
 
 Stage Summary:
-- FAB rebranded from emerald Hermes to purple PUSPA AI Assistant
+- FAB rebranded from emerald OpenClaw to purple PUSPA AI Assistant
 - Circular button shape matching the chatbot icon from the design spec
 - Green online dot with ping animation indicates assistant availability
 - Violet/purple gradient background with matching focus ring and pulse animation
@@ -63,16 +63,16 @@ Task: Review uploaded PUSPA AI Assistant design image and implement full rebrand
 
 Work Log:
 - Analyzed uploaded design image using VLM: PUSPA AI Assistant promotional design with purple theme, avatar persona, chat widget, quick actions
-- Rebranded all Hermes → PUSPA AI Assistant across 15+ files
+- Rebranded all OpenClaw → PUSPA AI Assistant across 15+ files
 - Changed color scheme from emerald/teal → violet/purple throughout all components
-- Rewrote all Hermes components with PUSPA branding and violet theme
+- Rewrote all OpenClaw components with PUSPA branding and violet theme
 - Enhanced Settings page with violet theme, role stats cards, improved Create Account dialog
 - Updated system prompt, providers, API routes with PUSPA branding
 - Updated localStorage key, quick actions for NGO context
 - All lint checks pass, dev server compiles successfully
 
 Stage Summary:
-- Complete Hermes → PUSPA AI Assistant rebrand across entire project
+- Complete OpenClaw → PUSPA AI Assistant rebrand across entire project
 - Color scheme: emerald/teal → violet/purple (#7c3aed primary)
 - FAB: Purple circular with green online dot (matching uploaded design)
 - Chat: Purple header, violet quick actions, purple circular send button with paper plane
@@ -81,8 +81,8 @@ Stage Summary:
 - System prompt: "PUSPA 🌸" with warm, approachable personality
 - Settings: Violet-themed Create Account with visual role selection cards
 - Quick actions: NGO-specific (Semak Status Kes, Status Bantuan, Bantuan Program, Hubungi Pentadbir)
-- All user-facing text changed from "Hermes" to "PUSPA"
-- Internal type names kept as "Hermes*" for backward compatibility
+- All user-facing text changed from "OpenClaw" to "PUSPA"
+- Internal type names kept as "OpenClaw*" for backward compatibility
 
 ---
 Task ID: 3
@@ -93,7 +93,7 @@ Work Log:
 - Read existing SQLite schema at /mnt/g/PUSPA-V4/prisma/schema.prisma (835 lines)
 - Changed datasource from SQLite to PostgreSQL with directUrl for Supabase
 - Created 35 Prisma enums replacing all String-typed status/category/role fields
-- Fixed 14 missing relations (Donation→Case, Donation→Donor, CaseNote→User, CaseDocument→User, Disbursement→User, EKYCVerification→User, DonorCommunication→User, Capture→User, HermesConversation→User, HermesSkill→User, HermesProviderConfig→User, VolunteerDeployment→Activity, VolunteerHourLog→VolunteerDeployment, TaxReceipt→Donation)
+- Fixed 14 missing relations (Donation→Case, Donation→Donor, CaseNote→User, CaseDocument→User, Disbursement→User, EKYCVerification→User, DonorCommunication→User, Capture→User, OpenClawConversationLegacy→User, OpenClawSkillLegacy→User, OpenClaw server env config→User, VolunteerDeployment→Activity, VolunteerHourLog→VolunteerDeployment, TaxReceipt→Donation)
 - Added 20 cascade delete rules (SetNull for optional parents, Cascade for dependent children, Restrict for Case creator)
 - Added 25+ missing indexes across Donation, Disbursement, Activity, Case, AuditLog, Notification, SecurityLog, Donor, DonorCommunication
 - Added soft delete (deletedAt DateTime?) to 10 main models: User, Member, Case, Donation, Disbursement, Programme, Volunteer, Donor, Partner, Branch
@@ -187,14 +187,14 @@ Stage Summary:
 
 ---
 Task ID: 2026-04-30-docs-server-alignment
-Agent: Hermes Agent
+Agent: OpenClaw Agent
 Task: Run local PUSPA-V4 preview and align Markdown documentation with current project state
 
 Work Log:
 - Verified repo root `/mnt/g/PUSPA-V4`, branch `main`, and existing dirty working tree.
 - Started local preview with `./node_modules/.bin/next dev -p 3001` for port-conflict-safe development.
 - Aligned docs to current Supabase Auth + Prisma user sync model.
-- Documented OpenClaw/PUSPA AI env aliases: `HERMES_OPENAI_*` and `OPENCLAW_*`, with model `openclaw/puspacare`.
+- Documented OpenClaw/PUSPA AI env aliases: `OPENCLAW_OPENAI_*` and `OPENCLAW_*`, with model `openclaw/puspacare`.
 - Marked stale NextAuth/Z.AI/proxy-only assumptions as historical where applicable.
 - Recorded current validation baseline: TypeScript and production build pass after latest fixes.
 
@@ -212,5 +212,5 @@ This document has been aligned with the current PUSPA-V4 workspace at `/mnt/g/PU
 - Local dev command in `package.json` remains `bun run dev` on port `3000`; active preview work may run with `./node_modules/.bin/next dev -p 3001` when port 3000 is occupied.
 - Auth: Supabase Auth is the primary app flow via `/api/v1/auth/supabase/*`, synced to Prisma users. Legacy/custom auth endpoints may remain for compatibility, but new protected API work should use server-side helpers from `@/lib/auth`.
 - Route protection: `src/middleware.ts` is the active guard in this workspace. Next.js warns the middleware convention is deprecated in favor of `proxy`, so future migration should preserve the same fail-closed behavior.
-- PUSPA AI/Hermes: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `HERMES_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
+- PUSPA AI/OpenClaw: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `OPENCLAW_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
 - Validation baseline after the latest alignment: `bun x tsc --noEmit --pretty false` passed and `bun run build` passed.

@@ -9,23 +9,23 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useHermesStore } from '@/stores/hermes-store'
+import { useOpenClawStore } from '@/stores/openclaw-store'
 import { viewLabels } from '@/types'
-import { HermesMessageV2 } from './hermes-message-v2'
-import { HermesChatInput } from './hermes-chat-input'
-import { HermesSettings } from './hermes-settings'
+import { OpenClawMessageV2 } from './openclaw-message-v2'
+import { OpenClawChatInput } from './openclaw-chat-input'
+import { OpenClawSettings } from './openclaw-settings'
 import { ExecutionTrace } from './execution-trace'
-import { getQuickActions } from '@/lib/hermes/quick-actions'
+import { getQuickActions } from '@/lib/openclaw-agent/quick-actions'
 import { cn } from '@/lib/utils'
-import { PROVIDERS } from '@/lib/hermes/provider-types'
+import { PROVIDERS } from '@/lib/openclaw-agent/provider-types'
 
-export function HermesDashboard() {
+export function OpenClawDashboard() {
   const {
     isOpen, viewMode, status, messages, currentView, showSettings,
     clearMessages, sendMessage, sendMessageStream,
     providerState, setShowSettings, setViewMode,
     activeSteps, addPendingAction, consumePendingAction,
-  } = useHermesStore()
+  } = useOpenClawStore()
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const [traceCollapsed, setTraceCollapsed] = useState(false)
@@ -198,7 +198,7 @@ export function HermesDashboard() {
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 text-zinc-400 hover:text-zinc-600"
-                  onClick={() => useHermesStore.getState().setOpen(false)}
+                  onClick={() => useOpenClawStore.getState().setOpen(false)}
                   aria-label="Tutup"
                 >
                   <X className="h-4 w-4" />
@@ -215,7 +215,7 @@ export function HermesDashboard() {
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden border-b border-black/5 dark:border-white/5"
                 >
-                  <HermesSettings />
+                  <OpenClawSettings />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -277,7 +277,7 @@ export function HermesDashboard() {
               ) : (
                 <>
                   {messages.map((msg, i) => (
-                    <HermesMessageV2
+                    <OpenClawMessageV2
                       key={msg.id}
                       message={msg}
                       isLast={i === messages.length - 1}
@@ -324,7 +324,7 @@ export function HermesDashboard() {
                 </div>
               )}
 
-              <HermesChatInput
+              <OpenClawChatInput
                 onSend={handleSend}
                 onClear={clearMessages}
                 onToggleSettings={() => setShowSettings(!showSettings)}
@@ -403,7 +403,7 @@ export function HermesDashboard() {
             variant="ghost"
             size="icon"
             className="h-7 w-7 text-zinc-400 hover:text-zinc-600"
-            onClick={() => useHermesStore.getState().setOpen(false)}
+            onClick={() => useOpenClawStore.getState().setOpen(false)}
             aria-label="Tutup"
           >
             <X className="h-4 w-4" />
@@ -420,7 +420,7 @@ export function HermesDashboard() {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden border-b border-black/5 dark:border-white/5"
           >
-            <HermesSettings />
+            <OpenClawSettings />
           </motion.div>
         )}
       </AnimatePresence>
@@ -479,7 +479,7 @@ export function HermesDashboard() {
         ) : (
           <>
             {messages.map((msg, i) => (
-              <HermesMessageV2
+              <OpenClawMessageV2
                 key={msg.id}
                 message={msg}
                 isLast={i === messages.length - 1}
@@ -526,7 +526,7 @@ export function HermesDashboard() {
 
       {/* Input */}
       <div className="border-t border-black/5 dark:border-white/5 p-3 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-sm">
-        <HermesChatInput
+        <OpenClawChatInput
           onSend={handleSend}
           onClear={clearMessages}
           onToggleSettings={() => setShowSettings(!showSettings)}

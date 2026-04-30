@@ -24,7 +24,7 @@ Migrated the entire Prisma schema from SQLite to PostgreSQL (Supabase) with comp
 - DeploymentStatus, HourLogStatus, EKYCStatus, RiskLevel
 - NotificationType, SecurityLogStatus, BoardMemberRole
 - DocumentCategory, DocumentStatus, RegistrationType
-- HermesMessageRole, HermesSkillSource, HermesMemoryCategory, HermesMemorySource, HermesProvider
+- OpenClawMessageLegacyRole, OpenClawSkillLegacySource, OpenClawMemoryLegacyCategory, OpenClawMemoryLegacySource, OpenClawProvider
 
 ### 3. Fixed Missing Relations
 - Donation.caseId → Case (with Case.donations back-relation)
@@ -35,9 +35,9 @@ Migrated the entire Prisma schema from SQLite to PostgreSQL (Supabase) with comp
 - EKYCVerification.verifiedBy → renamed to verifiedById → User (with User.eKYCVerifications back-relation)
 - DonorCommunication.sentBy → renamed to sentById → User (with User.donorCommunications back-relation)
 - Capture.userId → User (with User.captures back-relation)
-- HermesConversation.userId → User (with User.hermesConversations back-relation)
-- HermesSkill.userId → User (with User.hermesSkills back-relation)
-- HermesProviderConfig.userId → User (with User.hermesProviderConfig back-relation)
+- OpenClawConversationLegacy.userId → User (with User.openclawConversations back-relation)
+- OpenClawSkillLegacy.userId → User (with User.openclawSkills back-relation)
+- OpenClaw server env config.userId → User (with User.openclawProviderConfig back-relation)
 - VolunteerDeployment.activityId → Activity (with Activity.volunteerDeployments back-relation)
 - VolunteerHourLog.deploymentId → VolunteerDeployment (with VolunteerDeployment.hourLogs back-relation)
 - TaxReceipt.donationId → Donation (with Donation.taxReceipts back-relation)
@@ -62,7 +62,7 @@ Migrated the entire Prisma schema from SQLite to PostgreSQL (Supabase) with comp
 - EKYCVerification.memberId → onDelete: Cascade
 - TaxReceipt.donorId → onDelete: Cascade
 - TaxReceipt.donationId → onDelete: SetNull
-- HermesProviderConfig.userId → onDelete: Cascade
+- OpenClaw server env config.userId → onDelete: Cascade
 
 ### 5. Added Missing Indexes
 - Donation: donatedAt, method, donorIC, donorEmail, donorPhone, programmeId, caseId, donorId
@@ -114,5 +114,5 @@ This historical agent context is retained for traceability, but the current acti
 - Local preview: usually `./node_modules/.bin/next dev -p 3001` when port 3000 is busy.
 - Auth: Supabase Auth is primary via `/api/v1/auth/supabase/*`, synced to Prisma users; protected routes should use server-side auth helpers.
 - Route guard: `src/middleware.ts` is active in this workspace; Next.js middleware-to-proxy migration remains a future compatibility task.
-- PUSPA AI/Hermes: OpenClaw-first, no Z.AI fallback. Current app env should include redacted aliases for both `HERMES_OPENAI_*` and `OPENCLAW_*`, with model `openclaw/puspacare`.
+- PUSPA AI/OpenClaw: OpenClaw-first, no Z.AI fallback. Current app env should include redacted aliases for both `OPENCLAW_OPENAI_*` and `OPENCLAW_*`, with model `openclaw/puspacare`.
 - Validation baseline: `bun x tsc --noEmit --pretty false` and `bun run build` passed after the latest alignment fixes.

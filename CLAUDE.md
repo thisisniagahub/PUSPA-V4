@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PUSPA V4 is a Next.js 16 NGO management platform with an AI assistant (Hermes), SQLite for development and PostgreSQL for production via Prisma 6.
+PUSPA V4 is a Next.js 16 NGO management platform with an AI assistant (OpenClaw), SQLite for development and PostgreSQL for production via Prisma 6.
 
 ## Common Commands
 
@@ -47,16 +47,16 @@ The app uses **Supabase Auth** (not NextAuth v4 as the README states — the cod
 - `/api/v1/bot/*` (bot API key authentication)
 - Static assets and `/login`
 
-## Hermes AI System
+## OpenClaw AI System
 
-The AI assistant in `src/lib/hermes/` has a multi-provider transport layer:
+The AI assistant in `src/lib/openclaw-agent/` has a multi-provider transport layer:
 - **OpenClaw** (default) — OpenAI-compatible gateway, usually model `openclaw/puspacare`
 - **OpenRouter** — cloud with 200+ models
 - **Ollama** — local privacy-first
 
-The chat flow: `HermesStore → POST /api/v1/hermes/chat → build system prompt → call LLM → parse tool calls → execute up to 5 steps → format response → extract memory → save conversation`.
+The chat flow: `OpenClawStore → POST /api/v1/openclaw/chat → build system prompt → call LLM → parse tool calls → execute up to 5 steps → format response → extract memory → save conversation`.
 
-Tool definitions are in `src/lib/hermes/advanced-tools.ts` (38 tools). Skills system in `src/lib/hermes/skills.ts`. Memory system in `src/lib/hermes/memory.ts`.
+Tool definitions are in `src/lib/openclaw-agent/advanced-tools.ts` (38 tools). Skills system in `src/lib/openclaw-agent/skills.ts`. Memory system in `src/lib/openclaw-agent/memory.ts`.
 
 ## Environment Variables
 
@@ -86,7 +86,7 @@ The `vercel-build` script auto-switches schemas when `DATABASE_PROVIDER=postgres
 
 Three Zustand stores with persist middleware:
 - `puspa-app-state` — currentView, sidebar, role
-- `puspa-ai-state` — Hermes messages, provider config
+- `puspa-ai-state` — OpenClaw messages, provider config
 - `puspa-ops-state` — Ops Conductor work items
 
 ## Default Demo Accounts
@@ -109,5 +109,5 @@ This document has been aligned with the current PUSPA-V4 workspace at `/mnt/g/PU
 - Local dev command in `package.json` remains `bun run dev` on port `3000`; active preview work may run with `./node_modules/.bin/next dev -p 3001` when port 3000 is occupied.
 - Auth: Supabase Auth is the primary app flow via `/api/v1/auth/supabase/*`, synced to Prisma users. Legacy/custom auth endpoints may remain for compatibility, but new protected API work should use server-side helpers from `@/lib/auth`.
 - Route protection: `src/middleware.ts` is the active guard in this workspace. Next.js warns the middleware convention is deprecated in favor of `proxy`, so future migration should preserve the same fail-closed behavior.
-- PUSPA AI/Hermes: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `HERMES_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
+- PUSPA AI/OpenClaw: Z.AI is not supported. Provider defaults should be OpenClaw-compatible, normally `openclaw/puspacare`, with env aliases for both `OPENCLAW_OPENAI_*` and `OPENCLAW_*` names. Do not commit real API keys.
 - Validation baseline after the latest alignment: `bun x tsc --noEmit --pretty false` passed and `bun run build` passed.
