@@ -101,13 +101,16 @@ export function OpenClawMessage({ message }: OpenClawMessageProps) {
           )}
         >
           <div className="flex items-center gap-2">
+import { SafeDate } from '@/components/ui/safe-date'
+
+// ... (inside OpenClawMessage)
             <span
               className={cn(
                 'text-[10px]',
                 isUser ? 'text-violet-100/70' : 'text-muted-foreground',
               )}
             >
-              {formattedTime}
+              <SafeDate date={message.timestamp} formatOptions={{ hour: '2-digit', minute: '2-digit' }} />
             </span>
 
             {/* Provider badge */}

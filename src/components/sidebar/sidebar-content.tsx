@@ -43,9 +43,9 @@ export function SidebarContent({
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="relative flex h-full flex-col overflow-hidden border-r border-white/10 bg-card backdrop-blur-xl">
+      <div className="relative flex h-full flex-col overflow-hidden border-r border-white/5 bg-sidebar text-sidebar-foreground">
         <SidebarBrand collapsed={collapsed} onNavigateHome={() => handleNavigate('dashboard')} />
-
+  ...
         {onClose && (
           <div className="absolute right-3 top-5 z-10">
             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={onClose} aria-label="Tutup menu">

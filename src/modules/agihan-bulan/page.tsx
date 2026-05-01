@@ -947,7 +947,7 @@ export default function AgihanBulanPage() {
                             <TableCell>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Lagi tindakan">
                                     <MoreHorizontal className="h-4 w-4" />
                                     <span className="sr-only">Tindakan</span>
                                   </Button>
@@ -1021,10 +1021,10 @@ export default function AgihanBulanPage() {
                       <div className="flex items-center justify-between pt-1 border-t">
                         <span className="text-xs text-muted-foreground">{formatDate(distribution.date)}</span>
                         <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleView(distribution)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleView(distribution)} aria-label="Lihat">
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(distribution)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(distribution)} aria-label="Edit">
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
@@ -1032,6 +1032,7 @@ export default function AgihanBulanPage() {
                             size="icon"
                             className="h-8 w-8 text-red-600"
                             onClick={() => handleDelete(distribution)}
+                            aria-label="Padam"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

@@ -34,6 +34,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
+import { SafeDate } from '@/components/ui/safe-date'
 import {
   BarChart3,
   Wallet,
@@ -1166,28 +1167,28 @@ export default function AIToolsPage() {
           <TabsList className="w-full grid grid-cols-4 mb-6 h-auto p-1 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl">
             <TabsTrigger
               value="laporan"
-              className="py-3 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+              className="py-3 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-[color,background-color,border-color,opacity,box-shadow,transform]"
             >
               <FileText className="h-4 w-4 mr-1.5 hidden sm:inline-block" />
               <span className="text-xs sm:text-sm">Laporan</span>
             </TabsTrigger>
             <TabsTrigger
               value="sembang"
-              className="py-3 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+              className="py-3 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-[color,background-color,border-color,opacity,box-shadow,transform]"
             >
               <MessageSquare className="h-4 w-4 mr-1.5 hidden sm:inline-block" />
               <span className="text-xs sm:text-sm">Sembang</span>
             </TabsTrigger>
             <TabsTrigger
               value="analitik"
-              className="py-3 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+              className="py-3 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-[color,background-color,border-color,opacity,box-shadow,transform]"
             >
               <BrainCircuit className="h-4 w-4 mr-1.5 hidden sm:inline-block" />
               <span className="text-xs sm:text-sm">Analitik AI</span>
             </TabsTrigger>
             <TabsTrigger
               value="alat"
-              className="py-3 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+              className="py-3 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-[color,background-color,border-color,opacity,box-shadow,transform]"
             >
               <Search className="h-4 w-4 mr-1.5 hidden sm:inline-block" />
               <span className="text-xs sm:text-sm">Alat Ahli</span>
@@ -1202,7 +1203,7 @@ export default function AIToolsPage() {
               {reportTypes.map((report) => (
                 <Card
                   key={report.id}
-                  className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-white/10 bg-white/5 backdrop-blur-md overflow-hidden"
+                  className="group cursor-pointer hover:shadow-lg transition-[color,background-color,border-color,opacity,box-shadow,transform] duration-300 hover:-translate-y-1 border-white/10 bg-white/5 backdrop-blur-md overflow-hidden"
                   onClick={() => handleGenerateReport(report)}
                 >
                   <div
@@ -1414,10 +1415,7 @@ export default function AIToolsPage() {
                               msg.role === 'user' ? 'text-white/60' : 'text-muted-foreground'
                             }`}
                           >
-                            {msg.timestamp.toLocaleTimeString('ms-MY', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
+                            <SafeDate date={msg.timestamp} formatOptions={{ hour: '2-digit', minute: '2-digit' }} />
                           </p>
                         </div>
                       </div>
@@ -1453,6 +1451,7 @@ export default function AIToolsPage() {
                     size="icon"
                     className={`shrink-0 rounded-full ${isListening ? 'bg-red-500/20 text-red-500 animate-pulse' : 'text-muted-foreground hover:text-primary hover:bg-white/10'}`}
                     onClick={handleMicToggle}
+                    aria-label={isListening ? "Berhenti mendengar" : "Mula mendengar"}
                   >
                     <Mic className="h-4 w-4" />
                   </Button>
@@ -1474,6 +1473,7 @@ export default function AIToolsPage() {
                     className="shrink-0 rounded-full bg-gradient-to-r from-primary to-violet-600 hover:from-primary/80 hover:to-violet-600/80 text-white shadow-md shadow-primary/20"
                     onClick={() => handleSendChat()}
                     disabled={!chatInput.trim() || isChatSending}
+                    aria-label="Hantar"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
@@ -1504,7 +1504,7 @@ export default function AIToolsPage() {
                   {analyticsCards.map((card) => (
                     <Card
                       key={card.type}
-                      className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-white/10 bg-white/5 backdrop-blur-md overflow-hidden"
+                      className="group cursor-pointer hover:shadow-lg transition-[color,background-color,border-color,opacity,box-shadow,transform] duration-300 hover:-translate-y-1 border-white/10 bg-white/5 backdrop-blur-md overflow-hidden"
                       onClick={() => fetchAnalytics(card.type)}
                     >
                       <div
@@ -1799,7 +1799,7 @@ export default function AIToolsPage() {
               {selectedReport?.title}
             </DialogTitle>
             <DialogDescription className="text-white/60">
-              Laporan dijana oleh AI pada {new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })}
+              Laporan dijana oleh AI pada <SafeDate date={new Date()} formatOptions={{ day: 'numeric', month: 'long', year: 'numeric' }} />
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">

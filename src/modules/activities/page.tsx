@@ -32,6 +32,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SafeDate } from "@/components/ui/safe-date";
 import {
   Dialog,
   DialogContent,
@@ -351,18 +352,9 @@ type ActivityFormData = z.infer<typeof activitySchema>;
 
 // ─── Utility Functions ───────────────────────────────────────────────────────
 
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "";
-  try {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("ms-MY", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  } catch {
-    return dateStr;
-  }
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return null;
+  return <SafeDate date={dateStr} formatOptions={{ day: "numeric", month: "short", year: "numeric" }} />;
 }
 
 function generateId(): string {
@@ -402,7 +394,7 @@ function SortableActivityCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-3.5 shadow-xl transition-all duration-300 ${
+      className={`group rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-3.5 shadow-xl transition-[color,background-color,border-color,opacity,box-shadow,transform] duration-300 ${
         isDragging
           ? "scale-105 opacity-70 shadow-2xl ring-2 ring-primary/50 z-50"
           : "hover:shadow-[0_0_20px_rgba(236,178,255,0.1)] hover:border-primary/30 hover:-translate-y-0.5"

@@ -225,6 +225,7 @@ export default function Shell() {
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     className="flex flex-col items-center gap-2"
                   >
                     <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -232,9 +233,19 @@ export default function Shell() {
                   </motion.div>
                 </div>
               }>
-                <div key={safeCurrentView} className="h-full">
+                <motion.div
+                  key={safeCurrentView}
+                  initial={{ opacity: 0, y: 15, scale: 0.99 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -15, scale: 1.01 }}
+                  transition={{ 
+                    duration: 0.35, 
+                    ease: [0.22, 1, 0.36, 1], // Custom cubic-bezier for a more "snappy" but smooth feel
+                  }}
+                  className="h-full"
+                >
                   <ViewRenderer view={safeCurrentView} />
-                </div>
+                </motion.div>
               </Suspense>
             </AnimatePresence>
           </div>

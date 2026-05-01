@@ -206,74 +206,21 @@ export function OpenClawPanel() {
         </div>
       )}
 
+import { UnifiedChatInput } from '@/components/ui/unified-chat-input'
+
+// ... (inside OpenClawPanel return)
+
       {/* Input Area */}
-      <div className="border-t p-3 bg-background/95 backdrop-blur-sm">
-        <div className="flex items-center gap-2">
-          <div className="flex-1 relative">
-            <Input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={status === 'thinking' || status === 'streaming' ? 'PUSPA sedang berfikir...' : 'Taip mesej anda...'}
-              disabled={status === 'thinking' || status === 'streaming'}
-              className="pr-2 text-sm h-10 rounded-xl border-border focus-visible:ring-violet-500/30"
-            />
-          </div>
-
-          <Button
-            onClick={handleSend}
-            disabled={!input.trim() || status === 'thinking' || status === 'streaming'}
-            size="icon"
-            className="h-10 w-10 shrink-0 rounded-xl"
-            style={{
-              background: input.trim() ? 'linear-gradient(135deg, #7c3aed 0%, #9333ea 100%)' : undefined,
-            }}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Bottom status bar */}
-        <div className="flex items-center justify-between mt-2">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 gap-1">
-              <span>{providerInfo.icon}</span>
-              {providerInfo.name}
-            </Badge>
-            {providerState.provider !== 'openclaw' && (
-              <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">
-                {providerState.model.split('/').pop()?.slice(0, 20)}
-              </Badge>
-            )}
-            {toolsUsed > 0 && (
-              <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 gap-1 text-violet-600 border-violet-200">
-                <Wrench className="h-2.5 w-2.5" /> {toolsUsed}
-              </Badge>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-muted-foreground hover:text-foreground"
-              onClick={clearMessages}
-              aria-label="Semakan semula"
-            >
-              <RotateCcw className="h-3 w-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-muted-foreground hover:text-foreground"
-              onClick={() => setShowSettings(!showSettings)}
-              aria-label="Tetapan"
-            >
-              <Settings className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
+      <div className="p-3 bg-background/95 backdrop-blur-sm">
+        <UnifiedChatInput
+          onSend={handleSend}
+          onClear={clearMessages}
+          onToggleSettings={() => setShowSettings(!showSettings)}
+          disabled={status === 'thinking' || status === 'streaming'}
+          isBusy={status === 'thinking' || status === 'streaming'}
+          providerInfo={providerInfo}
+          modelLabel={providerState.model.split('/').pop()?.slice(0, 20)}
+        />
       </div>
     </motion.div>
   )

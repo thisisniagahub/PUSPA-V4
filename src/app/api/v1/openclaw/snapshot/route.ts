@@ -35,6 +35,7 @@ export async function GET(request: Request) {
       data: payload.data as OpenClawSnapshot,
     })
   } catch (error) {
+    console.error('[OpenClaw Snapshot] Error:', error)
     if (error instanceof AuthorizationError) {
       return NextResponse.json({
         success: false,

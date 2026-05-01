@@ -561,7 +561,7 @@ export default function AdminPage() {
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto p-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl">
             <TabsTrigger
               value="profil"
-              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all"
+              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-[color,background-color,border-color,opacity,box-shadow,transform]"
             >
               <Building2 className="h-4 w-4 hidden sm:block" />
               Profil Organisasi

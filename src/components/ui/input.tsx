@@ -3,8 +3,12 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+  const generatedId = React.useId()
+  const id = props.id || generatedId
+
   return (
     <input
+      id={id}
       type={type}
       data-slot="input"
       className={cn(

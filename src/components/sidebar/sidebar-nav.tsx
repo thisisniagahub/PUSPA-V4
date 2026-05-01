@@ -9,6 +9,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import type { SidebarNavGroup } from './sidebar-types';
+import Magnetic from '@/components/ui/magnetic';
 
 const BRAND_COLOR = '#ecb2ff';
 const ACCENT_COLOR = '#00fbfb';
@@ -81,22 +82,24 @@ export function SidebarNavItem({
       )}
       style={isActive ? { background: `linear-gradient(135deg, ${BRAND_COLOR}, ${ACCENT_COLOR})`, boxShadow: `0 4px 12px ${BRAND_COLOR}40` } : undefined}
     >
-      {isActive && <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white/80" aria-hidden="true" />}
-      <Icon
-        aria-hidden="true"
-        className={cn(
-          'h-[18px] w-[18px] shrink-0 transition-[color,transform] duration-200 motion-reduce:transition-none motion-reduce:transform-none',
-          isActive ? 'text-white' : 'text-muted-foreground group-hover:scale-110 group-hover:text-foreground',
-        )}
-      />
-      <span
-        className={cn(
-          'truncate whitespace-nowrap transition-[max-width,opacity] duration-300 ease-in-out motion-reduce:transition-none',
-          collapsed ? 'max-w-0 overflow-hidden opacity-0' : 'max-w-[180px] opacity-100',
-        )}
-      >
-        {item.label}
-      </span>
+      <Magnetic strength={0.2} className="flex items-center gap-3 w-full">
+        {isActive && <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white/80" aria-hidden="true" />}
+        <Icon
+          aria-hidden="true"
+          className={cn(
+            'h-[18px] w-[18px] shrink-0 transition-[color,transform] duration-200 motion-reduce:transition-none motion-reduce:transform-none',
+            isActive ? 'text-white' : 'text-muted-foreground group-hover:scale-110 group-hover:text-foreground',
+          )}
+        />
+        <span
+          className={cn(
+            'truncate whitespace-nowrap transition-[max-width,opacity] duration-300 ease-in-out motion-reduce:transition-none',
+            collapsed ? 'max-w-0 overflow-hidden opacity-0' : 'max-w-[180px] opacity-100',
+          )}
+        >
+          {item.label}
+        </span>
+      </Magnetic>
     </button>
   );
 

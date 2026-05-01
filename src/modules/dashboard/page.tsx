@@ -62,6 +62,8 @@ import {
 import { AnimatedCounter } from '@/components/ui/animated-counter'
 import { FlowingMenu } from '@/components/ui/flowing-menu'
 import { PluginSlot } from '@/components/plugins/PluginSlot'
+import SplitText from '@/components/ui/split-text'
+import HolographicCard from '@/components/ui/holographic-card'
 
 // ---------------------------------------------------------------------------
 // Developer Specific Components
@@ -234,28 +236,14 @@ function StatCard({
   trend?: number
   isCurrency?: boolean
 }) {
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-  }
-
   return (
-    <Card 
-      onMouseMove={handleMouseMove}
-      className="group relative overflow-hidden border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-500 hover:shadow-[0_0_40px_rgba(236,178,255,0.1)] hover:-translate-y-1.5 rounded-3xl"
+    <HolographicCard 
+      glowColor={accentColor}
+      className="group"
     >
-      {/* Spotlight Effect */}
-      <div 
-        className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{
-          background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, ${accentColor}10, transparent 40%)`
-        }}
-      />
-      
-      <CardContent className="flex items-start gap-4 p-6">
+      <CardContent className="flex items-start gap-4 p-6 bg-transparent border-none">
         <div
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-sm"
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
           style={{ backgroundColor: iconBgColor }}
         >
           <span style={{ color: accentColor }}>{icon}</span>
@@ -289,8 +277,7 @@ function StatCard({
           )}
         </div>
       </CardContent>
-      <div className="absolute bottom-0 left-0 h-1 w-full opacity-30 transition-all duration-500 group-hover:opacity-100" style={{ backgroundColor: accentColor }} />
-    </Card>
+    </HolographicCard>
   )
 }
 
@@ -436,9 +423,10 @@ export default function DashboardPage() {
             </div>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-white to-purple-200">
-                  Selamat Datang, Admin
-                </h1>
+                <SplitText 
+                  text={`Selamat Datang, ${user?.name || 'Admin'}`}
+                  className="text-3xl font-bold tracking-tight sm:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-white to-purple-200"
+                />
                 <Zap className="h-6 w-6 text-yellow-400 fill-yellow-400" />
               </div>
               <p className="mt-2 text-lg text-purple-100/80 font-medium">
