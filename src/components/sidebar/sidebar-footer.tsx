@@ -58,7 +58,7 @@ export function SidebarFooter({ collapsed, role, userLabel }: { collapsed: boole
       <Separator className="bg-border/40" />
       <div className={cn('flex items-center gap-3 overflow-hidden transition-[gap] duration-300 motion-reduce:transition-none pb-2', collapsed && 'justify-center')}>
         <div className={cn('flex shrink-0 items-center justify-center rounded-lg bg-white/5 border border-white/10 p-1.5', collapsed ? 'h-7 w-7' : 'h-9 w-9')}>
-          <Image src="/puspa-logo-official.png" alt="PUSPA" width={collapsed ? 16 : 24} height={collapsed ? 16 : 24} className="object-contain" />
+          <Image src="/puspa-logo-official.png" alt="PUSPA" width={collapsed ? 16 : 24} height={collapsed ? 16 : 24} className="h-auto w-auto object-contain" />
         </div>
         <div
           className={cn(

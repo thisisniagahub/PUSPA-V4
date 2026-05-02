@@ -70,8 +70,8 @@ export default function HolographicCard({
         transformStyle: "preserve-3d",
       }}
       className={cn(
-        "relative rounded-[2rem] border border-white/10 bg-card/40 backdrop-blur-2xl transition-all duration-300",
-        "shadow-[0_20px_50px_rgba(0,0,0,0.2)] hover:shadow-[0_30px_60px_rgba(0,0,0,0.4)]",
+        "relative rounded-[2rem] border border-white/10 bg-card/40 backdrop-blur-2xl transition-all duration-300 group",
+        "shadow-[0_20px_50px_rgba(0,0,0,0.2)] hover:shadow-[0_30px_60px_rgba(0,0,0,0.4)] grain-overlay",
         className
       )}
     >

@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown'
 import { cn } from '@/lib/utils'
 import type { OpenClawAgentMessage } from '@/stores/openclaw-store'
 import { PROVIDERS } from '@/lib/openclaw-agent/provider-types'
+import { SafeDate } from '@/components/ui/safe-date'
 
 interface OpenClawMessageProps {
   message: OpenClawAgentMessage
@@ -25,11 +26,6 @@ export function OpenClawMessage({ message }: OpenClawMessageProps) {
       // Clipboard API might not be available
     }
   }
-
-  const formattedTime = new Date(message.timestamp).toLocaleTimeString('ms-MY', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
 
   const providerInfo = message.provider ? PROVIDERS[message.provider] : null
 
@@ -101,9 +97,6 @@ export function OpenClawMessage({ message }: OpenClawMessageProps) {
           )}
         >
           <div className="flex items-center gap-2">
-import { SafeDate } from '@/components/ui/safe-date'
-
-// ... (inside OpenClawMessage)
             <span
               className={cn(
                 'text-[10px]',

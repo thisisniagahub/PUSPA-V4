@@ -39,6 +39,8 @@ import {
   Cpu,
   Terminal,
   ChevronRight,
+  MapPin,
+  MessageSquare,
 } from 'lucide-react'
 import { useAppStore } from '@/stores/app-store'
 import { cn } from '@/lib/utils'
@@ -64,6 +66,9 @@ import { FlowingMenu } from '@/components/ui/flowing-menu'
 import { PluginSlot } from '@/components/plugins/PluginSlot'
 import SplitText from '@/components/ui/split-text'
 import HolographicCard from '@/components/ui/holographic-card'
+import { AsnafTaskCard } from '@/components/dashboard/asnaf-task-card'
+import { CaseTimer } from '@/components/dashboard/case-timer'
+import { QuickMessages } from '@/components/dashboard/quick-messages'
 
 // ---------------------------------------------------------------------------
 // Developer Specific Components
@@ -125,7 +130,10 @@ function AIStatusCard() {
         </div>
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
-            <Zap className="h-5 w-5 text-primary fill-primary" />
+            <div className="relative">
+              <Zap className="h-5 w-5 text-primary fill-primary" />
+              <div className="absolute inset-0 bg-primary/40 blur-md animate-pulse rounded-full" />
+            </div>
             <h3 className="font-bold text-lg text-primary">AI Ops Engine</h3>
           </div>
           <p className="text-sm text-white/70 mb-4 max-w-[200px]">OpenClaw MCP Gateway is active. 12 agents online.</p>
@@ -419,7 +427,7 @@ export default function DashboardPage() {
         <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-6">
             <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white p-1 shadow-2xl ring-4 ring-white/10">
-              <Image src="/puspa-logo-official.png" alt="PUSPA" width={64} height={64} className="object-contain" />
+              <Image src="/puspa-logo-official.png" alt="PUSPA" width={64} height={64} className="h-auto w-auto object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-3">
@@ -477,6 +485,62 @@ export default function DashboardPage() {
         </div>
         <FlowingMenu items={flowingItems} />
       </section>
+
+      {/* 🚀 New Command Center Widgets */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5 text-warning" />
+              <h2 className="text-lg font-bold tracking-tight">Tugasan Kritikal</h2>
+            </div>
+            <Badge variant="outline" className="text-warning border-warning/20 bg-warning/5">3 Baru</Badge>
+          </div>
+          <div className="space-y-4">
+            <AsnafTaskCard
+              title="Verifikasi Rumah Fatimah Ali"
+              description="Siasatan lanjut diperlukan untuk status penyewaan rumah di PPR Pantai Ria."
+              priority="critical"
+              progress={65}
+              daysLeft={2}
+              officers={[{ name: 'Zul' }, { name: 'Aminah' }]}
+            />
+            <AsnafTaskCard
+              title="Bantuan Persekolahan 2026"
+              description="Semakan dokumen sokongan untuk 5 orang anak pemohon."
+              priority="urgent"
+              progress={40}
+              daysLeft={5}
+              officers={[{ name: 'Sarah' }]}
+            />
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-emerald-500" />
+            <h2 className="text-lg font-bold tracking-tight">Operasi Lapangan</h2>
+          </div>
+          <CaseTimer />
+          <div className="glass p-4 rounded-2xl flex items-center gap-4">
+            <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+              <MapPin className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase">Lokasi Semasa</p>
+              <p className="text-sm font-bold text-foreground">Lembah Pantai, KL</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-bold tracking-tight">Komunikasi</h2>
+          </div>
+          <QuickMessages />
+        </section>
+      </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

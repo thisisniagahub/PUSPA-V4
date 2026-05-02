@@ -75,7 +75,7 @@ export function CommandPalette() {
           alt="PUSPA"
           width={22}
           height={22}
-          className="object-contain"
+          className="h-auto w-auto object-contain"
         />
         <span className="text-xs font-semibold" style={{ color: '#4B0082' }}>PUSPA Command</span>
       </div>

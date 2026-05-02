@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils'
 
 interface UnifiedChatInputProps {
   onSend: (text: string) => void
+  value?: string
+  onValueChange?: (value: string) => void
   onClear?: () => void
   onToggleSettings?: () => void
   disabled?: boolean
@@ -20,6 +22,8 @@ interface UnifiedChatInputProps {
 
 export function UnifiedChatInput({
   onSend,
+  value,
+  onValueChange,
   onClear,
   onToggleSettings,
   disabled,
@@ -28,10 +32,12 @@ export function UnifiedChatInput({
   providerInfo,
   modelLabel,
 }: UnifiedChatInputProps) {
-  const [input, setInput] = React.useState('')
+  const [internalInput, setInternalInput] = React.useState('')
   const [isFocused, setIsFocused] = React.useState(false)
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
   const id = React.useId()
+  const input = value ?? internalInput
+  const setInput = onValueChange ?? setInternalInput
 
   // Auto-resize logic
   React.useEffect(() => {
@@ -50,7 +56,11 @@ export function UnifiedChatInput({
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
     }
-  }, [input, isBusy, onSend])
+  }, [input, isBusy, onSend, setInput])
+
+  const handleInputChange = React.useCallback((nextValue: string) => {
+    setInput(nextValue)
+  }, [setInput])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

@@ -22,7 +22,7 @@ export function SidebarBrand({ collapsed, onNavigateHome }: { collapsed: boolean
           alt="PUSPA Logo" 
           width={32} 
           height={32} 
-          className="object-contain drop-shadow-sm" 
+          className="h-auto w-auto object-contain drop-shadow-sm"
           priority 
           unoptimized
         />

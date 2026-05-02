@@ -94,6 +94,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchUser, supabase])
 
   const signIn = useCallback(async (email: string, password: string) => {
+    // Local Dev Bypass for UI/UX Review
+    if (process.env.NODE_ENV === 'development' && email === 'admin@puspa.org.my' && password === 'Puspa@2026') {
+      const mockUser: AuthUser = {
+        id: 'dev-admin-id',
+        email: 'admin@puspa.org.my',
+        name: 'Pentadbir PUSPA (Local)',
+        role: 'developer',
+        supabaseId: 'dev-supabase-id'
+      };
+      setUser(mockUser);
+      setLoading(false);
+      return { success: true };
+    }
+
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
 

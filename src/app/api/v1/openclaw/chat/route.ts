@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth'
-import { createOpenClawChatCompletion, type OpenClawChatMessage } from '@/lib/openclaw'
+import { AuthorizationError, requireAuth } from '@/lib/auth'
+import { createOpenClawChatCompletion, DEFAULT_OPENCLAW_AGENT_MODEL, type OpenClawChatMessage } from '@/lib/openclaw'
 
 export const runtime = 'nodejs'
 
@@ -75,10 +75,29 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error('OpenClaw chat error:', error)
-    return NextResponse.json(
-      { success: false, error: error?.message || 'OpenClaw Gateway mengalami masalah teknikal' },
-      { status: 500 },
-    )
+    if (error instanceof AuthorizationError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.status },
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        message: {
+          role: 'assistant',
+          content: [
+            'OpenClaw Gateway sedang offline atau tidak dapat dicapai dari server ini.',
+            'UI masih berfungsi, tetapi respons AI live memerlukan gateway aktif.',
+          ].join('\n'),
+        },
+        provider: 'openclaw',
+        model: process.env.OPENCLAW_AGENT_MODEL || process.env.OPENCLAW_MODEL || DEFAULT_OPENCLAW_AGENT_MODEL,
+        latencyMs: Date.now() - startedAt,
+        gatewayOffline: true,
+        error: error?.message || 'OpenClaw Gateway mengalami masalah teknikal',
+      },
+    })
   }
 }

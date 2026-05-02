@@ -90,7 +90,7 @@ export default function Shell() {
               alt="PUSPA"
               width={56}
               height={56}
-              className="animate-pulse object-contain drop-shadow-md"
+              className="h-auto w-auto animate-pulse object-contain drop-shadow-md"
               priority
               unoptimized
             />
@@ -142,7 +142,7 @@ export default function Shell() {
                       alt="PUSPA"
                       width={20}
                       height={20}
-                      className="shrink-0 object-contain drop-shadow-sm"
+                      className="h-auto w-auto shrink-0 object-contain drop-shadow-sm"
                       unoptimized
                     />
                   </div>

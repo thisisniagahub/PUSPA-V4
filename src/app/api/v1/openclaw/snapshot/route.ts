@@ -10,6 +10,53 @@ function sanitizeBridgeError(error: unknown) {
     .slice(0, 240)
 }
 
+function createOfflineSnapshot(baseUrl: string, error: string): OpenClawSnapshot {
+  const generatedAt = new Date().toISOString()
+
+  return {
+    generatedAt,
+    controlUrl: baseUrl,
+    gateway: {
+      connected: false,
+      status: 'offline',
+      latencyMs: 0,
+      gatewayUrl: baseUrl,
+      healthUrl: `${baseUrl}/health`,
+      error,
+    },
+    channels: {
+      total: 0,
+      connected: 0,
+      items: [],
+    },
+    models: {
+      defaultModel: null,
+      resolvedDefault: null,
+      fallbacks: [],
+      aliases: {},
+      allowedCount: 0,
+      oauthProviders: [],
+    },
+    agents: [],
+    automation: {
+      cron: [],
+      tasks: {
+        total: 0,
+        byStatus: {},
+        byRuntime: {},
+        recent: [],
+      },
+    },
+    plugins: {
+      entries: [],
+      webhookRoutes: [],
+    },
+    mcp: {
+      servers: [],
+    },
+  }
+}
+
 export async function GET(request: Request) {
   const baseUrl = (process.env.OPENCLAW_BRIDGE_URL || DEFAULT_OPENCLAW_BRIDGE_URL).replace(/\/$/, '')
 
@@ -25,9 +72,9 @@ export async function GET(request: Request) {
 
     if (!response.ok || !payload?.ok || !payload?.data) {
       return NextResponse.json({
-        success: false,
-        error: sanitizeBridgeError(payload?.error || `Bridge returned HTTP ${response.status}`),
-      }, { status: 502 })
+        success: true,
+        data: createOfflineSnapshot(baseUrl, sanitizeBridgeError(payload?.error || `Bridge returned HTTP ${response.status}`)),
+      })
     }
 
     return NextResponse.json({
@@ -35,7 +82,6 @@ export async function GET(request: Request) {
       data: payload.data as OpenClawSnapshot,
     })
   } catch (error) {
-    console.error('[OpenClaw Snapshot] Error:', error)
     if (error instanceof AuthorizationError) {
       return NextResponse.json({
         success: false,
@@ -43,8 +89,8 @@ export async function GET(request: Request) {
       }, { status: error.status })
     }
     return NextResponse.json({
-      success: false,
-      error: sanitizeBridgeError(error instanceof Error ? error.message : 'Failed to reach OpenClaw bridge'),
-    }, { status: 502 })
+      success: true,
+      data: createOfflineSnapshot(baseUrl, sanitizeBridgeError(error instanceof Error ? error.message : 'Failed to reach OpenClaw bridge')),
+    })
   }
 }

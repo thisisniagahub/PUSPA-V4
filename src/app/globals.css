@@ -54,6 +54,8 @@
   /* Status Colors */
   --color-success: #4ad7d1;
   --color-error: #ba1a1a;
+  --color-warning: #f59e0b;
+  --color-warning-foreground: #ffffff;
   
   /* Custom Radius (Aggressive 2026 Style) */
   --radius-sm: 0.5rem;
@@ -156,7 +158,13 @@
   }
 
   .glass {
-    @apply bg-white/60 dark:bg-black/60 backdrop-blur-xl border border-white/20 dark:border-white/5 shadow-2xl;
+    @apply bg-white/40 dark:bg-black/40 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl;
+    @apply relative overflow-hidden;
+  }
+
+  .glass::after {
+    content: "";
+    @apply absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none;
   }
 
   .fintech-card {
@@ -179,7 +187,7 @@
     height: 100%;
     z-index: 50;
     pointer-events: none;
-    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     filter: contrast(120%) brightness(100%);
     opacity: 0.02;
   }

@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { 
   Loader2, LockKeyhole, Mail, ArrowRight, ShieldCheck, 
   Fingerprint, Sparkles, Orbit, Cpu, Globe, Eye, EyeOff, 
-  ChevronRight, Terminal, Activity, Zap
+  ChevronRight, Terminal, Activity, Zap, AlertTriangle
 } from 'lucide-react'
 import { Toaster, toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -82,10 +82,7 @@ function LoginContent() {
   const [isAuthTimeout, setIsAuthTimeout] = useState(false)
 
   useEffect(() => {
-    if (!authLoadingRaw) {
-      setIsAuthTimeout(false)
-      return
-    }
+    if (!authLoadingRaw) return
     const timer = setTimeout(() => setIsAuthTimeout(true), 5000)
     return () => clearTimeout(timer)
   }, [authLoadingRaw])
@@ -207,7 +204,7 @@ function LoginContent() {
                   alt="PUSPA"
                   width={64}
                   height={64}
-                  className="object-contain"
+                  className="h-auto w-auto object-contain"
                   unoptimized
                 />
               </motion.div>

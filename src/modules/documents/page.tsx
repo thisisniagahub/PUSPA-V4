@@ -97,14 +97,6 @@ interface DocumentStats {
   categoryStats: { category: string; count: number }[]
 }
 
-interface PaginatedResponse {
-  data: Document[]
-  total: number
-  page: number
-  pageSize: number
-  totalPages: number
-}
-
 interface UploadResponse {
   path: string
   url: string
@@ -116,12 +108,12 @@ interface UploadResponse {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const CATEGORIES = [
-  { value: 'PENDAFTARAN', label: 'Pendaftaran', icon: Building, color: 'violet' },
-  { value: 'TADBIR_URUS', label: 'Tadbir Urus', icon: FileCheck, color: 'purple' },
-  { value: 'KEWANGAN', label: 'Kewangan', icon: FileText, color: 'fuchsia' },
-  { value: 'PEMATUHAN', label: 'Pematuhan', icon: Shield, color: 'purple' },
-  { value: 'OPERASI', label: 'Operasi', icon: Archive, color: 'violet' },
-  { value: 'PROGRAM', label: 'Program', icon: FolderOpen, color: 'fuchsia' },
+  { value: 'pendaftaran', label: 'Pendaftaran', icon: Building, color: 'violet' },
+  { value: 'tadbir_urus', label: 'Tadbir Urus', icon: FileCheck, color: 'purple' },
+  { value: 'kewangan', label: 'Kewangan', icon: FileText, color: 'fuchsia' },
+  { value: 'pematuhan', label: 'Pematuhan', icon: Shield, color: 'purple' },
+  { value: 'operasi', label: 'Operasi', icon: Archive, color: 'violet' },
+  { value: 'program', label: 'Program', icon: FolderOpen, color: 'fuchsia' },
 ] as const
 
 const CATEGORY_FILTERS = [
@@ -136,12 +128,12 @@ const STATUS_FILTERS = [
 ]
 
 const SUBCATEGORIES: Record<string, string[]> = {
-  PENDAFTARAN: ['Sijil ROS', 'Perlembagaan', 'SSM', 'Lesen', 'Pendaftaran Negeri'],
-  TADBIR_URUS: ['Minit AGM', 'Minit Mesyuarat', 'Resolusi', 'Polisi', 'SOP'],
-  KEWANGAN: ['Laporan Audit', 'Penyata Kewangan', 'Bajet', 'Resit', 'Invois'],
-  PEMATUHAN: ['Kelulusan LHDN', 'Notis PDPA', 'Polisi AML/CFT', 'Pemeriksaan', 'Laporan Pematuhan'],
-  OPERASI: ['MOU', 'Perjanjian', 'Kontrak', 'Laporan Operasi', 'Prosedur'],
-  PROGRAM: ['Proposal', 'Laporan Aktiviti', 'Kehadiran', 'Foto', 'Penilaian'],
+  pendaftaran: ['Sijil ROS', 'Perlembagaan', 'SSM', 'Lesen', 'Pendaftaran Negeri'],
+  tadbir_urus: ['Minit AGM', 'Minit Mesyuarat', 'Resolusi', 'Polisi', 'SOP'],
+  kewangan: ['Laporan Audit', 'Penyata Kewangan', 'Bajet', 'Resit', 'Invois'],
+  pematuhan: ['Kelulusan LHDN', 'Notis PDPA', 'Polisi AML/CFT', 'Pemeriksaan', 'Laporan Pematuhan'],
+  operasi: ['MOU', 'Perjanjian', 'Kontrak', 'Laporan Operasi', 'Prosedur'],
+  program: ['Proposal', 'Laporan Aktiviti', 'Kehadiran', 'Foto', 'Penilaian'],
 }
 
 const colorMap: Record<string, { bg: string; icon: string; badge: string; text: string; dot: string; ring: string }> = {
@@ -308,7 +300,7 @@ export default function DocumentsPage() {
   const fetchDocuments = useCallback(async () => {
     try {
       setLoading(true)
-      const data = await api.get<PaginatedResponse>('/documents', {
+      const response = await api.getEnvelope<Document[]>('/documents', {
         page,
         pageSize,
         search: search || undefined,
@@ -317,9 +309,15 @@ export default function DocumentsPage() {
         sortBy: 'createdAt',
         sortOrder: 'desc',
       })
-      setDocuments(data.data)
-      setTotal(data.total)
-      setTotalPages(data.totalPages)
+      const nextDocuments = Array.isArray(response.data) ? response.data : []
+      const nextTotal = typeof response.total === 'number' ? response.total : nextDocuments.length
+      const nextTotalPages = typeof response.totalPages === 'number'
+        ? response.totalPages
+        : Math.max(1, Math.ceil(nextTotal / pageSize))
+
+      setDocuments(nextDocuments)
+      setTotal(nextTotal)
+      setTotalPages(nextTotalPages)
     } catch {
       toast.error('Gagal memuatkan dokumen')
     } finally {

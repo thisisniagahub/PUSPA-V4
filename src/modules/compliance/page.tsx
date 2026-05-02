@@ -271,6 +271,12 @@ const INITIAL_ITEMS: ChecklistItem[] = [
   },
 ];
 
+function normalizeCategoryKey(category: string): CategoryKey | null {
+  if (category === 'tadbir_urus') return 'tadbirUr';
+  if (CATEGORIES.some((c) => c.key === category)) return category as CategoryKey;
+  return null;
+}
+
 // ──────────────────────────────────────────────
 // Helper: Score Color
 // ──────────────────────────────────────────────
@@ -367,23 +373,27 @@ export default function CompliancePage() {
       }>('/compliance');
 
       if (data?.checklistItems) {
-        const mapped: ChecklistItem[] = data.checklistItems.map((ci) => ({
-          id: ci.id,
-          category: ci.category as CategoryKey,
-          title: ci.item,
-          description: ci.description || '',
-          completed: ci.isCompleted,
-          completedAt: ci.completedAt
-            ? new Date(ci.completedAt).toLocaleDateString('ms-MY', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true,
-              })
-            : undefined,
-        }));
+        const mapped: ChecklistItem[] = data.checklistItems.map((ci) => {
+          const category = normalizeCategoryKey(ci.category) ?? 'transparensi';
+
+          return {
+            id: ci.id,
+            category,
+            title: ci.item,
+            description: ci.description || '',
+            completed: ci.isCompleted,
+            completedAt: ci.completedAt
+              ? new Date(ci.completedAt).toLocaleDateString('ms-MY', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true,
+                })
+              : undefined,
+          };
+        });
         setItems(mapped);
       }
     } catch (error: any) {
@@ -408,7 +418,7 @@ export default function CompliancePage() {
     [items],
   );
   const totalCount = items.length;
-  const overallPct = Math.round((completedCount / totalCount) * 100);
+  const overallPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const overallColors = getScoreColor(overallPct);
 
   const categoryScores = useMemo(() => {
@@ -420,8 +430,10 @@ export default function CompliancePage() {
       transparensi: { completed: 0, total: 0, pct: 0 },
     };
     items.forEach((item) => {
-      map[item.category].total += 1;
-      if (item.completed) map[item.category].completed += 1;
+      const score = map[item.category];
+      if (!score) return;
+      score.total += 1;
+      if (item.completed) score.completed += 1;
     });
     (Object.keys(map) as CategoryKey[]).forEach((k) => {
       map[k].pct = map[k].total > 0 ? Math.round((map[k].completed / map[k].total) * 100) : 0;
@@ -437,8 +449,8 @@ export default function CompliancePage() {
   const actionItems = useMemo(() => {
     const incomplete = items.filter((i) => !i.completed);
     return incomplete.sort((a, b) => {
-      const catA = CATEGORIES.find((c) => c.key === a.category)!;
-      const catB = CATEGORIES.find((c) => c.key === b.category)!;
+      const catA = CATEGORIES.find((c) => c.key === a.category) ?? CATEGORIES[CATEGORIES.length - 1];
+      const catB = CATEGORIES.find((c) => c.key === b.category) ?? CATEGORIES[CATEGORIES.length - 1];
       return catA.priority - catB.priority;
     });
   }, [items]);

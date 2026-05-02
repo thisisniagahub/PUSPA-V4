@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 
 export default function SpotlightCursor() {
-  const [mounted, setMounted] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
 
   const cursorX = useMotionValue(-100);
@@ -15,7 +14,6 @@ export default function SpotlightCursor() {
   const cursorYSpring = useSpring(cursorY, springConfig);
 
   useEffect(() => {
-    setMounted(true);
     const moveCursor = (e: MouseEvent) => {
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
@@ -32,8 +30,6 @@ export default function SpotlightCursor() {
     window.addEventListener('mousemove', moveCursor);
     return () => window.removeEventListener('mousemove', moveCursor);
   }, [cursorX, cursorY]);
-
-  if (!mounted) return null;
 
   return (
     <>

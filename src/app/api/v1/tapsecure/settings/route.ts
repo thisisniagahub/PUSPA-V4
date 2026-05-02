@@ -38,6 +38,40 @@ function resolveTargetUserId(
   return requestedUserId
 }
 
+async function resolveTargetUser(
+  session: Awaited<ReturnType<typeof requireAuth>>,
+  requestedUserId: string | null | undefined,
+) {
+  const targetUserId = resolveTargetUserId(session, requestedUserId)
+
+  if (targetUserId === session.user.id) {
+    const currentUser = await db.user.findFirst({
+      where: {
+        OR: [
+          { id: targetUserId },
+          { email: session.user.email },
+        ],
+      },
+    })
+
+    if (currentUser) return currentUser
+
+    return db.user.create({
+      data: {
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.name || session.user.email.split('@')[0],
+        password: 'supabase_auth_managed',
+        role: session.user.role,
+        isActive: true,
+        lastLogin: new Date(),
+      },
+    })
+  }
+
+  return db.user.findUnique({ where: { id: targetUserId } })
+}
+
 // ─── GET /api/v1/tapsecure/settings?userId=xxx ────────────────────
 // Retrieve security settings for a user (creates defaults if none exist)
 
@@ -45,10 +79,9 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireAuth()
     const searchParams = request.nextUrl.searchParams;
-    const userId = resolveTargetUserId(session, searchParams.get('userId'));
 
     // Verify user exists
-    const user = await db.user.findUnique({ where: { id: userId } });
+    const user = await resolveTargetUser(session, searchParams.get('userId'));
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'Pengguna tidak dijumpai' },
@@ -58,12 +91,12 @@ export async function GET(request: NextRequest) {
 
     // Find existing settings, or create defaults
     let settings = await db.securitySettings.findUnique({
-      where: { userId },
+      where: { userId: user.id },
     });
 
     if (!settings) {
       settings = await db.securitySettings.create({
-        data: { userId },
+        data: { userId: user.id },
       });
     }
 
@@ -102,11 +135,10 @@ export async function PUT(request: NextRequest) {
     const session = await requireAuth()
     const body = await request.json();
     const parsed = securitySettingsUpdateSchema.parse(body);
-    const userId = resolveTargetUserId(session, parsed.userId);
     const { userId: _ignoredUserId, ...updateData } = parsed;
 
     // Verify user exists
-    const user = await db.user.findUnique({ where: { id: userId } });
+    const user = await resolveTargetUser(session, parsed.userId);
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'Pengguna tidak dijumpai' },
@@ -116,14 +148,14 @@ export async function PUT(request: NextRequest) {
 
     // Fetch previous settings for audit logging
     const previousSettings = await db.securitySettings.findUnique({
-      where: { userId },
+      where: { userId: user.id },
     });
 
     // Upsert settings — create if not exist, update if exist
     const settings = await db.securitySettings.upsert({
-      where: { userId },
+      where: { userId: user.id },
       create: {
-        userId,
+        userId: user.id,
         ...defaultSettings,
         ...updateData,
       },
@@ -135,7 +167,7 @@ export async function PUT(request: NextRequest) {
     // Create security log for audit trail
     await db.securityLog.create({
       data: {
-        userId,
+        userId: user.id,
         action: 'settings_update',
         method: 'password',
         status: 'success',

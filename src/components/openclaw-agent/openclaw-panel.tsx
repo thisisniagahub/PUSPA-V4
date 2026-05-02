@@ -5,13 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, RotateCcw, X, Settings, Send, Zap, Brain, ChevronDown, Loader2, History, Wrench, AlertTriangle, CheckCircle2, ArrowRight, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Input } from '@/components/ui/input'
 import { useOpenClawStore } from '@/stores/openclaw-store'
 import { viewLabels } from '@/types'
 import { OpenClawMessage } from './openclaw-message'
 import { OpenClawChatHeader } from './openclaw-chat-header'
 import { OpenClawSettings } from './openclaw-settings'
+import { UnifiedChatInput } from '@/components/ui/unified-chat-input'
 import { getQuickActions } from '@/lib/openclaw-agent/quick-actions'
 import { cn } from '@/lib/utils'
 import { PROVIDERS } from '@/lib/openclaw-agent/provider-types'
@@ -25,7 +24,6 @@ export function OpenClawPanel() {
 
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -33,13 +31,6 @@ export function OpenClawPanel() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages, status])
-
-  // Focus input when panel opens
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 100)
-    }
-  }, [isOpen])
 
   // Process pending actions
   useEffect(() => {
@@ -49,8 +40,8 @@ export function OpenClawPanel() {
     }
   }, [messages])
 
-  const handleSend = useCallback(async () => {
-    const text = input.trim()
+  const handleSend = useCallback(async (value?: string) => {
+    const text = (value ?? input).trim()
     if (!text || status === 'thinking' || status === 'streaming') return
 
     setInput('')
@@ -60,13 +51,6 @@ export function OpenClawPanel() {
       await sendMessageStream(text)
     }
   }, [input, status, providerState.provider, sendMessage, sendMessageStream])
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
-  }, [handleSend])
 
   const quickActions = getQuickActions(currentView)
   const providerInfo = PROVIDERS[providerState.provider]
@@ -151,7 +135,6 @@ export function OpenClawPanel() {
                   key={action.id}
                   onClick={() => {
                     setInput(action.query)
-                    inputRef.current?.focus()
                   }}
                   className="text-xs px-3 py-1.5 rounded-full border bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
                 >
@@ -206,13 +189,11 @@ export function OpenClawPanel() {
         </div>
       )}
 
-import { UnifiedChatInput } from '@/components/ui/unified-chat-input'
-
-// ... (inside OpenClawPanel return)
-
       {/* Input Area */}
       <div className="p-3 bg-background/95 backdrop-blur-sm">
         <UnifiedChatInput
+          value={input}
+          onValueChange={setInput}
           onSend={handleSend}
           onClear={clearMessages}
           onToggleSettings={() => setShowSettings(!showSettings)}
