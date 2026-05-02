@@ -18,6 +18,10 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     
     // React rules
     "react-hooks/exhaustive-deps": "off",
+
+    "react-hooks/set-state-in-effect": "error",
+    "react-hooks/static-components": "error",
+    "react-hooks/refs": "error",
     "react-hooks/purity": "off",
     "react/no-unescaped-entities": "off",
     "react/display-name": "off",
@@ -42,6 +46,21 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     "no-undef": "off",
     "no-unreachable": "off",
     "no-useless-escape": "off",
+  },
+
+}, {
+  files: [
+    "src/modules/**/*.tsx",
+    "src/components/Aurora.tsx",
+    "src/components/auth-provider.tsx",
+    "src/components/notification-bell.tsx",
+    "src/components/ui/carousel.tsx",
+    "src/hooks/use-mobile.ts",
+  ],
+  rules: {
+    "react-hooks/set-state-in-effect": "off",
+    "react-hooks/static-components": "off",
+    "react-hooks/refs": "off",
   },
 }, {
   ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "examples/**", "skills", "bot-plain-secret.txt", "bot-raw-key.txt", "agentId", "create-bot-key*.js", "verify-test.ts"]

@@ -131,9 +131,10 @@ export const SIDEBAR_GROUPS: SidebarNavGroup[] = [
 
 export function getVisibleGroups(role: UserRole): SidebarNavGroup[] {
   return SIDEBAR_GROUPS
+    .filter((group) => group.roles.includes(role))
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => canAccessView(item.id, role)),
+      items: group.items.filter((item) => item.roles.includes(role) && canAccessView(item.id, role)),
     }))
     .filter((group) => group.items.length > 0)
 }
