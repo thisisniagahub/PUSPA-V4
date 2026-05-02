@@ -65,3 +65,13 @@ Example execute payload (safe):
 ```json
 { "task": "Semak readiness dashboard", "currentView": "dashboard", "dryRun": true }
 ```
+
+
+## 9) Super quick commands (recommended)
+Use these repo scripts to reduce manual steps:
+
+```bash
+bun run hermes:env         # auto-write local-safe env flags
+bun run hermes:local       # clone/install/run Hermes CLI
+bun run hermes:quickstart  # checklist helper for both terminals
+```
