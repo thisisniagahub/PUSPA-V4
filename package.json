@@ -13,7 +13,8 @@
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
     "db:seed": "npx tsx prisma/seed.ts",
-    "vercel-build": "bash scripts/prepare-vercel-build.sh"
+    "vercel-build": "bash scripts/prepare-vercel-build.sh",
+    "hermes:local": "bash scripts/run-hermes-local.sh"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

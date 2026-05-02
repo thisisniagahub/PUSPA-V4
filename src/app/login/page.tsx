@@ -232,7 +232,10 @@ function LoginContent() {
                     placeholder="E-MEL_IDENTITI"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-16 rounded-2xl border-white/[0.05] bg-white/[0.02] pl-16 text-white placeholder:text-white/5 focus:border-primary/50 focus:bg-white/[0.04] focus:ring-4 focus:ring-primary/10 transition-all font-mono text-sm tracking-wide"
+                    autoComplete="email"
+                    inputMode="email"
+                    required
+                    className="h-16 rounded-2xl border-white/[0.05] bg-white/[0.02] pl-16 text-white placeholder:text-white/35 focus:border-primary/50 focus:bg-white/[0.04] focus:ring-4 focus:ring-primary/10 transition-all font-mono text-sm tracking-wide"
                   />
                 </div>
               </div>
@@ -243,7 +246,7 @@ function LoginContent() {
                     <ShieldCheck className="h-3.5 w-3.5" />
                     <Label htmlFor="password" className="text-[10px] font-mono font-bold uppercase tracking-[0.2em]">S_PASSKEY</Label>
                   </div>
-                  <button type="button" className="text-[10px] font-bold text-primary/60 hover:text-primary transition-all hover:tracking-widest">LUPA_KATA_LALUAN?</button>
+                  <button type="button" className="text-[10px] font-bold text-primary/60 hover:text-primary transition-all hover:tracking-widest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-sm px-1">LUPA_KATA_LALUAN?</button>
                 </div>
                 <div className="relative group">
                   <LockKeyhole className="absolute left-6 top-1/2 h-5 w-5 -translate-y-1/2 text-white/10 transition-colors group-focus-within:text-primary" />
@@ -253,7 +256,9 @@ function LoginContent() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-16 rounded-2xl border-white/[0.05] bg-white/[0.02] pl-16 pr-14 text-white placeholder:text-white/5 focus:border-primary/50 focus:bg-white/[0.04] focus:ring-4 focus:ring-primary/10 transition-all font-mono tracking-[0.2em]"
+                    autoComplete="current-password"
+                    required
+                    className="h-16 rounded-2xl border-white/[0.05] bg-white/[0.02] pl-16 pr-14 text-white placeholder:text-white/35 focus:border-primary/50 focus:bg-white/[0.04] focus:ring-4 focus:ring-primary/10 transition-all font-mono tracking-[0.2em]"
                   />
                   <button
                     type="button"
