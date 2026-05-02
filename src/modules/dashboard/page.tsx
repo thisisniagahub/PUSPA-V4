@@ -146,6 +146,22 @@ function AIStatusCard() {
   )
 }
 
+
+function BentoCard({ className, children }: { className?: string; children: React.ReactNode }) {
+  return (
+    <div
+      className={cn(
+        "rounded-3xl border border-white/15 bg-[#13172a]/85 p-5 shadow-[0_16px_50px_rgba(8,12,30,0.45)] backdrop-blur-xl",
+        "before:pointer-events-none before:absolute before:inset-0 before:rounded-3xl before:border before:border-white/5",
+        "relative overflow-hidden",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Types & Constants
 // ---------------------------------------------------------------------------
@@ -468,14 +484,63 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Statistic Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard title="Ahli Asnaf" value={stats.jumlahAhliAsnaf} icon={<Users className="h-6 w-6" />} accentColor="#ecb2ff" iconBgColor="rgba(236, 178, 255, 0.1)" trend={stats.trendAhli} />
-        <StatCard title="Program Aktif" value={stats.programAktif} subtitle="sedang berjalan" icon={<Heart className="h-6 w-6" />} accentColor="#00fbfb" iconBgColor="rgba(0, 251, 251, 0.1)" trend={stats.trendProgram} />
-        <StatCard title="Jumlah Donasi" value={stats.jumlahDonasi} subtitle="tahun 2024" icon={<HandCoins className="h-6 w-6" />} accentColor="#ffffff" iconBgColor="rgba(255, 255, 255, 0.1)" trend={stats.trendDonasi} isCurrency />
-        <StatCard title="Sukarelawan" value={stats.sukarelawanAktif} subtitle="aktif lapangan" icon={<UserCheck className="h-6 w-6" />} accentColor="#bd00ff" iconBgColor="rgba(189, 0, 255, 0.1)" trend={stats.trendSukarelawan} />
-        <StatCard title="Compliance" value={stats.skorCompliance} subtitle="keseluruhan" icon={<ShieldCheck className="h-6 w-6" />} accentColor="#ecb2ff" iconBgColor="rgba(236, 178, 255, 0.1)" trend={stats.trendCompliance} />
-      </div>
+      {/* BentoGrid: Full Color Command Center */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Zap className="h-5 w-5 text-fuchsia-400" />
+          <h2 className="text-lg font-bold tracking-tight">Bento Dashboard</h2>
+        </div>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-12 auto-rows-[150px]">
+          <BentoCard className="md:col-span-4 bg-gradient-to-br from-[#7f5dff]/45 via-[#5b4ac7]/35 to-[#2e325f]/35 p-4">
+            <StatCard title="Ahli Asnaf" value={stats.jumlahAhliAsnaf} icon={<Users className="h-6 w-6" />} accentColor="#ecb2ff" iconBgColor="rgba(236, 178, 255, 0.2)" trend={stats.trendAhli} />
+          </BentoCard>
+          <BentoCard className="md:col-span-4 bg-gradient-to-br from-[#ffca75]/45 via-[#d6a354]/35 to-[#6c4e2e]/35 p-4">
+            <StatCard title="Program Aktif" value={stats.programAktif} subtitle="sedang berjalan" icon={<Heart className="h-6 w-6" />} accentColor="#00fbfb" iconBgColor="rgba(0, 251, 251, 0.2)" trend={stats.trendProgram} />
+          </BentoCard>
+          <BentoCard className="md:col-span-4 bg-gradient-to-br from-[#4de2bf]/40 via-[#2e8d89]/30 to-[#20415f]/35 p-4">
+            <StatCard title="Jumlah Donasi" value={stats.jumlahDonasi} subtitle="tahun 2024" icon={<HandCoins className="h-6 w-6" />} accentColor="#ffffff" iconBgColor="rgba(255, 255, 255, 0.2)" trend={stats.trendDonasi} isCurrency />
+          </BentoCard>
+
+          <BentoCard className="md:col-span-7 md:row-span-2 bg-gradient-to-br from-[#1f2442]/95 via-[#1a1f36]/90 to-[#101423]/95">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ClipboardList className="h-5 w-5 text-amber-200" />
+                <h3 className="text-lg font-bold text-white">Tugasan Kritikal</h3>
+              </div>
+              <Badge variant="outline" className="text-amber-200 border-amber-200/30 bg-amber-500/10">3 Baru</Badge>
+            </div>
+            <div className="space-y-4">
+              <AsnafTaskCard title="Verifikasi Rumah Fatimah Ali" description="Siasatan lanjut diperlukan untuk status penyewaan rumah di PPR Pantai Ria." priority="critical" progress={65} daysLeft={2} officers={[{ name: 'Zul' }, { name: 'Aminah' }]} />
+              <AsnafTaskCard title="Bantuan Persekolahan 2026" description="Semakan dokumen sokongan untuk 5 orang anak pemohon." priority="urgent" progress={40} daysLeft={5} officers={[{ name: 'Sarah' }]} />
+            </div>
+          </BentoCard>
+
+          <BentoCard className="md:col-span-5 space-y-4 bg-gradient-to-br from-[#242b4f]/90 via-[#1a2f3f]/85 to-[#152638]/90">
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-emerald-200" />
+              <h3 className="text-lg font-bold text-white">Operasi Lapangan</h3>
+            </div>
+            <CaseTimer />
+            <div className="rounded-2xl bg-black/20 p-4 flex items-center gap-4 border border-white/10">
+              <div className="h-10 w-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-200"><MapPin className="h-5 w-5" /></div>
+              <div><p className="text-[10px] font-bold text-emerald-100/80 uppercase">Lokasi Semasa</p><p className="text-sm font-bold text-white">Lembah Pantai, KL</p></div>
+            </div>
+          </BentoCard>
+
+          <BentoCard className="md:col-span-4 bg-gradient-to-br from-[#4a3c9c]/50 via-[#3a3278]/40 to-[#202445]/35">
+            <StatCard title="Sukarelawan" value={stats.sukarelawanAktif} subtitle="aktif lapangan" icon={<UserCheck className="h-6 w-6" />} accentColor="#bd00ff" iconBgColor="rgba(189, 0, 255, 0.2)" trend={stats.trendSukarelawan} />
+          </BentoCard>
+
+          <BentoCard className="md:col-span-4 bg-gradient-to-br from-[#8d4bca]/45 via-[#7037a3]/35 to-[#402852]/35">
+            <StatCard title="Compliance" value={stats.skorCompliance} subtitle="keseluruhan" icon={<ShieldCheck className="h-6 w-6" />} accentColor="#ecb2ff" iconBgColor="rgba(236, 178, 255, 0.2)" trend={stats.trendCompliance} />
+          </BentoCard>
+
+          <BentoCard className="md:col-span-4 space-y-3 bg-gradient-to-br from-[#2e3f86]/50 via-[#2b4b88]/35 to-[#234261]/35">
+            <div className="flex items-center gap-2"><MessageSquare className="h-5 w-5 text-cyan-200" /><h3 className="text-lg font-bold text-white">Komunikasi</h3></div>
+            <QuickMessages />
+          </BentoCard>
+        </div>
+      </section>
 
       {/* Tindakan Pintas (Flowing Menu) */}
       <section className="space-y-4">
@@ -485,62 +550,6 @@ export default function DashboardPage() {
         </div>
         <FlowingMenu items={flowingItems} />
       </section>
-
-      {/* 🚀 New Command Center Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5 text-warning" />
-              <h2 className="text-lg font-bold tracking-tight">Tugasan Kritikal</h2>
-            </div>
-            <Badge variant="outline" className="text-warning border-warning/20 bg-warning/5">3 Baru</Badge>
-          </div>
-          <div className="space-y-4">
-            <AsnafTaskCard
-              title="Verifikasi Rumah Fatimah Ali"
-              description="Siasatan lanjut diperlukan untuk status penyewaan rumah di PPR Pantai Ria."
-              priority="critical"
-              progress={65}
-              daysLeft={2}
-              officers={[{ name: 'Zul' }, { name: 'Aminah' }]}
-            />
-            <AsnafTaskCard
-              title="Bantuan Persekolahan 2026"
-              description="Semakan dokumen sokongan untuk 5 orang anak pemohon."
-              priority="urgent"
-              progress={40}
-              daysLeft={5}
-              officers={[{ name: 'Sarah' }]}
-            />
-          </div>
-        </section>
-
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-emerald-500" />
-            <h2 className="text-lg font-bold tracking-tight">Operasi Lapangan</h2>
-          </div>
-          <CaseTimer />
-          <div className="glass p-4 rounded-2xl flex items-center gap-4">
-            <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-              <MapPin className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase">Lokasi Semasa</p>
-              <p className="text-sm font-bold text-foreground">Lembah Pantai, KL</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-bold tracking-tight">Komunikasi</h2>
-          </div>
-          <QuickMessages />
-        </section>
-      </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
