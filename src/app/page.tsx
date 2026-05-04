@@ -97,7 +97,7 @@ export default function Shell() {
           </div>
           <div className="space-y-1">
             <p className="text-sm font-bold tracking-widest text-primary uppercase">PUSPA CARE</p>
-            <p className="text-xs text-muted-foreground">Menyediakan platform yang selamat...</p>
+            <p className="text-xs text-muted-foreground">Menyediakan platform yang selamat…</p>
           </div>
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function Shell() {
         style={{ '--desktop-sidebar-width': `${desktopSidebarWidth}px` } as CSSProperties}
       >
         {/* Sticky Header with High Contrast */}
-        <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-xl transition-all duration-300 border-border">
+        <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-xl transition-[background-color,border-color,backdrop-filter] duration-300 border-border">
           <div className="flex items-center justify-between h-14 px-4 sm:px-6">
             <div className="flex items-center gap-2.5 min-w-0">
               <Button type="button" variant="ghost" size="icon" className="lg:hidden shrink-0" onClick={toggleSidebar} aria-label="Toggle menu">
@@ -177,11 +177,11 @@ export default function Shell() {
                 aria-label="Toggle theme"
               >
                 <Sun className={cn(
-                  "h-4 w-4 transition-all text-foreground",
+                  "h-4 w-4 transition-[transform,opacity] text-foreground",
                   isDark ? "rotate-0 scale-100" : "rotate-90 scale-0"
                 )} />
                 <Moon className={cn(
-                  "absolute h-4 w-4 transition-all text-foreground",
+                  "absolute h-4 w-4 transition-[transform,opacity] text-foreground",
                   isDark ? "-rotate-90 scale-0" : "rotate-0 scale-100"
                 )} />
               </Button>
@@ -229,7 +229,7 @@ export default function Shell() {
                     className="flex flex-col items-center gap-2"
                   >
                     <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                    <span className="text-xs text-muted-foreground font-medium">Memuatkan modul...</span>
+                    <span className="text-xs text-muted-foreground font-medium">Memuatkan modul…</span>
                   </motion.div>
                 </div>
               }>

@@ -165,8 +165,8 @@ function LoginContent() {
               whileHover={{ x: 10 }}
               className="flex items-start gap-5 group"
             >
-               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/5 border border-white/10 group-hover:border-primary/50 group-hover:bg-primary/5 transition-all duration-500 shadow-2xl">
-                 <feature.icon className={cn("h-7 w-7 transition-all duration-500 group-hover:scale-110", feature.color)} />
+               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/5 border border-white/10 group-hover:border-primary/50 group-hover:bg-primary/5 transition-[border-color,background-color,box-shadow] duration-500 shadow-2xl">
+                 <feature.icon className={cn("h-7 w-7 transition-[transform,color] duration-500 group-hover:scale-110", feature.color)} />
                </div>
                <div className="space-y-1">
                  <h3 className="text-white font-bold group-hover:text-primary transition-colors">{feature.label}</h3>
@@ -235,7 +235,7 @@ function LoginContent() {
                     autoComplete="email"
                     inputMode="email"
                     required
-                    className="h-16 rounded-2xl border-white/[0.05] bg-white/[0.02] pl-16 text-white placeholder:text-white/35 focus:border-primary/50 focus:bg-white/[0.04] focus:ring-4 focus:ring-primary/10 transition-all font-mono text-sm tracking-wide"
+                    className="h-16 rounded-2xl border-white/[0.05] bg-white/[0.02] pl-16 text-white placeholder:text-white/35 focus:border-primary/50 focus:bg-white/[0.04] focus:ring-4 focus:ring-primary/10 transition-[border-color,background-color,box-shadow] font-mono text-sm tracking-wide"
                   />
                 </div>
               </div>
@@ -246,7 +246,7 @@ function LoginContent() {
                     <ShieldCheck className="h-3.5 w-3.5" />
                     <Label htmlFor="password" className="text-[10px] font-mono font-bold uppercase tracking-[0.2em]">S_PASSKEY</Label>
                   </div>
-                  <button type="button" className="text-[10px] font-bold text-primary/60 hover:text-primary transition-all hover:tracking-widest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-sm px-1">LUPA_KATA_LALUAN?</button>
+                  <button type="button" className="text-[10px] font-bold text-primary/60 hover:text-primary transition-[color,letter-spacing] hover:tracking-widest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-sm px-1">LUPA_KATA_LALUAN?</button>
                 </div>
                 <div className="relative group">
                   <LockKeyhole className="absolute left-6 top-1/2 h-5 w-5 -translate-y-1/2 text-white/10 transition-colors group-focus-within:text-primary" />
@@ -258,7 +258,7 @@ function LoginContent() {
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
                     required
-                    className="h-16 rounded-2xl border-white/[0.05] bg-white/[0.02] pl-16 pr-14 text-white placeholder:text-white/35 focus:border-primary/50 focus:bg-white/[0.04] focus:ring-4 focus:ring-primary/10 transition-all font-mono tracking-[0.2em]"
+                    className="h-16 rounded-2xl border-white/[0.05] bg-white/[0.02] pl-16 pr-14 text-white placeholder:text-white/35 focus:border-primary/50 focus:bg-white/[0.04] focus:ring-4 focus:ring-primary/10 transition-[border-color,background-color,box-shadow] font-mono tracking-[0.2em]"
                   />
                   <button
                     type="button"
@@ -274,7 +274,7 @@ function LoginContent() {
               <Button
                 type="submit"
                 disabled={isSubmitting || authLoading}
-                className="relative h-18 w-full overflow-hidden rounded-2xl bg-primary text-white font-black text-xl hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_20px_50px_rgba(124,58,237,0.4)] group/btn"
+                className="relative h-18 w-full overflow-hidden rounded-2xl bg-primary text-white font-black text-xl hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-[background-color,transform,box-shadow] shadow-[0_20px_50px_rgba(124,58,237,0.4)] group/btn"
               >
                 <AnimatePresence mode="wait">
                   {isSubmitting ? (
@@ -286,7 +286,7 @@ function LoginContent() {
                       className="flex items-center gap-4"
                     >
                       <Loader2 className="h-7 w-7 animate-spin" />
-                      MENGESAHKAN...
+                      MENGESAHKAN…
                     </motion.div>
                   ) : (
                     <motion.div 
@@ -351,7 +351,7 @@ export default function LoginPage() {
       <Suspense fallback={
         <div className="flex flex-col items-center gap-6">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <span className="text-[10px] font-black uppercase tracking-[0.5em] text-white/20">Establishing Node Link...</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.5em] text-white/20">Establishing Node Link…</span>
         </div>
       }>
         <LoginContent />
