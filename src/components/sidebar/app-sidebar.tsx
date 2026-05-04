@@ -49,7 +49,7 @@ export function AppSidebar() {
       )}
 
       <aside
-        className="fixed inset-y-0 left-0 z-50 hidden border-r border-border bg-card lg:flex lg:flex-col lg:transition-[width] lg:duration-300 lg:ease-in-out motion-reduce:transition-none"
+        className="fixed inset-y-0 left-0 z-50 hidden border-r border-white/5 bg-gradient-to-b from-zinc-950 to-black lg:flex lg:flex-col lg:transition-[width] lg:duration-300 lg:ease-in-out motion-reduce:transition-none"
         style={{ width }}
         aria-label="Sidebar navigasi"
       >

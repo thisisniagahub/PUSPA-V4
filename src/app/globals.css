@@ -52,10 +52,12 @@
   --color-sidebar-ring: var(--sidebar-ring);
   
   /* Status Colors */
-  --color-success: #4ad7d1;
-  --color-error: #ba1a1a;
+  --color-success: #10b981;
+  --color-error: #ef4444;
   --color-warning: #f59e0b;
   --color-warning-foreground: #ffffff;
+  --color-critical: #f43f5e;
+  --color-info: #3b82f6;
   
   /* Custom Radius (Aggressive 2026 Style) */
   --radius-sm: 0.5rem;
@@ -158,21 +160,37 @@
   }
 
   .glass {
-    @apply bg-white/40 dark:bg-black/40 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl;
-    @apply relative overflow-hidden;
+    @apply bg-white/70 dark:bg-zinc-900/60 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
+    @apply relative overflow-hidden transition-all duration-300;
   }
 
   .glass::after {
     content: "";
-    @apply absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none;
+    @apply absolute inset-0 bg-gradient-to-br from-white/20 to-transparent dark:from-white/5 dark:to-transparent pointer-events-none;
+  }
+
+  .glass-dark {
+    @apply bg-zinc-950/80 backdrop-blur-2xl border border-white/5 shadow-2xl;
   }
 
   .fintech-card {
-    @apply bg-card rounded-xl border border-border shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300;
+    @apply bg-card rounded-2xl border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_15px_45px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1;
+  }
+
+  .tactile {
+    @apply transition-all duration-200 active:scale-[0.97] active:brightness-90;
   }
 
   .mint-glow {
     @apply shadow-[0_0_20px_rgba(74,215,209,0.3)];
+  }
+
+  .amber-glow {
+    @apply shadow-[0_0_20px_rgba(245,158,11,0.3)];
+  }
+
+  .rose-glow {
+    @apply shadow-[0_0_20px_rgba(244,63,94,0.3)];
   }
 
   .grain-overlay {
