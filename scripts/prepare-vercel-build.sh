@@ -32,19 +32,10 @@ if [[ "${DATABASE_PROVIDER:-}" == "postgresql" ]] || [[ -n "${VERCEL:-}" ]] || [
 fi
 
 if [[ "$USE_POSTGRES" == "1" ]]; then
-  echo "Preparing production build with PostgreSQL Prisma schema"
-  cp prisma/schema.prisma /tmp/puspa-v4-schema.prisma.backup
-  restore_schema() {
-    if [[ -f /tmp/puspa-v4-schema.prisma.backup ]]; then
-      cp /tmp/puspa-v4-schema.prisma.backup prisma/schema.prisma
-      rm -f /tmp/puspa-v4-schema.prisma.backup
-    fi
-  }
-  trap restore_schema EXIT
-  cp prisma/schema.postgres.prisma prisma/schema.prisma
+  echo "Production build with PostgreSQL Prisma schema (already configured)"
   export DATABASE_URL="$POSTGRES_CANDIDATE"
 else
-  echo "Preparing local/dev build with SQLite Prisma schema"
+  echo "Warning: No PostgreSQL URL found, using default schema"
 fi
 
 prisma generate
