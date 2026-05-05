@@ -875,7 +875,7 @@ export default function MembersPage() {
               Urus dan selenggara maklumat ahli penerima zakat dan bantuan
             </p>
           </div>
-          <Button onClick={handleAddMember} className="shrink-0 gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
+          <Button onClick={handleAddMember} className="shrink-0 gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 tactile">
             <Plus className="h-4 w-4" />
             Tambah Ahli
           </Button>
@@ -883,58 +883,49 @@ export default function MembersPage() {
 
         {/* Stats Row */}
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-          <Card className="bg-card backdrop-blur-xl border-white/10">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/40">
-                <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Jumlah Ahli</p>
-                <p className="text-xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="glass group p-4 flex items-center gap-4 hover:bg-white/90 dark:hover:bg-zinc-900/80 transition-all cursor-default">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 group-hover:scale-110 transition-transform">
+              <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Jumlah Ahli</p>
+              <p className="text-2xl font-black text-slate-900 dark:text-white tabular-nums">{stats.total}</p>
+            </div>
+          </div>
 
-          <Card className="bg-card backdrop-blur-xl border-white/10">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/40">
-                <UserCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Aktif</p>
-                <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{stats.active}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="glass group p-4 flex items-center gap-4 hover:bg-white/90 dark:hover:bg-zinc-900/80 transition-all cursor-default">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 group-hover:scale-110 transition-transform">
+              <UserCheck className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Aktif</p>
+              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{stats.active}</p>
+            </div>
+          </div>
 
-          <Card className="bg-card backdrop-blur-xl border-white/10">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800/60">
-                <UserX className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Tidak Aktif</p>
-                <p className="text-xl font-bold text-gray-600 dark:text-gray-300">{stats.inactive}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="glass group p-4 flex items-center gap-4 hover:bg-white/90 dark:hover:bg-zinc-900/80 transition-all cursor-default">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-zinc-500/10 dark:bg-zinc-500/20 group-hover:scale-110 transition-transform">
+              <UserX className="h-6 w-6 text-zinc-600 dark:text-zinc-400" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Tidak Aktif</p>
+              <p className="text-2xl font-black text-zinc-600 dark:text-zinc-300 tabular-nums">{stats.inactive}</p>
+            </div>
+          </div>
 
-          <Card className="bg-card backdrop-blur-xl border-white/10">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/40">
-                <ShieldAlert className="h-5 w-5 text-red-600 dark:text-red-400" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Senarai Hitam</p>
-                <p className="text-xl font-bold text-red-700 dark:text-red-300">{stats.blacklisted}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="glass group p-4 flex items-center gap-4 hover:bg-white/90 dark:hover:bg-zinc-900/80 transition-all cursor-default">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500/10 dark:bg-rose-500/20 group-hover:scale-110 transition-transform">
+              <ShieldAlert className="h-6 w-6 text-rose-600 dark:text-rose-400" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Senarai Hitam</p>
+              <p className="text-2xl font-black text-rose-600 dark:text-rose-400 tabular-nums">{stats.blacklisted}</p>
+            </div>
+          </div>
         </div>
 
         {/* Search & Filter Bar */}
-        <Card className="mb-6 bg-card backdrop-blur-xl border-white/10">
-          <CardContent className="p-4">
+        <div className="glass mb-6 p-4">
             <div className="flex flex-col gap-3">
               {/* Search */}
               <div className="relative">
@@ -1001,17 +992,15 @@ export default function MembersPage() {
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+        </div>
 
         {/* Data Table - Desktop */}
-        <Card className="hidden bg-card backdrop-blur-xl border-white/10 md:block">
-          <CardContent className="p-0">
+        <div className="hidden glass md:block">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-slate-100 bg-slate-50/80 hover:bg-slate-50/80 dark:border-slate-700 dark:bg-slate-900/50">
-                    <TableHead className="w-[110px] font-semibold">No. Ahli</TableHead>
+                  <TableRow className="border-border/50 bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="w-[110px] font-bold uppercase text-[10px] tracking-widest">No. Ahli</TableHead>
                     <TableHead className="font-semibold">Nama</TableHead>
                     <TableHead className="font-semibold">No. IC</TableHead>
                     <TableHead className="font-semibold">Telefon</TableHead>
@@ -1100,7 +1089,7 @@ export default function MembersPage() {
 
             {/* Pagination */}
             {filteredMembers.length > 0 && (
-              <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 dark:border-slate-700">
+              <div className="flex items-center justify-between border-t border-white/10 px-4 py-3">
                 <p className="text-sm text-slate-500 dark:text-slate-400">
                   Menunjukkan {((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredMembers.length)} daripada {filteredMembers.length} ahli
                 </p>
@@ -1141,8 +1130,7 @@ export default function MembersPage() {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+        </div>
 
         {/* Card List - Mobile */}
         <div className="space-y-3 md:hidden">
@@ -1265,7 +1253,7 @@ export default function MembersPage() {
             setEditingMember(null);
           }
         }}>
-          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl glass-dark border-white/10">
             <DialogHeader>
               <DialogTitle className="text-lg font-bold">
                 {editingMember ? 'Sunting Maklumat Ahli' : 'Tambah Ahli Baru'}
@@ -1289,9 +1277,9 @@ export default function MembersPage() {
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Nama Penuh <span className="text-red-500">*</span></FormLabel>
+                          <FormLabel className="label-caps">Nama Penuh <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
-                            <Input placeholder="cth: Ahmad bin Abdullah" {...field} className="border-slate-200 dark:border-slate-600" />
+                            <Input placeholder="cth: Ahmad bin Abdullah" {...field} className="glass dark:bg-zinc-900/40" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1303,9 +1291,9 @@ export default function MembersPage() {
                       name="icNumber"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>No. Kad Pengenalan <span className="text-red-500">*</span></FormLabel>
+                          <FormLabel className="label-caps">No. Kad Pengenalan <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
-                            <Input placeholder="cth: 901231-01-5234" {...field} className="font-mono border-slate-200 dark:border-slate-600" />
+                            <Input placeholder="cth: 901231-01-5234" {...field} className="font-mono glass dark:bg-zinc-900/40" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
