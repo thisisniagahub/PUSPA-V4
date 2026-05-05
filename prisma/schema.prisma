@@ -4,8 +4,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL")
 }
 
 model User {
@@ -27,6 +27,7 @@ model User {
   notifications    Notification[]
   securityLogs     SecurityLog[]
   securitySettings SecuritySettings?
+  aiMemories       AIMemory[]  // Added for Hermes AI memory
 }
 
 model Member {
@@ -735,4 +736,17 @@ model BotApiKey {
 
   @@index([keyPrefix])
   @@index([isActive])
+}
+
+model AIMemory {
+  id        String   @id @default(cuid())
+  userId    String
+  role      String   // 'user' | 'assistant' | 'system'
+  content   String   // text content
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([createdAt])
 }

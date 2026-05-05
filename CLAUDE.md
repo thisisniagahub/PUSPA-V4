@@ -76,11 +76,7 @@ POSTGRES_PRISMA_URL=postgresql://user:pass@host:5432/puspa
 
 ## Prisma Schema
 
-Three schema files exist — the build scripts switch between them:
-- `prisma/schema.prisma` — SQLite (default for dev)
-- `prisma/schema.postgres.prisma` — PostgreSQL
-
-The `vercel-build` script auto-switches schemas when `DATABASE_PROVIDER=postgresql`.
+Single schema file `prisma/schema.prisma` configured exclusively for PostgreSQL (PRD Section 10.1: SQLite strictly deprecated).
 
 ## State Management
 
