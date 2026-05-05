@@ -89,7 +89,12 @@ export interface OpenClawState {
   setStatus: (status: OpenClawStatus) => void
   addMessage: (msg: Omit<OpenClawAgentMessage, 'id' | 'timestamp'>) => void
   updateLastMessage: (content: string) => void
-  finalizeLastMessage: (meta?: { provider?: ProviderId; model?: string; latencyMs?: number; clientAction?: OpenClawAgentMessage['clientAction'] }) => void
+  finalizeLastMessage: (meta?: { 
+    provider?: ProviderId; 
+    model?: string; 
+    latencyMs?: number; 
+    clientAction?: OpenClawAgentMessage['clientAction'] 
+  }) => void
   clearMessages: () => void
   setCurrentView: (view: ViewId) => void
   setUserRole: (role: AppRole) => void
@@ -125,9 +130,9 @@ export const useOpenClawStore = create<OpenClawState>()(
       showSettings: false,
       showHistory: false,
       providerState: {
-        provider: 'openclaw' as ProviderId,
-        model: 'openclaw/main',
-        hasApiKey: false,
+        provider: 'hermes' as ProviderId, // UPDATED: Default to 'hermes' (Vercel-native)
+        model: 'meta-llama/llama-3.1-8b-instruct:free',
+        hasApiKey: true, // OpenRouter key is server-side
         apiKeyPrefix: null,
         baseUrl: null,
         isConfigured: true,
@@ -205,7 +210,6 @@ export const useOpenClawStore = create<OpenClawState>()(
       })),
       clearSteps: () => set({ activeSteps: [] }),
       finalizeSteps: () => {
-        // Mark all running steps as completed
         set((s) => ({
           activeSteps: s.activeSteps.map((step) =>
             step.status === 'running' ? { ...step, status: 'completed' as AgentStepStatus } : step
@@ -213,17 +217,20 @@ export const useOpenClawStore = create<OpenClawState>()(
         }))
       },
 
+      // ============================================================
+      // sendMessage: Non-streaming fallback (for compatibility)
+      // ============================================================
       sendMessage: async (text: string) => {
         const { messages, currentView, userRole, locale, addMessage, setStatus, addStep, updateStep, finalizeLastMessage } = get()
 
         addMessage({ role: 'user', content: text })
         setStatus('thinking')
 
-        // Add execution trace steps
         const planStepId = addStep({ type: 'planning', label: 'Merancang', detail: 'Menganalisis permintaan anda...', status: 'running' })
 
         try {
-          const response = await fetch('/api/v1/openclaw/chat', {
+          // UPDATED: Point to /api/v1/ai (Hermes Vercel-Native)
+          const response = await fetch('/api/v1/ai', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -252,7 +259,7 @@ export const useOpenClawStore = create<OpenClawState>()(
 
           addMessage({
             role: 'assistant',
-            content: data.message.content || 'Maaf, saya tidak faham.',
+            content: data.message?.content || 'Maaf, saya tidak faham.',
             isToolResult: !!data.toolResult,
             toolName: data.toolResult?.name,
             provider: data.provider,
@@ -287,6 +294,10 @@ export const useOpenClawStore = create<OpenClawState>()(
         }
       },
 
+      // ============================================================
+      // sendMessageStream: Streaming response from /api/v1/ai (Hermes)
+      // UPDATED: Now uses Vercel AI SDK streaming format
+      // ============================================================
       sendMessageStream: async (text: string) => {
         const { messages, currentView, userRole, locale, addMessage, setStatus, updateLastMessage, finalizeLastMessage, providerState, addStep, updateStep } = get()
 
@@ -300,7 +311,8 @@ export const useOpenClawStore = create<OpenClawState>()(
         addMessage({ role: 'assistant', content: '', isStreaming: true })
 
         try {
-          const response = await fetch('/api/v1/openclaw/chat', {
+          // UPDATED: Point to /api/v1/ai (Hermes Vercel-Native)
+          const response = await fetch('/api/v1/ai', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -308,18 +320,23 @@ export const useOpenClawStore = create<OpenClawState>()(
               currentView,
               userRole,
               locale,
-              stream: true,
             }),
           })
 
-          // Check if response is actually a stream
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+          }
+
+          // Check if response is a stream
           const contentType = response.headers.get('content-type') || ''
-          if (contentType.includes('text/event-stream')) {
+
+          if (contentType.includes('text/event-stream') || contentType.includes('text/plain')) {
+            // Streaming response from Vercel AI SDK
             updateStep(planStepId, { status: 'completed', detail: 'Permintaan dianalisis' })
             addStep({ type: 'thinking', label: 'Menjana respons', detail: 'AI sedang memproses...', status: 'running' })
 
             const reader = response.body?.getReader()
-            if (!reader) throw new Error('No stream reader')
+            if (!reader) throw new Error('No stream reader available')
 
             const decoder = new TextDecoder()
             let buffer = ''
@@ -330,23 +347,30 @@ export const useOpenClawStore = create<OpenClawState>()(
               if (done) break
 
               buffer += decoder.decode(value, { stream: true })
+
+              // Process complete lines (Vercel AI SDK may send chunks as raw text)
               const lines = buffer.split('\n')
               buffer = lines.pop() || ''
 
               for (const line of lines) {
                 const trimmed = line.trim()
-                if (!trimmed || !trimmed.startsWith('data: ')) continue
-                const data = trimmed.slice(6)
-                if (data === '[DONE]') continue
+                if (!trimmed) continue
 
+                // Try to parse as JSON (if Vercel AI SDK sends structured data)
                 try {
-                  const chunk = JSON.parse(data)
+                  const chunk = JSON.parse(trimmed)
                   if (chunk.type === 'content' && chunk.content) {
                     updateLastMessage(chunk.content)
                   }
                   if (chunk.type === 'tool_call' && chunk.toolCall) {
                     hasToolCall = true
-                    const toolStepId = addStep({ type: 'tool_call', label: `Alat: ${chunk.toolCall.name || 'unknown'}`, detail: 'Menjalankan alat...', status: 'running', toolName: chunk.toolCall.name })
+                    const toolStepId = addStep({ 
+                      type: 'tool_call', 
+                      label: `Alat: ${chunk.toolCall.name || 'unknown'}`, 
+                      detail: 'Menjalankan alat...', 
+                      status: 'running', 
+                      toolName: chunk.toolCall.name 
+                    })
                     updateStep(toolStepId, { status: 'completed', detail: 'Alat dilaksanakan' })
                   }
                   if (chunk.type === 'done') {
@@ -369,12 +393,19 @@ export const useOpenClawStore = create<OpenClawState>()(
                     })
                   }
                 } catch {
-                  // Skip malformed
+                  // If not JSON, treat as plain text chunk
+                  updateLastMessage(trimmed)
                 }
               }
             }
+
+            // If we get here without a 'done' chunk, still finalize
+            addStep({ type: 'success', label: 'Selesai', detail: 'Respons dijana', status: 'completed' })
+            finalizeLastMessage({
+              provider: providerState.provider,
+            })
           } else {
-            // Non-streaming response fallback for compatible providers
+            // Non-streaming response fallback (shouldn't happen with /api/v1/ai)
             updateStep(planStepId, { status: 'completed', detail: 'Permintaan dianalisis' })
 
             const json = await response.json()
@@ -389,18 +420,14 @@ export const useOpenClawStore = create<OpenClawState>()(
               addStep({ type: 'success', label: 'Selesai', detail: 'Respons dijana', status: 'completed' })
             }
 
-            updateLastMessage(data.message.content || 'Maaf, saya tidak faham.')
+            updateLastMessage(data.message?.content || 'Maaf, saya tidak faham.')
+
             finalizeLastMessage({
               provider: data.provider,
               model: data.model,
               latencyMs: data.latencyMs,
               clientAction: data.clientAction,
             })
-
-            // Process client actions
-            if (data.clientAction) {
-              get().addPendingAction(data.clientAction)
-            }
           }
         } catch (error) {
           updateStep(planStepId, { status: 'error', detail: 'Ralat berlaku' })
@@ -412,21 +439,22 @@ export const useOpenClawStore = create<OpenClawState>()(
         }
       },
 
+      // ============================================================
+      // loadProviderConfig: Simplified (no external gateway)
+      // ============================================================
       loadProviderConfig: async () => {
         try {
-          const res = await fetch('/api/v1/openclaw/config')
-          const json = await res.json()
-          if (json.success) {
-            const { setProviderState } = get()
-            setProviderState({
-              provider: json.data.provider,
-              model: json.data.model,
-              hasApiKey: json.data.hasApiKey,
-              apiKeyPrefix: json.data.apiKeyPrefix,
-              baseUrl: json.data.baseUrl,
-              isConfigured: true,
-            })
-          }
+          // UPDATED: No need to fetch from /api/v1/openclaw/config
+          // Hermes runs natively in Next.js, config is server-side
+          const { setProviderState } = get()
+          setProviderState({
+            provider: 'hermes',
+            model: process.env.NEXT_PUBLIC_HERMES_MODEL || 'meta-llama/llama-3.1-8b-instruct:free',
+            hasApiKey: true, // Server-side env var
+            apiKeyPrefix: null,
+            baseUrl: null,
+            isConfigured: true,
+          })
         } catch {
           // Use default config
         }

@@ -18,7 +18,7 @@ import { PROVIDERS } from '@/lib/openclaw-agent/provider-types'
 export function OpenClawPanel() {
   const {
     isOpen, status, messages, currentView, showSettings,
-    clearMessages, sendMessage, sendMessageStream,
+    clearMessages, sendMessageStream, // UPDATED: Always use sendMessageStream (Hermes is now native)
     providerState, setShowSettings, addPendingAction, consumePendingAction,
   } = useOpenClawStore()
 
@@ -45,12 +45,9 @@ export function OpenClawPanel() {
     if (!text || status === 'thinking' || status === 'streaming') return
 
     setInput('')
-    if (providerState.provider === 'openclaw') {
-      await sendMessage(text)
-    } else {
-      await sendMessageStream(text)
-    }
-  }, [input, status, providerState.provider, sendMessage, sendMessageStream])
+    // UPDATED: Always use sendMessageStream (Hermes Vercel-Native streams by default)
+    await sendMessageStream(text)
+  }, [input, status, sendMessageStream])
 
   const quickActions = getQuickActions(currentView)
   const providerInfo = PROVIDERS[providerState.provider]
@@ -161,11 +158,21 @@ export function OpenClawPanel() {
               </div>
             )}
 
-            {/* Thinking indicator */}
+            {/* Thinking indicator (waiting for first chunk) */}
             {status === 'thinking' && (
               <div className="flex items-center gap-2 px-4">
                 <Loader2 className="h-4 w-4 animate-spin text-violet-500" />
                 <span className="text-xs text-muted-foreground">Memproses...</span>
+              </div>
+            )}
+
+            {/* Error indicator */}
+            {status === 'error' && (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 border border-red-200 dark:bg-red-950 dark:border-red-800">
+                <AlertTriangle className="h-4 w-4 text-red-500" />
+                <span className="text-xs text-red-700 dark:text-red-300">
+                  Ralat berlaku. Sila cuba lagi sebentar.
+                </span>
               </div>
             )}
           </>
