@@ -750,3 +750,16 @@ model AIMemory {
   @@index([userId])
   @@index([createdAt])
 }
+
+// RAG Knowledge Base
+model KnowledgeChunk {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  embedding Float[]  @db.Real[]
+  source    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([source])
+}
