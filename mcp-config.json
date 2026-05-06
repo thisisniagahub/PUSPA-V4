@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "puspa-internal": {
+      "command": "bun",
+      "args": ["run", "mcp-servers/puspa-internal.ts"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}",
+        "NODE_ENV": "${NODE_ENV:-development}"
+      }
+    }
+  }
+}

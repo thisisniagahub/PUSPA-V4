@@ -111,4 +111,20 @@ registerTool({
   },
 })
 
+// Import and register getCaseStatsTool
+import { getCaseStatsTool } from "./get-case-stats";
+
+registerTool({
+  name: getCaseStatsTool.name,
+  description: getCaseStatsTool.description,
+  parameters: getCaseStatsTool.parameters,
+  execute: async (args: Record<string, unknown>) => {
+    return await getCaseStatsTool.execute(args as any);
+  },
+});
+
 console.log('[Tools] Tool registry initialized with', toolRegistry.size, 'tools')
+
+// Export for external use
+export { getCaseStatsTool };
+export const TOOL_REGISTRY = [getCaseStatsTool];
